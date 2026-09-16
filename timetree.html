@@ -37,7 +37,7 @@
     <main id="main-container" class="max-w-md mx-auto p-4 space-y-4">
 
         <p class="text-xs text-slate-500 px-1 leading-relaxed">
-            TimeTreeで公開されているグループのスケジュールを、ここでまとめて見れるようにしてるよ。
+            TimeTreeで公開されているグループのスケジュールを、ここでまとめて見れるようにしてるよ。右上の＋から自分用にグループを追加することもできます（その場合、追加したグループはあなたの端末にのみ保存されます）。
         </p>
 
         <!-- 表示モード切り替え -->
@@ -74,6 +74,12 @@
             <div class="flex justify-between items-center">
                 <h3 id="group-modal-title" class="font-bold text-base text-slate-800">グループを追加</h3>
                 <button onclick="closeGroupModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="flex items-start space-x-2 bg-amber-50 border border-amber-100 rounded-2xl p-3">
+                <i class="fa-solid fa-circle-info text-amber-500 text-xs mt-0.5"></i>
+                <p class="text-[10px] text-amber-700 leading-relaxed">
+                    ここで追加したグループは<strong>あなたの端末にのみ保存</strong>されます。他の人の画面には表示されません。みんなの一覧に追加してほしい場合は管理者に連絡してね。
+                </p>
             </div>
             <form onsubmit="saveGroup(event)" class="space-y-3">
                 <input type="hidden" id="group-edit-index" value="">
