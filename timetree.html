@@ -24,9 +24,14 @@
                 <p class="text-[11px] text-slate-400 leading-tight">Oshi-Calに戻る</p>
             </div>
         </a>
-        <button onclick="openGroupModal()" class="w-11 h-11 rounded-full bg-white flex items-center justify-center text-pink-500 hover:bg-pink-50 transition shadow-sm shadow-pink-200/60 flex-shrink-0">
-            <i class="fa-solid fa-plus text-base"></i>
-        </button>
+        <div class="flex items-center space-x-2 flex-shrink-0">
+            <button onclick="resetToDefaults()" title="初期リストを読み込み直す" class="w-11 h-11 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-pink-500 hover:bg-pink-50 transition shadow-sm shadow-pink-200/60">
+                <i class="fa-solid fa-rotate-right text-base"></i>
+            </button>
+            <button onclick="openGroupModal()" class="w-11 h-11 rounded-full bg-white flex items-center justify-center text-pink-500 hover:bg-pink-50 transition shadow-sm shadow-pink-200/60">
+                <i class="fa-solid fa-plus text-base"></i>
+            </button>
+        </div>
     </header>
 
     <main id="main-container" class="max-w-md mx-auto p-4 space-y-4">
@@ -96,7 +101,25 @@
             { name: "ZUTTOMOTTO【ずっともっと】", color: "#f43f5e", calendarId: "zuttomoofficial" },
             { name: "なみだ色の消しごむ",           color: "#38bdf8", calendarId: "namikeshi" },
             { name: "LilyS/ash",                     color: "#a855f7", calendarId: "lilyslash" },
-            { name: "マリークラウン",                color: "#3b82f6", calendarId: "mrcr" }
+            { name: "マリークラウン",                color: "#3b82f6", calendarId: "mrcr" },
+            { name: "ドレスコード",                  color: "#e11d48", calendarId: "dresscode" },
+            { name: "Sweet Alley",                   color: "#f472b6", calendarId: "sweetalleysuke" },
+            { name: "CURE'T",                        color: "#22d3ee", calendarId: "curet_official" },
+            { name: "ドラマチックレコード",          color: "#8b5cf6", calendarId: "dmrc" },
+            { name: "君に、胸キュン。",              color: "#fb7185", calendarId: "kimikyun_schedule" },
+            { name: "煌めき☆アンフォレント",        color: "#f59e0b", calendarId: "kirafore_info" },
+            { name: "VVSiS",                         color: "#0ea5e9", calendarId: "vvsis_official" },
+            { name: "iON!",                          color: "#ef4444", calendarId: "ion_heroines" },
+            { name: "HzMe",                          color: "#14b8a6", calendarId: "hzme" },
+            { name: "myojou",                        color: "#6366f1", calendarId: "myojou" },
+            { name: "ナナコロビヤオキ",              color: "#84cc16", calendarId: "nanakoro78" },
+            { name: "MEGAFON",                       color: "#f97316", calendarId: "megafon_official" },
+            { name: "fav me",                        color: "#d946ef", calendarId: "fm_schedule" },
+            { name: "iLiFE!",                        color: "#facc15", calendarId: "ilife_official" },
+            { name: "のんふぃく！",                  color: "#10b981", calendarId: "nonfic_official" },
+            { name: "ラストシーン",                  color: "#64748b", calendarId: "lastscene_official" },
+            { name: "テンシンランマン",              color: "#ec4899", calendarId: "tenshinranman" },
+            { name: "JamsCollection",                color: "#7c3aed", calendarId: "jamscollection_official" }
         ];
         const STORAGE_KEY = 'oshi_cal_timetree_groups';
         const VIEW_MODE_KEY = 'oshi_cal_timetree_viewmode';
@@ -120,6 +143,14 @@
 
         function saveGroups() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(groups));
+        }
+
+        function resetToDefaults() {
+            if (!confirm('グループ一覧を初期リストに戻す？\n（自分で追加・編集したグループは消えます）')) return;
+            groups = DEFAULT_GROUPS.slice();
+            activeIndex = 0;
+            saveGroups();
+            render();
         }
 
         function setViewMode(mode) {
