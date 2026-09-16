@@ -256,8 +256,63 @@
         // 閲覧者側からは書き換えられない） ====
         // グループ名をキーに、それぞれのURLを入れてね。使わないものは空文字のままでOK。
         const OFFICIAL_GROUP_LINKS = {
-            "Onephony": { x: "", instagram: "", tiktok: "", homepage: "", litlink: "" },
-            "マリークラウン": { x: "", instagram: "", tiktok: "", homepage: "", litlink: "" }
+            "Onephony": {
+                x: "https://x.com/onephony_",
+                instagram: "https://www.instagram.com/onephony__official?stkn=MTIzcjRiZjVtc3Y5dA==",
+                tiktok: "https://www.tiktok.com/@onephony__official?_r=1&_t=ZS-99mHmoJeDNS",
+                homepage: "",
+                litlink: "https://lit.link/Onephony",
+                spotify: "https://open.spotify.com/artist/1l2hlo4d4Q9TsiQ0v5sZ6D?si=SRVFoiv_TpaLfoX-Ds1SFg&utm_source=copy-link"
+            },
+            "マリークラウン": { x: "", instagram: "", tiktok: "", homepage: "", litlink: "", spotify: "" },
+            "AKANECLUB": {
+                x: "https://x.com/akaneclub_info",
+                instagram: "",
+                tiktok: "",
+                homepage: "",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/3AyKLWQ1H1jbJAcQ187W27?si=peYwP1BeQ8SqUUpiPoKktQ&utm_source=copy-link"
+            },
+            "FULIT BOX": {
+                x: "https://x.com/FULITBOX",
+                instagram: "https://www.instagram.com/fulitbox?stkn=czVkMHFiOHM0eWRs",
+                tiktok: "",
+                homepage: "",
+                litlink: "https://lit.link/FULITBOX",
+                spotify: "https://open.spotify.com/artist/6YronPZruM6tYUeh2kaMhV?si=l-1DLNbpTWmjsNocGuW1ZA&utm_source=copy-link"
+            },
+            "Merry BAD TUNE": {
+                x: "https://x.com/merrybadtune",
+                instagram: "",
+                tiktok: "",
+                homepage: "",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/2hL0PMtxHtTv5W1Z9Cusmd?si=ukJMJ11GSNqDAAceS1Tuhw&utm_source=copy-link"
+            },
+            "STARNOTE": {
+                x: "https://x.com/starnote_idol",
+                instagram: "https://www.instagram.com/starnote.idol?stkn=cHQ5NGg5bm5mNTV2",
+                tiktok: "https://www.tiktok.com/@starnote.idol?_r=1&_t=ZS-99mIIq2Zkx8",
+                homepage: "",
+                litlink: "https://lit.link/starnote",
+                spotify: "https://open.spotify.com/artist/7jGYhMnXPXbanwHv6McrOd?si=zQZLiJdeRJ2lI9KYu-jOew&utm_source=copy-link"
+            },
+            "かすみ草とステラ": {
+                x: "https://x.com/Kastella_OFC",
+                instagram: "",
+                tiktok: "",
+                homepage: "",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/0lClILedbTcLXrlX7pbUDy?si=jdpuZ1fESrabjsiSL6E0GQ&utm_source=copy-link"
+            },
+            "ハルニシオン": {
+                x: "https://x.com/info_HNS",
+                instagram: "",
+                tiktok: "https://www.tiktok.com/@harunision.official?_r=1&_t=ZS-99mInzNYvXc",
+                homepage: "",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/12bj3lZnc4JCm6vQsRBH3f?si=WDyk17qQRmehSQBDjltwZQ&utm_source=copy-link"
+            }
         };
 
         const LINK_META = {
@@ -265,7 +320,8 @@
             instagram: { label: "Instagram", icon: "fa-brands fa-instagram", color: "#e1306c" },
             tiktok: { label: "TikTok", icon: "fa-brands fa-tiktok", color: "#000000" },
             homepage: { label: "ホームページ", icon: "fa-solid fa-globe", color: "#0ea5e9" },
-            litlink: { label: "Lit.Link", icon: "fa-solid fa-link", color: "#a855f7" }
+            litlink: { label: "Lit.Link", icon: "fa-solid fa-link", color: "#a855f7" },
+            spotify: { label: "Spotify", icon: "fa-brands fa-spotify", color: "#1db954" }
         };
 
         let groups = [
