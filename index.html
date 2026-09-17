@@ -1216,58 +1216,109 @@
                 return;
             }
 
+            // 同じ日・同じタイトルのライブは1枚のカードにまとめる
+            const liveMap = new Map();
+            filtered.forEach(e => {
+                const key = e.group ? favGroupKey(e) : 'solo__' + e.id;
+                if (!liveMap.has(key)) liveMap.set(key, []);
+                liveMap.get(key).push(e);
+            });
+
+            const lives = [...liveMap.values()].sort(
+                (a, b) => new Date(a[0].date + ' ' + a[0].time) - new Date(b[0].date + ' ' + b[0].time)
+            );
+
             let html = '';
             let lastDate = '';
 
-            filtered.forEach(e => {
-                const groupObj = groups.find(g => g.name === e.group);
-                const color = groupObj ? groupObj.color : (e.group ? '#ec4899' : '#94a3b8');
-                const dateFormatted = dayjs(e.date).isValid() ? dayjs(e.date).format('M月D日(dd)') : e.date;
-                const isToday = dayjs(e.date).isToday();
+            lives.forEach(list => {
+                const rep = list[0];
+                const isMulti = list.length > 1;
+                const dateFormatted = dayjs(rep.date).isValid() ? dayjs(rep.date).format('M月D日(dd)') : rep.date;
+                const isToday = dayjs(rep.date).isToday();
 
-                if (e.date !== lastDate) {
+                if (rep.date !== lastDate) {
                     html += `
-                        <div data-date="${e.date}" class="scroll-mt-24 flex items-center space-x-2 pt-3 pb-1 px-1">
+                        <div data-date="${rep.date}" class="scroll-mt-24 flex items-center space-x-2 pt-3 pb-1 px-1">
                             <h3 class="font-bold text-slate-700 text-xs">${dateFormatted}</h3>
                             ${isToday ? '<span class="px-2 py-0.5 bg-pink-500 text-white text-[10px] font-bold rounded-full shadow-sm shadow-pink-500/30">今日</span>' : ''}
                         </div>
                     `;
-                    lastDate = e.date;
+                    lastDate = rep.date;
                 }
 
-                const isExpanded = expandedEvents.has(e.id);
-                const isFav = favorites.has(e.id);
-                const hasDetail = true; // メモ追加が常に可能なので、常に開閉できるようにする
-                const groupChipHtml = e.group
-                    ? `<span onclick="event.stopPropagation(); openGroupLinksModal('${e.group}')" class="text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer" style="background-color: ${color}18; color: ${color};">${e.group}</span>`
+                const cardKey = 'live_' + list.map(e => e.id).join('|');
+                const isExpanded = expandedEvents.has(cardKey);
+                const anyFav = list.some(e => favorites.has(e.id));
+
+                const repGroupObj = groups.find(g => g.name === rep.group);
+                const repColor = repGroupObj ? repGroupObj.color : (rep.group ? '#ec4899' : '#94a3b8');
+
+                // 左端のカラーバー：複数グループならその色を積み重ねる
+                const barHtml = isMulti
+                    ? `<div class="w-2 flex flex-col">${list.map(e => {
+                            const go = groups.find(g => g.name === e.group);
+                            return `<div class="flex-1" style="background-color:${go ? go.color : '#ec4899'}"></div>`;
+                        }).join('')}</div>`
+                    : `<div class="w-2" style="background-color: ${repColor}"></div>`;
+
+                // グループチップ：複数ならまとめて並べる
+                const chipsHtml = rep.group
+                    ? list.map(e => {
+                        const go = groups.find(g => g.name === e.group);
+                        const c = go ? go.color : '#ec4899';
+                        return `<span onclick="event.stopPropagation(); openGroupLinksModal('${e.group}')" class="text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer" style="background-color: ${c}18; color: ${c};">${e.group}</span>`;
+                      }).join('')
                     : `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-user text-[9px] mr-1"></i>個人の予定</span>`;
 
-                html += `
-                    <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${coPerformingGroups(e).length > 1 ? 'border-2 border-purple-200' : 'border border-pink-100/60'}">
-                        <div class="w-2" style="background-color: ${color}"></div>
-                        <div class="flex-1 p-4 ${hasDetail ? 'cursor-pointer' : ''}" ${hasDetail ? `onclick="toggleEventDetail('${e.id}')"` : ''}>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-2xl font-black text-slate-800 tracking-tight">${e.time}</span>
-                                <div class="flex items-center space-x-2">
-                                    ${groupChipHtml}
-                                    <button onclick="event.stopPropagation(); toggleFavorite('${e.id}')" class="w-7 h-7 rounded-full flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}">
-                                        <i class="fa-solid fa-heart text-xs"></i>
-                                    </button>
-                                    ${hasDetail ? `<span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"><i class="fa-solid fa-chevron-down text-[10px]"></i></span>` : ''}
-                                </div>
-                            </div>
-                            <h4 class="font-bold text-slate-800 text-sm leading-snug">${e.title}</h4>
-                            ${coPerformBadgeHtml(e) ? `<div class="mt-1.5">${coPerformBadgeHtml(e)}</div>` : ''}
-                            ${isExpanded ? `
-                                <div class="mt-3 pt-3 border-t border-pink-50 space-y-2">
-                                    ${coPerformListHtml(e)}
-                                    ${e.location ? `<div class="flex space-x-2"><a href="${mapsUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-pink-100 transition"><i class="fa-solid fa-location-dot"></i><span>${e.location}</span></a><a href="${transitUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" title="乗換案内でルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-train-subway"></i></a></div>` : ''}
-                                    ${renderRegulationHtml(e)}
-                                    ${renderMemoHtml(e)}
-                                    <a href="${gcalUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex items-center justify-center space-x-1.5 w-full bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-calendar-plus"></i><span>Googleカレンダーに追加</span></a>
-                                    ${!e.isSheet ? `<div class="flex justify-end pt-1"><button onclick="event.stopPropagation(); deleteEvent('${e.id}')" class="text-slate-300 hover:text-red-500 text-[11px] transition"><i class="fa-solid fa-trash"></i> 削除</button></div>` : ''}
+                // 時間：グループごとに違う場合はまとめて1つに表示できないので代表の時間を出す
+                const times = [...new Set(list.map(e => e.time))];
+                const timeHtml = times.length === 1
+                    ? `<span class="text-2xl font-black text-slate-800 tracking-tight">${times[0]}</span>`
+                    : `<span class="text-2xl font-black text-slate-800 tracking-tight">${times[0]}<span class="text-xs font-bold text-slate-400 ml-1">ほか</span></span>`;
+
+                // 展開時：グループごとの詳細
+                const detailsHtml = list.map(e => {
+                    const go = groups.find(g => g.name === e.group);
+                    const c = go ? go.color : (e.group ? '#ec4899' : '#94a3b8');
+                    const isFav = favorites.has(e.id);
+                    return `
+                        <div class="rounded-2xl border border-pink-50 p-3 space-y-2">
+                            ${isMulti ? `
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group}</span>
+                                        <span class="text-[11px] font-bold text-slate-400">${e.time}</span>
+                                    </div>
+                                    <button onclick="event.stopPropagation(); toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
                                 </div>
                             ` : ''}
+                            ${e.location ? `<div class="flex space-x-2"><a href="${mapsUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-pink-100 transition"><i class="fa-solid fa-location-dot"></i><span>${e.location}</span></a><a href="${transitUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" title="乗換案内でルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-train-subway"></i></a></div>` : ''}
+                            ${renderRegulationHtml(e)}
+                            ${renderMemoHtml(e)}
+                            <a href="${gcalUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex items-center justify-center space-x-1.5 w-full bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-calendar-plus"></i><span>Googleカレンダーに追加</span></a>
+                            ${!e.isSheet ? `<div class="flex justify-end"><button onclick="event.stopPropagation(); deleteEvent('${e.id}')" class="text-slate-300 hover:text-red-500 text-[11px] transition"><i class="fa-solid fa-trash"></i> 削除</button></div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                html += `
+                    <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${isMulti ? 'border-2 border-purple-200' : 'border border-pink-100/60'}">
+                        ${barHtml}
+                        <div class="flex-1 p-4 cursor-pointer" onclick="toggleEventDetail('${cardKey}')">
+                            <div class="flex items-center justify-between mb-2">
+                                ${timeHtml}
+                                <div class="flex items-center space-x-2">
+                                    ${!isMulti ? `<button onclick="event.stopPropagation(); toggleFavorite('${rep.id}')" class="w-7 h-7 rounded-full flex items-center justify-center transition ${anyFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-xs"></i></button>` : ''}
+                                    <span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"><i class="fa-solid fa-chevron-down text-[10px]"></i></span>
+                                </div>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm leading-snug mb-2">${rep.title}</h4>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
+                                ${chipsHtml}
+                            </div>
+                            ${isExpanded ? `<div class="mt-3 pt-3 border-t border-pink-50 space-y-2">${detailsHtml}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -1359,35 +1410,75 @@
                 return;
             }
 
-            let html = `<h4 class="text-xs font-bold text-slate-500 px-1">${dayjs(selectedDate).format('M月D日')}の予定</h4>`;
+            // 同じタイトルのライブは1枚にまとめる
+            const liveMap = new Map();
             filtered.forEach(e => {
-                const groupObj = groups.find(g => g.name === e.group);
-                const color = groupObj ? groupObj.color : (e.group ? '#ec4899' : '#94a3b8');
-                const isFav = favorites.has(e.id);
-                const groupChipHtml = e.group
-                    ? `<span onclick="openGroupLinksModal('${e.group}')" class="text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer" style="background-color: ${color}15; color: ${color};">${e.group}</span>`
+                const key = e.group ? favGroupKey(e) : 'solo__' + e.id;
+                if (!liveMap.has(key)) liveMap.set(key, []);
+                liveMap.get(key).push(e);
+            });
+            const lives = [...liveMap.values()].sort((a, b) => a[0].time.localeCompare(b[0].time));
+
+            let html = `<h4 class="text-xs font-bold text-slate-500 px-1">${dayjs(selectedDate).format('M月D日')}の予定</h4>`;
+
+            lives.forEach(list => {
+                const rep = list[0];
+                const isMulti = list.length > 1;
+                const repGroupObj = groups.find(g => g.name === rep.group);
+                const repColor = repGroupObj ? repGroupObj.color : (rep.group ? '#ec4899' : '#94a3b8');
+
+                const barHtml = isMulti
+                    ? `<span class="w-1.5 rounded-full overflow-hidden flex flex-col">${list.map(e => {
+                            const go = groups.find(g => g.name === e.group);
+                            return `<span class="flex-1" style="background-color:${go ? go.color : '#ec4899'}"></span>`;
+                        }).join('')}</span>`
+                    : `<span class="w-1.5 rounded-full" style="background-color: ${repColor}"></span>`;
+
+                const chipsHtml = rep.group
+                    ? list.map(e => {
+                        const go = groups.find(g => g.name === e.group);
+                        const c = go ? go.color : '#ec4899';
+                        return `<span onclick="openGroupLinksModal('${e.group}')" class="text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer" style="background-color: ${c}15; color: ${c};">${e.group}</span>`;
+                      }).join('')
                     : `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-user text-[9px] mr-1"></i>個人の予定</span>`;
 
-                html += `
-                    <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-pink-100/60 flex items-stretch space-x-3">
-                        <span class="w-1.5 rounded-full" style="background-color: ${color}"></span>
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between mb-1">
-                                <div class="flex items-center space-x-2">
-                                    ${groupChipHtml}
-                                    <span class="text-xs font-semibold text-slate-400">${e.time}</span>
+                const detailsHtml = list.map(e => {
+                    const go = groups.find(g => g.name === e.group);
+                    const c = go ? go.color : (e.group ? '#ec4899' : '#94a3b8');
+                    const isFav = favorites.has(e.id);
+                    return `
+                        <div class="${isMulti ? 'rounded-xl border border-pink-50 p-2.5 mt-2' : ''}">
+                            ${isMulti ? `
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}15;color:${c};">${e.group}</span>
+                                        <span class="text-[11px] font-semibold text-slate-400">${e.time}</span>
+                                    </div>
+                                    <button onclick="toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
                                 </div>
-                                <button onclick="toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}">
-                                    <i class="fa-solid fa-heart text-xs"></i>
-                                </button>
-                            </div>
-                            <h5 class="font-bold text-xs text-slate-800 mb-1">${e.title}</h5>
-                            ${coPerformBadgeHtml(e) ? `<div class="mb-1.5">${coPerformBadgeHtml(e)}</div>` : ''}
-                            ${coPerformListHtml(e) ? `<div class="mb-1.5">${coPerformListHtml(e)}</div>` : ''}
+                            ` : ''}
                             ${e.location ? `<div class="flex items-center space-x-3 mb-1"><a href="${mapsUrl(e.location)}" target="_blank" class="text-[11px] text-pink-600 font-semibold flex items-center hover:underline"><i class="fa-solid fa-location-dot mr-1.5 text-pink-400"></i>${e.location}</a><a href="${transitUrl(e.location)}" target="_blank" class="text-[11px] text-purple-500 font-semibold flex items-center hover:underline"><i class="fa-solid fa-train-subway mr-1"></i>ルート検索</a></div>` : ''}
                             ${renderRegulationHtml(e)}
                             <div class="mt-1.5">${renderMemoHtml(e)}</div>
                             <a href="${gcalUrl(e)}" target="_blank" class="mt-1.5 inline-flex items-center text-[11px] text-slate-500 font-semibold hover:underline"><i class="fa-solid fa-calendar-plus mr-1.5"></i>Googleカレンダーに追加</a>
+                        </div>
+                    `;
+                }).join('');
+
+                html += `
+                    <div class="bg-white p-3.5 rounded-2xl shadow-sm flex items-stretch space-x-3 ${isMulti ? 'border-2 border-purple-200' : 'border border-pink-100/60'}">
+                        ${barHtml}
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-bold text-slate-400">${rep.time}${isMulti && [...new Set(list.map(e => e.time))].length > 1 ? ' ほか' : ''}</span>
+                                ${!isMulti ? `<button onclick="toggleFavorite('${rep.id}')" class="w-6 h-6 flex items-center justify-center transition ${favorites.has(rep.id) ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-xs"></i></button>` : ''}
+                            </div>
+                            <h5 class="font-bold text-xs text-slate-800 mb-1.5">${rep.title}</h5>
+                            <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
+                                ${chipsHtml}
+                            </div>
+                            ${detailsHtml}
                         </div>
                     </div>
                 `;
