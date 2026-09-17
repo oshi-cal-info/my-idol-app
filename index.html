@@ -70,6 +70,9 @@
             <button onclick="clearFilter()" title="絞り込みをリセット" class="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-pink-600 bg-pink-50/50 border border-pink-100 rounded-xl transition">
                 <i class="fa-solid fa-rotate-right text-xs"></i>
             </button>
+            <button id="past-toggle-btn" onclick="togglePastEvents()" title="過去の予定を表示" class="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-pink-600 bg-pink-50/50 border border-pink-100 rounded-xl transition">
+                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+            </button>
         </div>
 
         <!-- リストビュー -->
@@ -396,6 +399,8 @@
         let favorites = new Set();
         let activeFilters = new Set(); // 空 = すべてのグループを表示
         let personalMemos = {}; // { eventId: memoText } 自分だけのメモ（ローカル保存）
+        let eventHistory = {}; // { eventId: event } 一度取得した予定を残しておく履歴（ソースから消えても保持）
+        let showPastEvents = false; // 過去の予定を表示するかどうか（デフォルトは非表示）
         let currentView = 'list';
         let currentMonth = dayjs().startOf('month');
         let selectedDate = dayjs().format('YYYY-MM-DD');
@@ -409,6 +414,8 @@
             if (savedFavorites) { try { favorites = new Set(JSON.parse(savedFavorites)); } catch(e) {} }
             const savedMemos = localStorage.getItem('oshi_cal_personal_memos');
             if (savedMemos) { try { personalMemos = JSON.parse(savedMemos); } catch(e) {} }
+            const savedHistory = localStorage.getItem('oshi_cal_event_history');
+            if (savedHistory) { try { eventHistory = JSON.parse(savedHistory); } catch(e) {} }
             groups.forEach(g => {
                 if (typeof g.visible === 'undefined') g.visible = true;
                 if (typeof g.notify === 'undefined') g.notify = true;
@@ -418,6 +425,10 @@
         function saveUserData() {
             localStorage.setItem('oshi_cal_groups', JSON.stringify(groups));
             localStorage.setItem('oshi_cal_manual_events', JSON.stringify(events));
+        }
+
+        function saveEventHistory() {
+            localStorage.setItem('oshi_cal_event_history', JSON.stringify(eventHistory));
         }
 
         function savePersonalMemos() {
@@ -529,9 +540,19 @@
             }
 
             if (newGroupsFound) saveUserData();
-            
+
+            // 履歴に保存（ソース側から後で消えても、参戦した記録を残せるように）
+            sheetEvents.forEach(e => { eventHistory[e.id] = e; });
+            saveEventHistory();
+
             const manualEvents = events.filter(e => !e.isSheet);
-            events = [...manualEvents, ...sheetEvents];
+            const currentIds = new Set(sheetEvents.map(e => e.id));
+            const todayForHistory = dayjs().format('YYYY-MM-DD');
+            // 今回のソースには無いが、過去に取得済みで日付が今日以前の予定は履歴から復元する
+            const historicalOnly = Object.values(eventHistory).filter(e =>
+                !currentIds.has(e.id) && e.date <= todayForHistory
+            );
+            events = [...manualEvents, ...sheetEvents, ...historicalOnly];
 
             checkForNewSheetEvents(sheetEvents);
             
@@ -794,6 +815,7 @@
             updateFilterSummaryLabel();
             updateFavBadge();
             updateDeadlineBadge();
+            updatePastToggleUI();
 
             if (currentView === 'list') {
                 renderListView();
@@ -1607,9 +1629,11 @@
             let filtered = events.slice().sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
             filtered = filtered.filter(e => matchesActiveFilters(e.group));
 
-            // 過去の予定（今日より前）は表示しない
+            // 過去の予定（今日より前）は、トグルがオフの間は表示しない
             const todayStr = dayjs().format('YYYY-MM-DD');
-            filtered = filtered.filter(e => e.date >= todayStr);
+            if (!showPastEvents) {
+                filtered = filtered.filter(e => e.date >= todayStr);
+            }
 
             if (filtered.length === 0) {
                 container.innerHTML = todayLiveCardHtml() + `
@@ -2000,6 +2024,22 @@
         function clearFilter() {
             activeFilters.clear();
             render();
+        }
+
+        function togglePastEvents() {
+            showPastEvents = !showPastEvents;
+            updatePastToggleUI();
+            render();
+        }
+
+        function updatePastToggleUI() {
+            const btn = document.getElementById('past-toggle-btn');
+            if (!btn) return;
+            if (showPastEvents) {
+                btn.className = "w-9 h-9 flex items-center justify-center text-white bg-pink-500 border border-pink-500 rounded-xl transition";
+            } else {
+                btn.className = "w-9 h-9 flex items-center justify-center text-slate-400 hover:text-pink-600 bg-pink-50/50 border border-pink-100 rounded-xl transition";
+            }
         }
 
         // ==== お気に入りを新しいタブで開く ====
