@@ -185,7 +185,10 @@
                 <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-filter text-pink-500 mr-2"></i>グループで絞り込み</h3>
                 <button onclick="closeModal('filter-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <button onclick="clearFilter()" class="mb-3 py-2 bg-pink-50 text-pink-600 font-bold rounded-xl border border-pink-100 text-[11px]">すべて選択（絞り込み解除）</button>
+            <div class="flex space-x-2 mb-3">
+                <button onclick="clearFilter()" class="flex-1 py-2 bg-pink-50 text-pink-600 font-bold rounded-xl border border-pink-100 text-[11px]">すべて選択（絞り込み解除）</button>
+                <button onclick="selectNoneFilters()" class="flex-1 py-2 bg-slate-50 text-slate-500 font-bold rounded-xl border border-slate-100 text-[11px]">すべて解除</button>
+            </div>
             <div id="filter-group-list" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
         </div>
     </div>
@@ -265,6 +268,17 @@
     </div>
 
     <!-- チケット締切メニュー -->
+    <!-- 今日の現場 詳細パネル -->
+    <div id="today-live-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-4" onclick="closeTodayLiveModal()">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-3 shadow-2xl max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center">
+                <h3 class="font-black text-base text-slate-800"><i class="fa-solid fa-star text-pink-500 mr-2"></i>今日の現場</h3>
+                <button onclick="closeTodayLiveModal()" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="today-live-body" class="space-y-2.5"></div>
+        </div>
+    </div>
+
     <div id="deadline-menu" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" onclick="toggleDeadlineMenu()">
         <div class="absolute right-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white shadow-2xl p-6 flex flex-col transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-2 border-b border-pink-50 pb-4">
@@ -397,7 +411,8 @@
         let events = [];
         let expandedEvents = new Set();
         let favorites = new Set();
-        let activeFilters = new Set(); // 空 = すべてのグループを表示
+        let activeFilters = new Set(); // 空 & !filtersExplicit = すべてのグループを表示
+        let filtersExplicit = false; // true になると activeFilters の中身がそのまま「選択中のグループ」を表す（空なら0件表示）
         let personalMemos = {}; // { eventId: memoText } 自分だけのメモ（ローカル保存）
         let eventHistory = {}; // { eventId: event } 一度取得した予定を残しておく履歴（ソースから消えても保持）
         let showPastEvents = false; // 過去の予定を表示するかどうか（デフォルトは非表示）
@@ -1271,8 +1286,10 @@
         function updateFilterSummaryLabel() {
             const label = document.getElementById('filter-summary-label');
             if (!label) return;
-            if (activeFilters.size === 0) {
+            if (!filtersExplicit) {
                 label.innerHTML = '<i class="fa-solid fa-filter text-pink-400 text-xs mr-2"></i>すべてのグループ';
+            } else if (activeFilters.size === 0) {
+                label.innerHTML = '<i class="fa-solid fa-filter text-pink-400 text-xs mr-2"></i>0件のグループ（非表示中）';
             } else if (activeFilters.size === 1) {
                 label.innerHTML = `<i class="fa-solid fa-filter text-pink-400 text-xs mr-2"></i>${[...activeFilters][0]}`;
             } else {
@@ -1290,7 +1307,7 @@
             }
             let html = '';
             visibleGroups.forEach(g => {
-                const checked = activeFilters.size === 0 || activeFilters.has(g.name);
+                const checked = !filtersExplicit || activeFilters.has(g.name);
                 html += `
                     <label class="flex items-center justify-between p-3 bg-pink-50/30 border border-pink-100/70 rounded-2xl">
                         <span class="flex items-center space-x-2">
@@ -1306,8 +1323,9 @@
 
         function toggleFilterGroup(name) {
             const visibleGroupNames = groups.filter(g => g.visible !== false).map(g => g.name);
-            if (activeFilters.size === 0) {
+            if (!filtersExplicit) {
                 // 「すべて」状態から個別に外す操作なので、まず表示中のグループを選択済みとして展開する
+                filtersExplicit = true;
                 visibleGroupNames.forEach(n => activeFilters.add(n));
             }
             if (activeFilters.has(name)) {
@@ -1317,8 +1335,21 @@
             }
             // 結果的に表示中のグループが全部選択された状態に戻ったら「すべて」に戻す
             if (activeFilters.size === visibleGroupNames.length) {
+                filtersExplicit = false;
                 activeFilters.clear();
             }
+            updateFilterSummaryLabel();
+            renderFilterGroupList();
+            if (currentView === 'list') {
+                renderListView();
+            } else {
+                renderMonthView();
+            }
+        }
+
+        function selectNoneFilters() {
+            filtersExplicit = true;
+            activeFilters.clear();
             updateFilterSummaryLabel();
             renderFilterGroupList();
             if (currentView === 'list') {
@@ -1356,7 +1387,8 @@
         function matchesActiveFilters(eventGroup) {
             if (!eventGroup) return true; // グループ無しの個人予定は常に表示
             if (!isGroupVisible(eventGroup)) return false;
-            return activeFilters.size === 0 || activeFilters.has(eventGroup);
+            if (!filtersExplicit) return true;
+            return activeFilters.has(eventGroup);
         }
 
         function hasAnyOfficialLink(name) {
@@ -1424,86 +1456,82 @@
         }
 
         // ==== ⑥ 今日のライブ（現場モード）カード ====
-        let todayCardExpanded = false; // 「今日の現場」カードの開閉状態
-
-        function toggleTodayCard() {
-            todayCardExpanded = !todayCardExpanded;
-            if (currentView === 'list') renderListView();
-        }
-
-        function todayLiveCardHtml() {
+        // ==== ⑥ 今日の現場（常に上部に小さく固定表示、タップで詳細パネル） ====
+        function getTodayLiveGroups() {
             const todayStr = dayjs().format('YYYY-MM-DD');
             const todays = events
                 .filter(e => e.date === todayStr && matchesActiveFilters(e.group))
                 .sort((a, b) => a.time.localeCompare(b.time));
-            if (todays.length === 0) return '';
 
-            // 同じライブはまとめる
             const map = new Map();
             todays.forEach(e => {
                 const key = e.group ? favGroupKey(e) : 'solo__' + e.id;
                 if (!map.has(key)) map.set(key, []);
                 map.get(key).push(e);
             });
-            const liveCount = map.size;
+            return [...map.values()];
+        }
 
-            // 折りたたみ時：小さいバーだけ表示
-            if (!todayCardExpanded) {
-                return `
-                    <div onclick="toggleTodayCard()" class="cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl px-4 py-3 shadow-md shadow-pink-500/30 flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <span class="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-star text-[10px]"></i></span>
-                            <span class="text-white font-black text-xs">今日の現場</span>
-                            <span class="text-white/70 text-[10px] font-bold">${dayjs().format('M月D日(dd)')}・${liveCount}件</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-down text-white/80 text-xs"></i>
-                    </div>
-                `;
-            }
-
-            const blocks = [...map.values()].map(list => {
-                const rep = list[0];
-                const chips = list.map(e => {
-                    const go = groups.find(g => g.name === e.group);
-                    const c = go ? go.color : '#94a3b8';
-                    return `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/90" style="color:${c};">${e.group || '個人の予定'}${e.time !== '00:00' ? ' ' + e.time : ''}</span>`;
-                }).join('');
-
-                const memos = list.map(e => personalMemos[e.id]).filter(Boolean);
-                const memoHtml = memos.length
-                    ? `<div class="bg-white/90 rounded-2xl px-3 py-2.5 mt-2 space-y-1">${memos.map(m => m.split('\n').map(l => `<p class="text-[11px] font-semibold text-slate-700">${escapeHtml(l)}</p>`).join('')).join('')}</div>`
-                    : '';
-
-                const locHtml = rep.location
-                    ? `<div class="flex space-x-2 mt-2">
-                        <a href="${mapsUrl(rep.location)}" target="_blank" class="flex-1 flex items-center space-x-2 bg-white/90 text-slate-700 text-[11px] font-bold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-location-dot text-pink-500"></i><span>${rep.location}</span></a>
-                        <a href="${transitUrl(rep.location)}" target="_blank" title="ルート検索" class="w-11 flex items-center justify-center bg-white/90 text-purple-500 rounded-2xl"><i class="fa-solid fa-train-subway"></i></a>
-                       </div>`
-                    : '';
-
-                return `
-                    <div class="bg-white/25 rounded-2xl p-3">
-                        <p class="text-white font-bold text-sm leading-snug mb-1.5">${escapeHtml(rep.title)}</p>
-                        <div class="flex flex-wrap gap-1.5">${chips}</div>
-                        ${locHtml}
-                        ${memoHtml}
-                    </div>
-                `;
-            }).join('');
+        function todayLiveCardHtml() {
+            const lives = getTodayLiveGroups();
+            if (lives.length === 0) return '';
 
             return `
-                <div class="bg-gradient-to-br from-pink-500 to-purple-500 rounded-3xl p-4 shadow-lg shadow-pink-500/30 space-y-3">
-                    <div onclick="toggleTodayCard()" class="cursor-pointer flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <span class="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center text-white"><i class="fa-solid fa-star text-[11px]"></i></span>
-                            <h3 class="text-white font-black text-sm">今日の現場</h3>
-                            <span class="text-white/70 text-[11px] font-bold">${dayjs().format('M月D日(dd)')}</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-down text-white/80 text-xs rotate-180 transition-transform"></i>
+                <div onclick="openTodayLiveModal()" class="sticky top-[92px] z-20 cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl px-4 py-3 shadow-md shadow-pink-500/40 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-star text-[10px]"></i></span>
+                        <span class="text-white font-black text-xs">今日の現場</span>
+                        <span class="text-white/70 text-[10px] font-bold">${dayjs().format('M月D日(dd)')}・${lives.length}件</span>
                     </div>
-                    ${blocks}
+                    <i class="fa-solid fa-chevron-right text-white/80 text-xs"></i>
                 </div>
             `;
+        }
+
+        function openTodayLiveModal() {
+            const lives = getTodayLiveGroups();
+            const container = document.getElementById('today-live-body');
+            if (!container) return;
+
+            if (lives.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 py-8">今日の予定はありません</p>`;
+            } else {
+                container.innerHTML = lives.map(list => {
+                    const rep = list[0];
+                    const chips = list.map(e => {
+                        const go = groups.find(g => g.name === e.group);
+                        const c = go ? go.color : '#94a3b8';
+                        return `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group || '個人の予定'}${e.time !== '00:00' ? ' ' + e.time : ''}</span>`;
+                    }).join('');
+
+                    const memos = list.map(e => personalMemos[e.id]).filter(Boolean);
+                    const memoHtml = memos.length
+                        ? `<div class="bg-amber-50 rounded-2xl px-3 py-2.5 mt-2 space-y-1">${memos.map(m => m.split('\n').map(l => `<p class="text-[11px] font-semibold text-amber-700">${escapeHtml(l)}</p>`).join('')).join('')}</div>`
+                        : '';
+
+                    const locHtml = rep.location
+                        ? `<div class="flex space-x-2 mt-2">
+                            <a href="${mapsUrl(rep.location)}" target="_blank" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-bold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-location-dot"></i><span>${rep.location}</span></a>
+                            <a href="${transitUrl(rep.location)}" target="_blank" title="ルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl"><i class="fa-solid fa-train-subway"></i></a>
+                           </div>`
+                        : '';
+
+                    return `
+                        <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3">
+                            <p class="text-slate-800 font-bold text-sm leading-snug mb-1.5">${escapeHtml(rep.title)}</p>
+                            <div class="flex flex-wrap gap-1.5">${chips}</div>
+                            ${locHtml}
+                            ${memoHtml}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('today-live-modal').classList.remove('hidden');
+        }
+
+        function closeTodayLiveModal() {
+            document.getElementById('today-live-modal').classList.add('hidden');
         }
 
         // ==== ② 推し活サマリー ====
@@ -2069,6 +2097,7 @@
         }
 
         function clearFilter() {
+            filtersExplicit = false;
             activeFilters.clear();
             render();
         }
