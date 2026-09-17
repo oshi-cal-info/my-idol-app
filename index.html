@@ -1424,6 +1424,13 @@
         }
 
         // ==== ⑥ 今日のライブ（現場モード）カード ====
+        let todayCardExpanded = false; // 「今日の現場」カードの開閉状態
+
+        function toggleTodayCard() {
+            todayCardExpanded = !todayCardExpanded;
+            if (currentView === 'list') renderListView();
+        }
+
         function todayLiveCardHtml() {
             const todayStr = dayjs().format('YYYY-MM-DD');
             const todays = events
@@ -1438,6 +1445,21 @@
                 if (!map.has(key)) map.set(key, []);
                 map.get(key).push(e);
             });
+            const liveCount = map.size;
+
+            // 折りたたみ時：小さいバーだけ表示
+            if (!todayCardExpanded) {
+                return `
+                    <div onclick="toggleTodayCard()" class="cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl px-4 py-3 shadow-md shadow-pink-500/30 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-star text-[10px]"></i></span>
+                            <span class="text-white font-black text-xs">今日の現場</span>
+                            <span class="text-white/70 text-[10px] font-bold">${dayjs().format('M月D日(dd)')}・${liveCount}件</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-white/80 text-xs"></i>
+                    </div>
+                `;
+            }
 
             const blocks = [...map.values()].map(list => {
                 const rep = list[0];
@@ -1471,10 +1493,13 @@
 
             return `
                 <div class="bg-gradient-to-br from-pink-500 to-purple-500 rounded-3xl p-4 shadow-lg shadow-pink-500/30 space-y-3">
-                    <div class="flex items-center space-x-2">
-                        <span class="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center text-white"><i class="fa-solid fa-star text-[11px]"></i></span>
-                        <h3 class="text-white font-black text-sm">今日の現場</h3>
-                        <span class="text-white/70 text-[11px] font-bold">${dayjs().format('M月D日(dd)')}</span>
+                    <div onclick="toggleTodayCard()" class="cursor-pointer flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center text-white"><i class="fa-solid fa-star text-[11px]"></i></span>
+                            <h3 class="text-white font-black text-sm">今日の現場</h3>
+                            <span class="text-white/70 text-[11px] font-bold">${dayjs().format('M月D日(dd)')}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-white/80 text-xs rotate-180 transition-transform"></i>
                     </div>
                     ${blocks}
                 </div>
