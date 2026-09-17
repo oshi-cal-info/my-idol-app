@@ -1206,6 +1206,10 @@
             let filtered = events.slice().sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
             filtered = filtered.filter(e => matchesActiveFilters(e.group));
 
+            // 過去の予定（今日より前）は表示しない
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            filtered = filtered.filter(e => e.date >= todayStr);
+
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
