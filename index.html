@@ -32,6 +32,10 @@
             <h1 class="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent tracking-wide">Oshi-Cal</h1>
         </div>
         <div class="flex items-center space-x-2">
+            <button onclick="toggleDeadlineMenu()" title="チケット締切" class="relative w-11 h-11 rounded-full bg-white flex items-center justify-center text-amber-500 hover:bg-amber-50 transition shadow-sm shadow-pink-200/60">
+                <i class="fa-solid fa-clock text-base"></i>
+                <span id="deadline-count-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold items-center justify-center"></span>
+            </button>
             <button onclick="toggleFavMenu()" class="relative w-11 h-11 rounded-full bg-white flex items-center justify-center text-pink-500 hover:bg-pink-50 transition shadow-sm shadow-pink-200/60">
                 <i class="fa-solid fa-heart text-base"></i>
                 <span id="fav-count-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-pink-500 text-white text-[9px] font-bold items-center justify-center"></span>
@@ -121,6 +125,9 @@
             </p>
             <button id="notify-toggle-btn" onclick="requestNotificationPermission()" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
                 <i class="fa-solid fa-bell mr-1.5"></i> <span id="notify-toggle-label">新着ライブの通知を受け取る</span>
+            </button>
+            <button onclick="toggleMenu(); toggleSummary();" class="mt-2 w-full py-3 bg-gradient-to-r from-pink-50 to-purple-50 text-pink-600 font-bold rounded-2xl hover:from-pink-100 hover:to-purple-100 transition text-xs border border-pink-100 flex items-center justify-center">
+                <i class="fa-solid fa-chart-simple mr-1.5"></i> 推し活まとめを見る
             </button>
             <a href="timetree.html" target="_blank" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100 flex items-center justify-center">
                 <i class="fa-solid fa-calendar-days mr-1.5"></i> TimeTreeのスケジュールを見る
@@ -237,6 +244,32 @@
                     <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-amber-400 to-pink-400 text-white font-bold rounded-2xl shadow-md text-xs">保存する</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- 推し活サマリー -->
+    <div id="summary-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="toggleSummary()">
+        <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-3xl w-full max-w-sm p-5 shadow-2xl max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-black text-base text-white"><i class="fa-solid fa-chart-simple mr-2"></i>推し活まとめ</h3>
+                <div class="flex items-center space-x-1">
+                    <button onclick="shareSummary()" title="シェア" class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition"><i class="fa-solid fa-share-nodes text-xs"></i></button>
+                    <button onclick="toggleSummary()" class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition"><i class="fa-solid fa-xmark text-xs"></i></button>
+                </div>
+            </div>
+            <div id="summary-body"></div>
+        </div>
+    </div>
+
+    <!-- チケット締切メニュー -->
+    <div id="deadline-menu" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" onclick="toggleDeadlineMenu()">
+        <div class="absolute right-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white shadow-2xl p-6 flex flex-col transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-2 border-b border-pink-50 pb-4">
+                <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-clock mr-2 text-amber-500"></i>チケット締切</h3>
+                <button onclick="toggleDeadlineMenu()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-[10px] text-slate-400 mb-4 leading-relaxed">スケジュールのメモから自動で拾った、2週間以内の締切です。拾えていないものもあるので、詳細は必ず公式でも確認してね。</p>
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="deadline-list"></div>
         </div>
     </div>
 
@@ -539,6 +572,140 @@
             return `https://calendar.google.com/calendar/render?${params.toString()}`;
         }
 
+        // ==== ④ チケット締切の抽出 ====
+        // メモ本文から「〜9/13(日)23:59まで」のような締切日を拾う
+        function extractDeadlines(e) {
+            if (!e.regulation) return [];
+            const text = e.regulation
+                .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+                .replace(/／/g, '/').replace(/：/g, ':');
+
+            const found = [];
+            // 「9/13」「9.13」「9月13日」の直後〜60文字以内に「まで」がある箇所を締切とみなす
+            const re = /(\d{1,2})\s*[\/.月]\s*(\d{1,2})\s*日?[^\d]{0,40}?まで/g;
+            let m;
+            while ((m = re.exec(text)) !== null) {
+                const month = parseInt(m[1], 10);
+                const day = parseInt(m[2], 10);
+                if (month < 1 || month > 12 || day < 1 || day > 31) continue;
+
+                // 年は「そのライブの年」を基準に、月がライブより後なら前年とみなす
+                const evDate = dayjs(e.date);
+                let year = evDate.isValid() ? evDate.year() : dayjs().year();
+                if (evDate.isValid() && month > evDate.month() + 1) year -= 1;
+
+                const d = dayjs(`${year}-${('0'+month).slice(-2)}-${('0'+day).slice(-2)}`);
+                if (!d.isValid()) continue;
+                const key = d.format('YYYY-MM-DD');
+                if (!found.some(f => f.date === key)) {
+                    found.push({ date: key, label: m[0].trim() });
+                }
+            }
+            return found;
+        }
+
+        // 今日以降で、締切が近い順に並べた一覧を返す
+        function getUpcomingDeadlines(daysAhead = 14) {
+            const today = dayjs().startOf('day');
+            const limit = today.add(daysAhead, 'day');
+            const list = [];
+
+            events.forEach(e => {
+                if (!matchesActiveFilters(e.group)) return;
+                extractDeadlines(e).forEach(d => {
+                    const dd = dayjs(d.date);
+                    if (dd.isBefore(today) || dd.isAfter(limit)) return;
+                    list.push({
+                        event: e,
+                        deadline: d.date,
+                        label: d.label,
+                        daysLeft: dd.diff(today, 'day')
+                    });
+                });
+            });
+
+            return list.sort((a, b) => a.deadline.localeCompare(b.deadline));
+        }
+
+        function updateDeadlineBadge() {
+            const badge = document.getElementById('deadline-count-badge');
+            if (!badge) return;
+            const n = getUpcomingDeadlines().length;
+            if (n > 0) {
+                badge.textContent = n;
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+        }
+
+        function toggleDeadlineMenu() {
+            const menu = document.getElementById('deadline-menu');
+            const panel = menu.querySelector('div > div');
+            if (menu.classList.contains('hidden')) {
+                renderDeadlineList();
+                menu.classList.remove('hidden');
+                setTimeout(() => {
+                    menu.classList.remove('opacity-0');
+                    panel.classList.remove('translate-x-full');
+                }, 10);
+            } else {
+                menu.classList.add('opacity-0');
+                panel.classList.add('translate-x-full');
+                setTimeout(() => menu.classList.add('hidden'), 300);
+            }
+        }
+
+        function renderDeadlineList() {
+            const container = document.getElementById('deadline-list');
+            if (!container) return;
+            const list = getUpcomingDeadlines();
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-xs text-slate-400">
+                        <i class="fa-regular fa-clock text-3xl text-amber-200 mb-2 block"></i>
+                        2週間以内の締切はありません
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = list.map(d => {
+                const go = groups.find(g => g.name === d.event.group);
+                const c = go ? go.color : '#ec4899';
+                const urgent = d.daysLeft <= 2;
+                const dayLabel = d.daysLeft === 0 ? '今日まで' : `あと${d.daysLeft}日`;
+                return `
+                    <div class="rounded-2xl p-3.5 border ${urgent ? 'bg-red-50 border-red-200' : 'bg-amber-50/60 border-amber-100'}">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${d.event.group || '個人の予定'}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${urgent ? 'bg-red-500 text-white' : 'bg-amber-400 text-white'}">${dayLabel}</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-800 mb-1 leading-snug">${escapeHtml(d.event.title)}</p>
+                        <p class="text-[10px] text-slate-500 mb-0.5">ライブ: ${dayjs(d.event.date).format('M/D(dd)')}</p>
+                        <p class="text-[10px] font-semibold ${urgent ? 'text-red-600' : 'text-amber-700'}">締切: ${dayjs(d.deadline).format('M/D(dd)')}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // カード上に出す「締切間近」バッジ
+        function deadlineBadgeHtml(e) {
+            const today = dayjs().startOf('day');
+            const ds = extractDeadlines(e)
+                .map(d => ({ ...d, daysLeft: dayjs(d.date).diff(today, 'day') }))
+                .filter(d => d.daysLeft >= 0 && d.daysLeft <= 14)
+                .sort((a, b) => a.daysLeft - b.daysLeft);
+            if (ds.length === 0) return '';
+            const d = ds[0];
+            const urgent = d.daysLeft <= 2;
+            const label = d.daysLeft === 0 ? '締切今日' : `締切あと${d.daysLeft}日`;
+            return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full ${urgent ? 'bg-red-500' : 'bg-amber-400'} text-white shadow-sm"><i class="fa-solid fa-clock mr-1 text-[9px]"></i>${label}</span>`;
+        }
+
         function renderRegulationHtml(e) {
             if (!e.regulation) return '';
             const raw = e.regulation.trim();
@@ -626,6 +793,7 @@
             renderFilterGroupList();
             updateFilterSummaryLabel();
             updateFavBadge();
+            updateDeadlineBadge();
 
             if (currentView === 'list') {
                 renderListView();
@@ -1211,6 +1379,228 @@
             document.getElementById('group-links-modal').classList.remove('hidden');
         }
 
+        // ==== ⑥ 今日のライブ（現場モード）カード ====
+        function todayLiveCardHtml() {
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            const todays = events
+                .filter(e => e.date === todayStr && matchesActiveFilters(e.group))
+                .sort((a, b) => a.time.localeCompare(b.time));
+            if (todays.length === 0) return '';
+
+            // 同じライブはまとめる
+            const map = new Map();
+            todays.forEach(e => {
+                const key = e.group ? favGroupKey(e) : 'solo__' + e.id;
+                if (!map.has(key)) map.set(key, []);
+                map.get(key).push(e);
+            });
+
+            const blocks = [...map.values()].map(list => {
+                const rep = list[0];
+                const chips = list.map(e => {
+                    const go = groups.find(g => g.name === e.group);
+                    const c = go ? go.color : '#94a3b8';
+                    return `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/90" style="color:${c};">${e.group || '個人の予定'}${e.time !== '00:00' ? ' ' + e.time : ''}</span>`;
+                }).join('');
+
+                const memos = list.map(e => personalMemos[e.id]).filter(Boolean);
+                const memoHtml = memos.length
+                    ? `<div class="bg-white/90 rounded-2xl px-3 py-2.5 mt-2 space-y-1">${memos.map(m => m.split('\n').map(l => `<p class="text-[11px] font-semibold text-slate-700">${escapeHtml(l)}</p>`).join('')).join('')}</div>`
+                    : '';
+
+                const locHtml = rep.location
+                    ? `<div class="flex space-x-2 mt-2">
+                        <a href="${mapsUrl(rep.location)}" target="_blank" class="flex-1 flex items-center space-x-2 bg-white/90 text-slate-700 text-[11px] font-bold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-location-dot text-pink-500"></i><span>${rep.location}</span></a>
+                        <a href="${transitUrl(rep.location)}" target="_blank" title="ルート検索" class="w-11 flex items-center justify-center bg-white/90 text-purple-500 rounded-2xl"><i class="fa-solid fa-train-subway"></i></a>
+                       </div>`
+                    : '';
+
+                return `
+                    <div class="bg-white/25 rounded-2xl p-3">
+                        <p class="text-white font-bold text-sm leading-snug mb-1.5">${escapeHtml(rep.title)}</p>
+                        <div class="flex flex-wrap gap-1.5">${chips}</div>
+                        ${locHtml}
+                        ${memoHtml}
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="bg-gradient-to-br from-pink-500 to-purple-500 rounded-3xl p-4 shadow-lg shadow-pink-500/30 space-y-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center text-white"><i class="fa-solid fa-star text-[11px]"></i></span>
+                        <h3 class="text-white font-black text-sm">今日の現場</h3>
+                        <span class="text-white/70 text-[11px] font-bold">${dayjs().format('M月D日(dd)')}</span>
+                    </div>
+                    ${blocks}
+                </div>
+            `;
+        }
+
+        // ==== ② 推し活サマリー ====
+        // 12月は年間サマリーを既定で開く（年末のふりかえり用）
+        let summaryPeriod = (dayjs().month() === 11) ? 'year' : 'month';
+
+        function computeSummary(period) {
+            const now = dayjs();
+            const start = period === 'year' ? now.startOf('year') : now.startOf('month');
+            const end = period === 'year' ? now.endOf('year') : now.endOf('month');
+
+            // お気に入りに入れた予定＝「参戦した/する」とみなす
+            const targets = events.filter(e => {
+                if (!favorites.has(e.id)) return false;
+                const d = dayjs(e.date);
+                return d.isValid() && !d.isBefore(start) && !d.isAfter(end);
+            });
+
+            // ライブ本数（同じライブの複数グループは1本と数える）
+            const liveKeys = new Set(targets.map(e => e.group ? favGroupKey(e) : 'solo__' + e.id));
+
+            const groupCount = {};
+            const venueCount = {};
+            targets.forEach(e => {
+                if (e.group) groupCount[e.group] = (groupCount[e.group] || 0) + 1;
+                if (e.location) venueCount[e.location] = (venueCount[e.location] || 0) + 1;
+            });
+
+            const rank = obj => Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            // 一番参戦が多かった月（年間サマリー用）
+            let busiestMonth = null;
+            if (period === 'year') {
+                const byMonth = {};
+                targets.forEach(e => {
+                    const k = dayjs(e.date).format('M月');
+                    byMonth[k] = (byMonth[k] || 0) + 1;
+                });
+                const top = Object.entries(byMonth).sort((a, b) => b[1] - a[1])[0];
+                if (top) busiestMonth = { month: top[0], count: top[1] };
+            }
+
+            return {
+                period,
+                label: period === 'year' ? `${now.year()}年` : now.format('YYYY年M月'),
+                liveCount: liveKeys.size,
+                groupCount: Object.keys(groupCount).length,
+                topGroups: rank(groupCount),
+                topVenues: rank(venueCount),
+                busiestMonth
+            };
+        }
+
+        function toggleSummary() {
+            const modal = document.getElementById('summary-modal');
+            if (modal.classList.contains('hidden')) {
+                renderSummary();
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function setSummaryPeriod(p) {
+            summaryPeriod = p;
+            renderSummary();
+        }
+
+        function renderSummary() {
+            const s = computeSummary(summaryPeriod);
+            const container = document.getElementById('summary-body');
+            if (!container) return;
+
+            const isYear = summaryPeriod === 'year';
+            const monthCls = !isYear ? 'bg-white text-pink-600 shadow-sm' : 'text-white/70';
+            const yearCls = isYear ? 'bg-white text-pink-600 shadow-sm' : 'text-white/70';
+
+            if (s.liveCount === 0) {
+                container.innerHTML = `
+                    <div class="flex bg-white/20 p-1 rounded-full text-[11px] font-bold w-fit mx-auto mb-4">
+                        <button onclick="setSummaryPeriod('month')" class="px-4 py-1.5 rounded-full transition ${monthCls}">今月</button>
+                        <button onclick="setSummaryPeriod('year')" class="px-4 py-1.5 rounded-full transition ${yearCls}">今年</button>
+                    </div>
+                    <div class="text-center py-10">
+                        <i class="fa-regular fa-heart text-4xl text-white/50 mb-3 block"></i>
+                        <p class="text-xs text-white/80 font-medium">${s.label}のお気に入りがまだありません</p>
+                        <p class="text-[10px] text-white/60 mt-1.5">行くライブを♡しておくと、ここに記録がたまるよ</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const groupCards = s.topGroups.map(([name, n], i) => {
+                const go = groups.find(g => g.name === name);
+                const c = go ? go.color : '#ec4899';
+                return `
+                    <div class="flex items-center justify-between bg-white/90 rounded-2xl px-3 py-2.5">
+                        <div class="flex items-center space-x-2.5 min-w-0">
+                            <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style="background-color:${c}">${i + 1}</span>
+                            <span class="text-xs font-bold text-slate-800 truncate">${name}</span>
+                        </div>
+                        <span class="text-xs font-black text-slate-400 flex-shrink-0">${n}</span>
+                    </div>
+                `;
+            }).join('');
+
+            const venueCards = s.topVenues.length ? s.topVenues.map(([name, n], i) => `
+                    <div class="flex items-center justify-between bg-white/90 rounded-2xl px-3 py-2.5">
+                        <div class="flex items-center space-x-2.5 min-w-0">
+                            <span class="w-5 h-5 rounded-full bg-purple-400 flex items-center justify-center text-[10px] font-black text-white flex-shrink-0">${i + 1}</span>
+                            <span class="text-xs font-bold text-slate-800 truncate">${name}</span>
+                        </div>
+                        <span class="text-xs font-black text-slate-400 flex-shrink-0">${n}</span>
+                    </div>
+            `).join('') : '<p class="text-[11px] text-white/70 px-1">会場の記録がまだありません</p>';
+
+            container.innerHTML = `
+                <div class="flex bg-white/20 p-1 rounded-full text-[11px] font-bold w-fit mx-auto mb-4">
+                    <button onclick="setSummaryPeriod('month')" class="px-4 py-1.5 rounded-full transition ${monthCls}">今月</button>
+                    <button onclick="setSummaryPeriod('year')" class="px-4 py-1.5 rounded-full transition ${yearCls}">今年</button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5 mb-4">
+                    <div class="bg-white/90 rounded-2xl p-3.5">
+                        <p class="text-[10px] font-bold text-slate-400 mb-0.5">参戦本数</p>
+                        <p class="text-3xl font-black text-slate-800 leading-none">${s.liveCount}<span class="text-sm ml-1">本</span></p>
+                    </div>
+                    <div class="bg-white/90 rounded-2xl p-3.5">
+                        <p class="text-[10px] font-bold text-slate-400 mb-0.5">推しグループ</p>
+                        <p class="text-3xl font-black text-slate-800 leading-none">${s.groupCount}<span class="text-sm ml-1">組</span></p>
+                    </div>
+                </div>
+
+                ${s.busiestMonth ? `
+                    <div class="bg-white/90 rounded-2xl p-3.5 mb-4">
+                        <p class="text-[10px] font-bold text-slate-400 mb-0.5">一番通った月</p>
+                        <p class="text-xl font-black text-slate-800">${s.busiestMonth.month} <span class="text-xs text-slate-400 font-bold">(${s.busiestMonth.count}本)</span></p>
+                    </div>
+                ` : ''}
+
+                <p class="text-[11px] font-black text-white mb-2 px-1">よく観たグループ</p>
+                <div class="space-y-1.5 mb-4">${groupCards}</div>
+
+                <p class="text-[11px] font-black text-white mb-2 px-1">よく行った会場</p>
+                <div class="space-y-1.5">${venueCards}</div>
+            `;
+        }
+
+        async function shareSummary() {
+            const s = computeSummary(summaryPeriod);
+            if (s.liveCount === 0) { alert('まだ記録がありません'); return; }
+            const lines = [
+                `【推し活まとめ ${s.label}】`,
+                `参戦 ${s.liveCount}本 / ${s.groupCount}組`,
+                ...s.topGroups.slice(0, 3).map(([n, c], i) => `${i + 1}. ${n}（${c}）`)
+            ];
+            const text = lines.join('\n');
+            if (navigator.share) {
+                try { await navigator.share({ title: 'Oshi-Cal', text }); return; } catch (e) {}
+            }
+            if (navigator.clipboard) {
+                try { await navigator.clipboard.writeText(text); alert('コピーしました。SNSに貼り付けてね。'); return; } catch (e) {}
+            }
+            alert(text);
+        }
+
         function renderListView() {
             const container = document.getElementById('view-list');
 
@@ -1222,7 +1612,7 @@
             filtered = filtered.filter(e => e.date >= todayStr);
 
             if (filtered.length === 0) {
-                container.innerHTML = `
+                container.innerHTML = todayLiveCardHtml() + `
                     <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
                         <i class="fa-regular fa-calendar-xmark text-4xl text-pink-300 mb-3"></i>
                         <p class="text-xs text-slate-400 font-medium">予定がありません</p>
@@ -1243,7 +1633,7 @@
                 (a, b) => new Date(a[0].date + ' ' + a[0].time) - new Date(b[0].date + ' ' + b[0].time)
             );
 
-            let html = '';
+            let html = todayLiveCardHtml();
             let lastDate = '';
 
             lives.forEach(list => {
@@ -1331,6 +1721,7 @@
                             <h4 class="font-bold text-slate-800 text-sm leading-snug mb-2">${rep.title}</h4>
                             <div class="flex flex-wrap items-center gap-1.5">
                                 ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
+                                ${deadlineBadgeHtml(rep)}
                                 ${chipsHtml}
                             </div>
                             ${isExpanded ? `<div class="mt-3 pt-3 border-t border-pink-50 space-y-2">${detailsHtml}</div>` : ''}
