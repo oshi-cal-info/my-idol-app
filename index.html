@@ -541,8 +541,19 @@
 
         function renderRegulationHtml(e) {
             if (!e.regulation) return '';
-            const lines = e.regulation.split('\n').map(l => l.trim()).filter(Boolean);
-            const linesHtml = lines.map(l => `<p>${l}</p>`).join('');
+            const raw = e.regulation.trim();
+
+            // メモ全体がURLだけの場合は「詳細ページを見る」ボタンとして表示する
+            if (/^https?:\/\/\S+$/.test(raw)) {
+                return `<a href="${raw}" target="_blank" onclick="event.stopPropagation()" class="flex items-center justify-center space-x-1.5 w-full bg-purple-50 text-purple-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-circle-info"></i><span>会場・時間などの詳細を見る</span><i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-60"></i></a>`;
+            }
+
+            // 本文中のURLはリンクに変換する
+            const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+            const linesHtml = lines.map(l => {
+                const linked = escapeHtml(l).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" onclick="event.stopPropagation()" class="underline break-all">$1</a>');
+                return `<p>${linked}</p>`;
+            }).join('');
             return `<div class="bg-purple-50/70 text-purple-700 text-[11px] font-semibold px-3 py-2.5 rounded-2xl flex items-start space-x-2"><i class="fa-solid fa-star mt-0.5 text-purple-400"></i><div class="space-y-0.5">${linesHtml}</div></div>`;
         }
 
