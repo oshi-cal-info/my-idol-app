@@ -269,7 +269,7 @@
 
     <!-- チケット締切メニュー -->
     <!-- 今日の現場 詳細パネル -->
-    <div id="today-live-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-4" onclick="closeTodayLiveModal()">
+    <div id="today-live-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="closeTodayLiveModal()">
         <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-3 shadow-2xl max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center">
                 <h3 class="font-black text-base text-slate-800"><i class="fa-solid fa-star text-pink-500 mr-2"></i>今日の現場</h3>
@@ -390,6 +390,76 @@
                 litlink: "",
                 spotify: "https://open.spotify.com/artist/12bj3lZnc4JCm6vQsRBH3f?si=WDyk17qQRmehSQBDjltwZQ&utm_source=copy-link",
                 fanclub: "https://harunision-official.boosty.app/contents/963"
+            },
+            "Aivery": {
+                x: "https://x.com/Aivery__",
+                instagram: "https://www.instagram.com/aivery__official?stkn=NGJtazRxOGRvOGQ2",
+                tiktok: "https://www.tiktok.com/@aivery__official?_r=1&_t=ZS-99pVyh0LoW8",
+                youtube: "https://youtube.com/@aivery_official?si=bkhWRZXs2_vgmt9M",
+                homepage: "",
+                litlink: "https://lit.link/Aivery",
+                spotify: "",
+                fanclub: ""
+            },
+            "AOAO": {
+                x: "https://x.com/AOAO_info",
+                instagram: "https://www.instagram.com/aoao.info?stkn=MXhlNHJ0azFhb2tkdg==",
+                tiktok: "",
+                youtube: "",
+                homepage: "https://aoao.tokyo/",
+                litlink: "",
+                spotify: "",
+                fanclub: ""
+            },
+            "UtaGe!": {
+                x: "https://x.com/info_UtaGe",
+                instagram: "",
+                tiktok: "https://www.tiktok.com/@utage.idol?_r=1&_t=ZS-99pWNI2r4Ow",
+                youtube: "https://youtube.com/@utage_idol?si=zcDXDv4nzoIilreQ",
+                homepage: "",
+                litlink: "https://lit.link/utageinfo",
+                spotify: "",
+                fanclub: ""
+            },
+            "こみっきゅおん！": {
+                x: "https://x.com/comiqon",
+                instagram: "https://www.instagram.com/comiqon_official?stkn=ZGxtb2o4NDc5NXN5",
+                tiktok: "https://www.tiktok.com/@comiqon__official?_r=1&_t=ZS-99pWUXBOaTi",
+                youtube: "https://youtube.com/@comiqon?si=kXppR2bwalYzDNqf",
+                homepage: "https://www.comiqon.com/",
+                litlink: "",
+                spotify: "",
+                fanclub: ""
+            },
+            "タイトル未定": {
+                x: "https://x.com/MiteiTitle",
+                instagram: "https://www.instagram.com/miteititle?stkn=cDhnOTZzeWw3MThj",
+                tiktok: "https://www.tiktok.com/@titlemitei?_r=1&_t=ZS-99pWfvKInti",
+                youtube: "https://youtube.com/@miteititle?si=fkMi3JfnCKqi8lTA",
+                homepage: "",
+                litlink: "https://lit.link/miteititle",
+                spotify: "",
+                fanclub: ""
+            },
+            "ラフ×ラフ": {
+                x: "https://x.com/roughlaugh_o",
+                instagram: "https://www.instagram.com/roughlaugh_official?stkn=OHRtOW9peXZ0MGJp",
+                tiktok: "https://www.tiktok.com/@roughlaugh_official?_r=1&_t=ZS-99pX2Y5torS",
+                youtube: "https://youtube.com/@roughlaugh_official?si=zoPdyjUtx-OV5uT3",
+                homepage: "https://roughlaugh-official.com/",
+                litlink: "",
+                spotify: "",
+                fanclub: ""
+            },
+            "花いろは": {
+                x: "https://x.com/hanairoha_ww",
+                instagram: "",
+                tiktok: "https://www.tiktok.com/@hanairoha_official?_r=1&_t=ZS-99pXAv4Kfai",
+                youtube: "https://youtube.com/channel/UC8rRzQoafxs81aV7-bhWmeQ?si=opp3qkyFBD8jkOhn",
+                homepage: "https://hanairoha.com/",
+                litlink: "",
+                spotify: "",
+                fanclub: ""
             }
         };
 
@@ -1498,30 +1568,36 @@
             } else {
                 container.innerHTML = lives.map(list => {
                     const rep = list[0];
-                    const chips = list.map(e => {
+                    const isMulti = list.length > 1;
+
+                    const eventBlocks = list.map(e => {
                         const go = groups.find(g => g.name === e.group);
                         const c = go ? go.color : '#94a3b8';
-                        return `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group || '個人の予定'}${e.time !== '00:00' ? ' ' + e.time : ''}</span>`;
+                        const memo = personalMemos[e.id];
+
+                        return `
+                            <div class="${isMulti ? 'border-t border-pink-100 pt-2 mt-2 first:border-t-0 first:pt-0 first:mt-0' : ''} space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group || '個人の予定'}${e.time !== '00:00' ? ' ' + e.time : ''}</span>
+                                    ${deadlineBadgeHtml(e)}
+                                </div>
+                                ${e.location ? `
+                                    <div class="flex space-x-2">
+                                        <a href="${mapsUrl(e.location)}" target="_blank" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-bold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-location-dot"></i><span>${e.location}</span></a>
+                                        <a href="${transitUrl(e.location)}" target="_blank" title="ルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl"><i class="fa-solid fa-train-subway"></i></a>
+                                    </div>
+                                ` : ''}
+                                ${renderRegulationHtml(e)}
+                                ${memo ? `<div class="bg-amber-50 rounded-2xl px-3 py-2.5 space-y-1">${memo.split('\n').map(l => `<p class="text-[11px] font-semibold text-amber-700">${escapeHtml(l)}</p>`).join('')}</div>` : ''}
+                                <a href="${gcalUrl(e)}" target="_blank" class="flex items-center justify-center space-x-1.5 w-full bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-calendar-plus"></i><span>Googleカレンダーに追加</span></a>
+                            </div>
+                        `;
                     }).join('');
-
-                    const memos = list.map(e => personalMemos[e.id]).filter(Boolean);
-                    const memoHtml = memos.length
-                        ? `<div class="bg-amber-50 rounded-2xl px-3 py-2.5 mt-2 space-y-1">${memos.map(m => m.split('\n').map(l => `<p class="text-[11px] font-semibold text-amber-700">${escapeHtml(l)}</p>`).join('')).join('')}</div>`
-                        : '';
-
-                    const locHtml = rep.location
-                        ? `<div class="flex space-x-2 mt-2">
-                            <a href="${mapsUrl(rep.location)}" target="_blank" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-bold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-location-dot"></i><span>${rep.location}</span></a>
-                            <a href="${transitUrl(rep.location)}" target="_blank" title="ルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl"><i class="fa-solid fa-train-subway"></i></a>
-                           </div>`
-                        : '';
 
                     return `
                         <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3">
-                            <p class="text-slate-800 font-bold text-sm leading-snug mb-1.5">${escapeHtml(rep.title)}</p>
-                            <div class="flex flex-wrap gap-1.5">${chips}</div>
-                            ${locHtml}
-                            ${memoHtml}
+                            <p class="text-slate-800 font-bold text-sm leading-snug mb-2">${escapeHtml(rep.title)}</p>
+                            ${eventBlocks}
                         </div>
                     `;
                 }).join('');
