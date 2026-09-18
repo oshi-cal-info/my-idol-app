@@ -258,12 +258,15 @@
         <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-3xl w-full max-w-sm p-5 shadow-2xl max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-black text-base text-white"><i class="fa-solid fa-chart-simple mr-2"></i>推し活まとめ</h3>
-                <div class="flex items-center space-x-1">
-                    <button onclick="shareSummary()" title="シェア" class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition"><i class="fa-solid fa-share-nodes text-xs"></i></button>
-                    <button onclick="toggleSummary()" class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition"><i class="fa-solid fa-xmark text-xs"></i></button>
-                </div>
+                <button onclick="toggleSummary()" class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition"><i class="fa-solid fa-xmark text-xs"></i></button>
             </div>
             <div id="summary-body"></div>
+            <div class="flex space-x-2 mt-4">
+                <button onclick="shareSummaryImage()" class="flex-1 py-2.5 bg-white text-pink-600 font-bold rounded-2xl text-[11px] shadow-sm flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-image"></i><span>画像でシェア</span>
+                </button>
+                <button onclick="shareSummary()" title="テキストでシェア" class="w-11 h-11 rounded-2xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition flex-shrink-0"><i class="fa-solid fa-share-nodes text-xs"></i></button>
+            </div>
         </div>
     </div>
 
@@ -1762,7 +1765,10 @@
             const lines = [
                 `【推し活まとめ ${s.label}】`,
                 `参戦 ${s.liveCount}本 / ${s.groupCount}組`,
-                ...s.topGroups.slice(0, 3).map(([n, c], i) => `${i + 1}. ${n}（${c}）`)
+                ...s.topGroups.slice(0, 3).map(([n, c], i) => `${i + 1}. ${n}（${c}）`),
+                '',
+                '#推し活 #OshiCal',
+                SITE_URL
             ];
             const text = lines.join('\n');
             if (navigator.share) {
@@ -1772,6 +1778,166 @@
                 try { await navigator.clipboard.writeText(text); alert('コピーしました。SNSに貼り付けてね。'); return; } catch (e) {}
             }
             alert(text);
+        }
+
+        // このサイトのURL（画像・シェア文の下部に入れる）
+        const SITE_URL = 'https://oshi-cal-info.github.io/my-idol-app/';
+
+        function shareSummaryImage() {
+            const s = computeSummary(summaryPeriod);
+            if (s.liveCount === 0) { alert('まだ記録がありません'); return; }
+
+            const WIDTH = 1080;
+            const PAD = 70;
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const topGroups = s.topGroups.slice(0, 5);
+            const topVenues = s.topVenues.slice(0, 3);
+            const ROW_H = 92;
+            const HEADER_H = 300;
+            const STAT_H = 190;
+            const SECTION_GAP = 60;
+            const groupsH = topGroups.length ? 70 + topGroups.length * ROW_H : 0;
+            const venuesH = topVenues.length ? 70 + topVenues.length * ROW_H : 0;
+            const footerH = 160;
+            const HEIGHT = HEADER_H + STAT_H + SECTION_GAP + groupsH + (venuesH ? SECTION_GAP + venuesH : 0) + footerH + PAD;
+
+            canvas.width = WIDTH;
+            canvas.height = HEIGHT;
+
+            // 背景グラデーション
+            const bg = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+            bg.addColorStop(0, '#ec4899');
+            bg.addColorStop(1, '#a855f7');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            // 装飾の丸（ふんわり）
+            ctx.globalAlpha = 0.15;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(WIDTH - 60, 60, 160, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(40, HEIGHT - 80, 130, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+
+            // ヘッダー
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '700 30px sans-serif';
+            ctx.fillText('MY 推し活まとめ', PAD, 100);
+            ctx.font = '900 66px sans-serif';
+            ctx.fillText(s.label, PAD, 175);
+            ctx.font = '64px sans-serif';
+            ctx.fillText('🎫', WIDTH - PAD - 70, 110);
+
+            let y = HEADER_H;
+
+            // 統計カード（参戦本数 / 推しグループ）
+            const statW = (WIDTH - PAD * 2 - 24) / 2;
+            [
+                { label: '参戦本数', value: `${s.liveCount}`, unit: '本' },
+                { label: '推しグループ', value: `${s.groupCount}`, unit: '組' }
+            ].forEach((stat, i) => {
+                const x = PAD + i * (statW + 24);
+                ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                drawRoundRect(ctx, x, y, statW, STAT_H, 28);
+                ctx.fill();
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '700 26px sans-serif';
+                ctx.fillText(stat.label, x + 28, y + 50);
+                ctx.fillStyle = '#1e293b';
+                ctx.font = '900 72px sans-serif';
+                ctx.fillText(stat.value, x + 28, y + 130);
+                const vw = ctx.measureText(stat.value).width;
+                ctx.font = '700 30px sans-serif';
+                ctx.fillText(stat.unit, x + 28 + vw + 12, y + 130);
+            });
+            y += STAT_H + SECTION_GAP;
+
+            const contentW = WIDTH - PAD * 2;
+
+            function drawRankSection(title, items, dotColorFn) {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '900 32px sans-serif';
+                ctx.fillText(title, PAD, y + 40);
+                y += 70;
+                items.forEach(([name, count], i) => {
+                    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                    drawRoundRect(ctx, PAD, y, contentW, ROW_H - 16, 22);
+                    ctx.fill();
+
+                    const badgeR = 22;
+                    const cy = y + (ROW_H - 16) / 2;
+                    ctx.fillStyle = dotColorFn(name);
+                    ctx.beginPath(); ctx.arc(PAD + 40, cy, badgeR, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '900 24px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(String(i + 1), PAD + 40, cy + 8);
+                    ctx.textAlign = 'left';
+
+                    ctx.fillStyle = '#1e293b';
+                    ctx.font = '700 32px sans-serif';
+                    ctx.fillText(truncateText(ctx, name, contentW - 220), PAD + 84, cy + 11);
+
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '900 30px sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(String(count), PAD + contentW - 24, cy + 10);
+                    ctx.textAlign = 'left';
+
+                    y += ROW_H;
+                });
+            }
+
+            if (topGroups.length) {
+                drawRankSection('よく観たグループ', topGroups, (name) => {
+                    const go = groups.find(g => g.name === name);
+                    return go ? go.color : '#ec4899';
+                });
+                y += SECTION_GAP;
+            }
+
+            if (topVenues.length) {
+                drawRankSection('よく行った会場', topVenues, () => '#a855f7');
+                y += SECTION_GAP;
+            }
+
+            // フッター：ハッシュタグ + URL
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.font = '700 28px sans-serif';
+            ctx.fillText('#推し活 #OshiCal', PAD, y + 40);
+            ctx.font = '600 24px sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.75)';
+            ctx.fillText(SITE_URL, PAD, y + 78);
+
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 30px sans-serif';
+            ctx.fillText('🩷 Oshi-Cal', WIDTH - PAD, y + 60);
+            ctx.textAlign = 'left';
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) { alert('画像の作成に失敗しました'); return; }
+                const file = new File([blob], 'oshi-cal-summary.png', { type: 'image/png' });
+                const shareText = `【推し活まとめ ${s.label}】参戦${s.liveCount}本 / ${s.groupCount}組\n#推し活 #OshiCal\n${SITE_URL}`;
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({ files: [file], title: 'Oshi-Cal', text: shareText });
+                        return;
+                    } catch (e) { /* キャンセル・失敗時はダウンロードにフォールバック */ }
+                }
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'oshi-cal-summary.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                alert('画像を保存したよ。SNSアプリから画像を選んで投稿してね。');
+            }, 'image/png');
         }
 
         function renderListView() {
