@@ -16,6 +16,11 @@
         dayjs.extend(window.dayjs_plugin_isToday);
         dayjs.locale('ja');
     </script>
+    <!-- Firebase（ログイン・クラウド同期用） -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #fdf2f8; }
@@ -118,10 +123,29 @@
     <!-- サイドメニュー（グループ管理） -->
     <div id="side-menu" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" onclick="toggleMenu()">
         <div class="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-2xl p-6 flex flex-col transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-6 border-b border-pink-50 pb-4">
+            <div class="flex justify-between items-center mb-4 border-b border-pink-50 pb-4">
                 <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-users-rectangle mr-2 text-pink-500"></i>推しグループ管理</h3>
                 <button onclick="toggleMenu()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
             </div>
+
+            <!-- ログイン・同期 -->
+            <div class="mb-4 p-3 bg-pink-50/40 border border-pink-100 rounded-2xl">
+                <div id="auth-logged-out" class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold text-slate-500">ログインしてデータを同期</span>
+                    <button onclick="signInWithGoogle()" class="px-3 py-1.5 bg-white text-pink-600 font-bold rounded-full text-[10px] border border-pink-200 shadow-sm flex-shrink-0">
+                        <i class="fa-brands fa-google mr-1"></i>ログイン
+                    </button>
+                </div>
+                <div id="auth-logged-in" class="hidden items-center justify-between">
+                    <div class="flex items-center space-x-2 min-w-0">
+                        <img id="auth-user-photo" class="w-7 h-7 rounded-full flex-shrink-0" src="" alt="">
+                        <span id="auth-user-name" class="text-[11px] font-bold text-slate-700 truncate"></span>
+                    </div>
+                    <button onclick="signOutUser()" class="text-[10px] font-bold text-slate-400 hover:text-red-500 flex-shrink-0">ログアウト</button>
+                </div>
+                <p class="text-[9px] text-slate-400 mt-1.5 leading-relaxed">ログインすると、お気に入り・メモ・グループ設定を他の端末とも共有できるようになります。</p>
+            </div>
+
             <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="group-management-list"></div>
             <p class="mt-3 text-[10px] text-slate-400 leading-relaxed px-1">
                 グループはライブスケジュールから自動で追加されます。ここでは表示色や表示オン/オフを、自分の端末用に設定できます。
@@ -320,6 +344,106 @@
         const AUTO_SYNC_CSV_URL = "https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/export?format=csv";
         const SITE_URL = 'https://oshi-cal-info.github.io/my-idol-app/'; // このサイトのURL（シェア文・画像に入れる）
 
+        // ==== Firebase（ログイン・クラウド同期） ====
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAAwAdsciNyukTSzLvwTZ9P27_vs63k_g",
+            authDomain: "oshi-cal-d3091.firebaseapp.com",
+            projectId: "oshi-cal-d3091",
+            storageBucket: "oshi-cal-d3091.firebasestorage.app",
+            messagingSenderId: "896634384335",
+            appId: "1:896634384335:web:8ebb3207a612fe0676acba"
+        };
+        const VAPID_KEY = "BDH5cbkERV5r4uBGbnI3ike3WHHGOgt9SDnZy7UymhM0qTMQYdhScXklVJgHxuS0x2eq689lNIPWeriNXMXNqhs";
+
+        let auth = null;
+        let db = null;
+        let currentUser = null;
+        let cloudSaveTimer = null;
+
+        function initFirebase() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                auth.onAuthStateChanged(handleAuthChange);
+            } catch (e) {
+                console.log('Firebaseの初期化に失敗:', e);
+            }
+        }
+
+        async function handleAuthChange(user) {
+            currentUser = user;
+            updateAuthUI();
+            if (user) {
+                await loadCloudData();
+            }
+        }
+
+        function signInWithGoogle() {
+            if (!auth) return;
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(err => {
+                alert('ログインに失敗しました: ' + err.message);
+            });
+        }
+
+        function signOutUser() {
+            if (!auth) return;
+            auth.signOut();
+        }
+
+        function updateAuthUI() {
+            const out = document.getElementById('auth-logged-out');
+            const inn = document.getElementById('auth-logged-in');
+            if (!out || !inn) return;
+            if (currentUser) {
+                out.classList.add('hidden');
+                inn.classList.remove('hidden');
+                inn.classList.add('flex');
+                document.getElementById('auth-user-photo').src = currentUser.photoURL || '';
+                document.getElementById('auth-user-name').textContent = currentUser.displayName || currentUser.email || 'ログイン中';
+            } else {
+                inn.classList.add('hidden');
+                inn.classList.remove('flex');
+                out.classList.remove('hidden');
+            }
+        }
+
+        async function loadCloudData() {
+            if (!currentUser || !db) return;
+            try {
+                const doc = await db.collection('users').doc(currentUser.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data.groups) groups = data.groups;
+                    if (data.favorites) favorites = new Set(data.favorites);
+                    if (data.personalMemos) personalMemos = data.personalMemos;
+                    saveUserData();
+                    saveFavorites();
+                    savePersonalMemos();
+                    render();
+                } else {
+                    // 初回ログイン：今のローカルデータをクラウドにアップロードする
+                    saveCloudData();
+                }
+            } catch (e) {
+                console.log('クラウドからの読み込みに失敗:', e);
+            }
+        }
+
+        function saveCloudData() {
+            if (!currentUser || !db) return;
+            clearTimeout(cloudSaveTimer);
+            cloudSaveTimer = setTimeout(() => {
+                db.collection('users').doc(currentUser.uid).set({
+                    groups: groups,
+                    favorites: [...favorites],
+                    personalMemos: personalMemos,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true }).catch(e => console.log('クラウド保存に失敗:', e));
+            }, 800);
+        }
+
         // ==== 公式SNSリンク（管理者だけがここを編集する。コードを書き換えてデプロイしない限り、
         // 閲覧者側からは書き換えられない） ====
         // グループ名をキーに、それぞれのURLを入れてね。使わないものは空文字のままでOK。
@@ -514,6 +638,7 @@
         function saveUserData() {
             localStorage.setItem('oshi_cal_groups', JSON.stringify(groups));
             localStorage.setItem('oshi_cal_manual_events', JSON.stringify(events));
+            saveCloudData();
         }
 
         function saveEventHistory() {
@@ -522,10 +647,12 @@
 
         function savePersonalMemos() {
             localStorage.setItem('oshi_cal_personal_memos', JSON.stringify(personalMemos));
+            saveCloudData();
         }
 
         function saveFavorites() {
             localStorage.setItem('oshi_cal_favorites', JSON.stringify([...favorites]));
+            saveCloudData();
         }
 
         async function fetchSheetData() {
@@ -2492,6 +2619,7 @@
             render();
             updateNotifyToggleUI();
             registerServiceWorker();
+            initFirebase();
             await fetchSheetData();
 
             // アプリを開いたままにしている間も、一定間隔で新着をチェックする
