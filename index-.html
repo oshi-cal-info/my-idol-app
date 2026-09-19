@@ -1,0 +1,2508 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oshi-Cal - 推し活スケジュール管理</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%85%3C/text%3E%3C/svg%3E">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#ec4899">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isToday.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/locale/ja.js"></script>
+    <script>
+        dayjs.extend(window.dayjs_plugin_isToday);
+        dayjs.locale('ja');
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #fdf2f8; }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen pb-24">
+
+    <!-- ヘッダー -->
+    <header class="bg-gradient-to-r from-pink-50 via-white to-purple-50 sticky top-0 z-30 px-5 py-4 flex items-center justify-between rounded-b-[2rem] shadow-md shadow-pink-200/40">
+        <div class="flex items-center space-x-3">
+            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-pink-400 to-purple-400 flex items-center justify-center text-white shadow-md shadow-pink-300/50">
+                <i class="fa-solid fa-calendar-days text-lg"></i>
+            </div>
+            <h1 class="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent tracking-wide">Oshi-Cal</h1>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="toggleDeadlineMenu()" title="チケット締切" class="relative w-11 h-11 rounded-full bg-white flex items-center justify-center text-amber-500 hover:bg-amber-50 transition shadow-sm shadow-pink-200/60">
+                <i class="fa-solid fa-clock text-base"></i>
+                <span id="deadline-count-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold items-center justify-center"></span>
+            </button>
+            <button onclick="toggleFavMenu()" class="relative w-11 h-11 rounded-full bg-white flex items-center justify-center text-pink-500 hover:bg-pink-50 transition shadow-sm shadow-pink-200/60">
+                <i class="fa-solid fa-heart text-base"></i>
+                <span id="fav-count-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-pink-500 text-white text-[9px] font-bold items-center justify-center"></span>
+            </button>
+            <button onclick="toggleMenu()" class="w-11 h-11 rounded-full bg-white flex items-center justify-center text-pink-500 hover:bg-pink-50 transition shadow-sm shadow-pink-200/60">
+                <i class="fa-solid fa-bars text-base"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-md mx-auto p-4 space-y-4">
+        
+        <div class="flex justify-between items-center px-1">
+            <h2 class="text-base font-bold text-slate-700 flex items-center">
+                <i class="fa-solid fa-sparkles text-pink-500 mr-2"></i>スケジュールまとめ
+            </h2>
+            <div class="flex items-center space-x-2">
+                <div class="flex bg-pink-100/60 p-1 rounded-full text-xs font-bold">
+                    <button id="tab-list" onclick="switchView('list')" class="px-4 py-1.5 rounded-full transition bg-white text-pink-600 shadow-sm">リスト</button>
+                    <button id="tab-month" onclick="switchView('month')" class="px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700">月表示</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- フィルターバー -->
+        <div class="flex items-center space-x-2 bg-white p-2.5 rounded-2xl shadow-sm border border-pink-100/60">
+            <button onclick="openFilterModal()" class="relative flex-1 flex items-center justify-between pl-3.5 pr-3 py-2 bg-pink-50/50 border border-pink-100 rounded-xl text-xs font-semibold text-slate-700">
+                <span id="filter-summary-label" class="flex items-center"><i class="fa-solid fa-filter text-pink-400 text-xs mr-2"></i>すべてのグループ</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-pink-400"></i>
+            </button>
+            <button onclick="clearFilter()" title="絞り込みをリセット" class="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-pink-600 bg-pink-50/50 border border-pink-100 rounded-xl transition">
+                <i class="fa-solid fa-rotate-right text-xs"></i>
+            </button>
+            <button id="past-toggle-btn" onclick="togglePastEvents()" title="過去の予定を表示" class="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-pink-600 bg-pink-50/50 border border-pink-100 rounded-xl transition">
+                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+            </button>
+        </div>
+
+        <!-- リストビュー -->
+        <div id="view-list" class="space-y-3"></div>
+
+        <!-- 月表示ビュー -->
+        <div id="view-month" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/60">
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 hover:bg-pink-100 transition"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                    <h3 id="calendar-title" class="font-bold text-slate-800 text-sm">2026年 9月</h3>
+                    <button onclick="changeMonth(1)" class="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 hover:bg-pink-100 transition"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-xs font-bold text-slate-400 mb-2">
+                    <span class="text-pink-500">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="text-purple-500">土</span>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
+            </div>
+            <div id="selected-day-events" class="space-y-2.5"></div>
+        </div>
+    </main>
+
+    <!-- 管理者への連絡 -->
+    <footer class="max-w-md mx-auto px-4 pb-4 text-center">
+        <p class="text-[10px] text-slate-400 leading-relaxed">
+            追加してほしいグループやご要望はこちらまで<br>
+            <a href="https://x.com/onelove221218" target="_blank" class="inline-flex items-center mt-1.5 px-3 py-1.5 bg-white border border-pink-100 rounded-full text-[10px] font-bold text-slate-500 hover:text-pink-500 hover:bg-pink-50 transition shadow-sm">
+                <i class="fa-brands fa-x-twitter mr-1.5"></i>管理者のXへ
+            </a>
+        </p>
+    </footer>
+
+    <!-- フローティング追加ボタン -->
+    <div class="fixed bottom-6 right-6 z-20 flex flex-col items-center space-y-3">
+        <button onclick="goToToday()" title="今日へ" class="w-11 h-11 rounded-full bg-white text-pink-500 shadow-md shadow-pink-200/60 flex items-center justify-center hover:bg-pink-50 transition">
+            <i class="fa-solid fa-calendar-day text-sm"></i>
+        </button>
+        <button onclick="openAddModal()" title="自分だけの予定を追加" class="w-14 h-14 rounded-full bg-gradient-to-tr from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/40 flex items-center justify-center text-xl hover:scale-105 transition">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+    </div>
+
+    <!-- サイドメニュー（グループ管理） -->
+    <div id="side-menu" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" onclick="toggleMenu()">
+        <div class="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-2xl p-6 flex flex-col transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6 border-b border-pink-50 pb-4">
+                <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-users-rectangle mr-2 text-pink-500"></i>推しグループ管理</h3>
+                <button onclick="toggleMenu()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="group-management-list"></div>
+            <p class="mt-3 text-[10px] text-slate-400 leading-relaxed px-1">
+                グループはライブスケジュールから自動で追加されます。ここでは表示色や表示オン/オフを、自分の端末用に設定できます。
+            </p>
+            <button id="notify-toggle-btn" onclick="requestNotificationPermission()" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
+                <i class="fa-solid fa-bell mr-1.5"></i> <span id="notify-toggle-label">新着ライブの通知を受け取る</span>
+            </button>
+            <button onclick="toggleMenu(); toggleSummary();" class="mt-2 w-full py-3 bg-gradient-to-r from-pink-50 to-purple-50 text-pink-600 font-bold rounded-2xl hover:from-pink-100 hover:to-purple-100 transition text-xs border border-pink-100 flex items-center justify-center">
+                <i class="fa-solid fa-chart-simple mr-1.5"></i> 推し活まとめを見る
+            </button>
+            <a href="timetree.html" target="_blank" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100 flex items-center justify-center">
+                <i class="fa-solid fa-calendar-days mr-1.5"></i> TimeTreeのスケジュールを見る
+            </a>
+        </div>
+    </div>
+
+    <!-- イベント追加モーダル -->
+    <div id="event-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-calendar-plus text-pink-500 mr-2"></i>自分の予定を追加</h3>
+                <button onclick="closeModal('event-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-[10px] text-slate-400 -mt-2">例: ライブの合間にご飯を食べる予定など。ここで追加した予定は、あなたのこの端末だけに保存されます（他の人には見えません）。</p>
+            <form id="event-form" onsubmit="saveEvent(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">グループ（任意）</label>
+                    <select id="modal-group" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400"></select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">タイトル</label>
+                    <input type="text" id="modal-title" required placeholder="例: ご飯タイム／生誕ライブ" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-1">日付</label>
+                        <input type="date" id="modal-date" required class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-1">時間</label>
+                        <input type="time" id="modal-time" required class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">場所</label>
+                    <input type="text" id="modal-location" placeholder="例: 渋谷O-EAST" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">入場特典・時間などのメモ</label>
+                    <textarea id="modal-regulation" rows="3" placeholder="例: 入場 17:00／特典会 18:00〜／開演 19:00" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400 resize-none"></textarea>
+                </div>
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-2xl shadow-md shadow-pink-500/30 hover:opacity-95 transition text-xs mt-2">保存する</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- グループ絞り込みモーダル -->
+    <div id="filter-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-pink-50 max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-filter text-pink-500 mr-2"></i>グループで絞り込み</h3>
+                <button onclick="closeModal('filter-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="flex space-x-2 mb-3">
+                <button onclick="clearFilter()" class="flex-1 py-2 bg-pink-50 text-pink-600 font-bold rounded-xl border border-pink-100 text-[11px]">すべて選択（絞り込み解除）</button>
+                <button onclick="selectNoneFilters()" class="flex-1 py-2 bg-slate-50 text-slate-500 font-bold rounded-xl border border-slate-100 text-[11px]">すべて解除</button>
+            </div>
+            <div id="filter-group-list" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
+        </div>
+    </div>
+
+    <!-- グループ表示設定モーダル -->
+    <div id="group-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-base text-slate-800">表示設定</h3>
+                <button onclick="closeModal('group-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="group-form" onsubmit="saveGroup(event)" class="space-y-3">
+                <input type="hidden" id="group-edit-index" value="">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">グループ</label>
+                    <p id="group-modal-name-label" class="w-full p-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700"></p>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">テーマカラー</label>
+                    <input type="color" id="group-modal-color" value="#ec4899" class="w-full h-10 p-1 bg-pink-50/40 border border-pink-100 rounded-2xl cursor-pointer">
+                </div>
+                <label class="flex items-center justify-between p-3 bg-pink-50/40 border border-pink-100 rounded-2xl cursor-pointer">
+                    <span class="text-[11px] font-bold text-slate-500">このグループの予定をスケジュールに表示する</span>
+                    <input type="checkbox" id="group-modal-visible" checked class="w-4 h-4 accent-pink-500">
+                </label>
+                <label class="flex items-center justify-between p-3 bg-pink-50/40 border border-pink-100 rounded-2xl cursor-pointer">
+                    <span class="text-[11px] font-bold text-slate-500">このグループの新着ライブを通知する</span>
+                    <input type="checkbox" id="group-modal-notify" checked class="w-4 h-4 accent-pink-500">
+                </label>
+                <p class="text-[10px] text-slate-400 px-1">※ ここでの設定はあなたの端末にのみ保存されます。公式リンクやスケジュールの取得元は管理者のみが変更できます。</p>
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-2xl shadow-md shadow-pink-500/30 hover:opacity-95 transition text-xs mt-2">保存する</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- グループ公式リンク一覧モーダル -->
+    <div id="group-links-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
+            <div class="flex justify-between items-center">
+                <h3 id="group-links-title" class="font-bold text-base text-slate-800 flex items-center"></h3>
+                <button onclick="closeModal('group-links-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="group-links-list" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <!-- 自分用メモモーダル -->
+    <div id="memo-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-note-sticky text-amber-500 mr-2"></i>自分用メモ</h3>
+                <button onclick="closeModal('memo-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveMemo(event)" class="space-y-3">
+                <input type="hidden" id="memo-event-id" value="">
+                <textarea id="memo-text" rows="4" placeholder="例: Aちゃんと参戦／自分の整理番号は123番" class="w-full p-3 bg-amber-50/60 border border-amber-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"></textarea>
+                <div class="flex space-x-2">
+                    <button type="button" onclick="deleteMemo()" class="flex-1 py-3 bg-slate-50 text-slate-400 font-bold rounded-2xl text-xs border border-slate-100">削除</button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-amber-400 to-pink-400 text-white font-bold rounded-2xl shadow-md text-xs">保存する</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 推し活サマリー -->
+    <div id="summary-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="toggleSummary()">
+        <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-3xl w-full max-w-sm p-5 shadow-2xl max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-black text-base text-white"><i class="fa-solid fa-chart-simple mr-2"></i>推し活まとめ</h3>
+                <button onclick="toggleSummary()" class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition"><i class="fa-solid fa-xmark text-xs"></i></button>
+            </div>
+            <div id="summary-body"></div>
+            <div class="flex space-x-2 mt-4">
+                <button onclick="shareSummaryImage()" class="flex-1 py-2.5 bg-white text-pink-600 font-bold rounded-2xl text-[11px] shadow-sm flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-image"></i><span>画像でシェア</span>
+                </button>
+                <button onclick="shareSummary()" title="テキストでシェア" class="w-11 h-11 rounded-2xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition flex-shrink-0"><i class="fa-solid fa-share-nodes text-xs"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- チケット締切メニュー -->
+    <!-- 今日の現場 詳細パネル -->
+    <div id="today-live-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="closeTodayLiveModal()">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-3 shadow-2xl max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center">
+                <h3 class="font-black text-base text-slate-800"><i class="fa-solid fa-star text-pink-500 mr-2"></i>今日の現場</h3>
+                <button onclick="closeTodayLiveModal()" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="today-live-body" class="space-y-2.5"></div>
+        </div>
+    </div>
+
+    <div id="deadline-menu" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" onclick="toggleDeadlineMenu()">
+        <div class="absolute right-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white shadow-2xl p-6 flex flex-col transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-2 border-b border-pink-50 pb-4">
+                <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-clock mr-2 text-amber-500"></i>チケット締切</h3>
+                <button onclick="toggleDeadlineMenu()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-[10px] text-slate-400 mb-4 leading-relaxed">スケジュールのメモから自動で拾った、2週間以内の締切です。拾えていないものもあるので、詳細は必ず公式でも確認してね。</p>
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="deadline-list"></div>
+        </div>
+    </div>
+
+    <!-- お気に入りメニュー -->
+    <div id="fav-menu" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" onclick="toggleFavMenu()">
+        <div class="absolute right-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white shadow-2xl p-6 flex flex-col transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4 border-b border-pink-50 pb-4">
+                <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-heart mr-2 text-pink-500"></i>お気に入り</h3>
+                <div class="flex items-center space-x-1">
+                    <button onclick="openFavInNewTab()" title="新しいタブで開く" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center"><i class="fa-solid fa-up-right-from-square text-xs"></i></button>
+                    <button onclick="toggleFavMenu()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div class="flex space-x-2 mb-2">
+                <button onclick="shareImageOfFavorites()" class="flex-1 py-2.5 bg-pink-50 text-pink-600 font-bold rounded-2xl text-[10px] border border-pink-100 hover:bg-pink-100 transition flex items-center justify-center space-x-1">
+                    <i class="fa-solid fa-image"></i><span>画像でシェア</span>
+                </button>
+                <button onclick="exportFavoritesToIcs()" class="flex-1 py-2.5 bg-purple-50 text-purple-600 font-bold rounded-2xl text-[10px] border border-purple-100 hover:bg-purple-100 transition flex items-center justify-center space-x-1">
+                    <i class="fa-solid fa-calendar-plus"></i><span>一括カレンダー登録</span>
+                </button>
+            </div>
+            <button onclick="shareFavoritesToSns()" class="w-full text-center text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline mb-4">テキストでシェアする</button>
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="fav-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const AUTO_SYNC_CSV_URL = "https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/export?format=csv";
+        const SITE_URL = 'https://oshi-cal-info.github.io/my-idol-app/'; // このサイトのURL（シェア文・画像に入れる）
+
+        // ==== 公式SNSリンク（管理者だけがここを編集する。コードを書き換えてデプロイしない限り、
+        // 閲覧者側からは書き換えられない） ====
+        // グループ名をキーに、それぞれのURLを入れてね。使わないものは空文字のままでOK。
+        const OFFICIAL_GROUP_LINKS = {
+            "Onephony": {
+                x: "https://x.com/onephony_",
+                instagram: "https://www.instagram.com/onephony__official?stkn=MTIzcjRiZjVtc3Y5dA==",
+                tiktok: "https://www.tiktok.com/@onephony__official?_r=1&_t=ZS-99mHmoJeDNS",
+                youtube: "",
+                homepage: "",
+                litlink: "https://lit.link/Onephony",
+                spotify: "https://open.spotify.com/artist/1l2hlo4d4Q9TsiQ0v5sZ6D?si=SRVFoiv_TpaLfoX-Ds1SFg&utm_source=copy-link",
+                fanclub: "https://onephony.com/"
+            },
+            "マリークラウン": { x: "", instagram: "", tiktok: "", youtube: "", homepage: "", litlink: "", spotify: "", fanclub: "" },
+            "AKANECLUB": {
+                x: "https://x.com/akaneclub_info",
+                instagram: "",
+                tiktok: "",
+                youtube: "https://youtube.com/@akaneclub?si=VgUuf5tYX0EJBleJ",
+                homepage: "",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/3AyKLWQ1H1jbJAcQ187W27?si=peYwP1BeQ8SqUUpiPoKktQ&utm_source=copy-link",
+                fanclub: ""
+            },
+            "FULIT BOX": {
+                x: "https://x.com/FULITBOX",
+                instagram: "https://www.instagram.com/fulitbox?stkn=czVkMHFiOHM0eWRs",
+                tiktok: "",
+                youtube: "https://youtube.com/@fulitbox?si=ny_XLyHuLN_t3jjl",
+                homepage: "",
+                litlink: "https://lit.link/FULITBOX",
+                spotify: "https://open.spotify.com/artist/6YronPZruM6tYUeh2kaMhV?si=l-1DLNbpTWmjsNocGuW1ZA&utm_source=copy-link",
+                fanclub: ""
+            },
+            "Merry BAD TUNE": {
+                x: "https://x.com/merrybadtune",
+                instagram: "",
+                tiktok: "",
+                youtube: "https://youtube.com/@merrybadtune.?si=5osZHMsU8GtyKKel",
+                homepage: "",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/2hL0PMtxHtTv5W1Z9Cusmd?si=ukJMJ11GSNqDAAceS1Tuhw&utm_source=copy-link",
+                fanclub: ""
+            },
+            "STARNOTE": {
+                x: "https://x.com/starnote_idol",
+                instagram: "https://www.instagram.com/starnote.idol?stkn=cHQ5NGg5bm5mNTV2",
+                tiktok: "https://www.tiktok.com/@starnote.idol?_r=1&_t=ZS-99mIIq2Zkx8",
+                youtube: "https://youtube.com/@starnoteofficial?si=PVXViLM2v3aUjJvi",
+                homepage: "",
+                litlink: "https://lit.link/starnote",
+                spotify: "https://open.spotify.com/artist/7jGYhMnXPXbanwHv6McrOd?si=zQZLiJdeRJ2lI9KYu-jOew&utm_source=copy-link",
+                fanclub: ""
+            },
+            "かすみ草とステラ": {
+                x: "https://x.com/Kastella_OFC",
+                instagram: "https://www.instagram.com/kastella_OFC/",
+                tiktok: "",
+                youtube: "https://youtu.be/0ejnlTHQN3A?si=Er29jcR2ACQWRMY3",
+                homepage: "",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/0lClILedbTcLXrlX7pbUDy?si=jdpuZ1fESrabjsiSL6E0GQ&utm_source=copy-link",
+                fanclub: ""
+            },
+            "ハルニシオン": {
+                x: "https://x.com/info_HNS",
+                instagram: "",
+                tiktok: "https://www.tiktok.com/@harunision.official?_r=1&_t=ZS-99mInzNYvXc",
+                youtube: "https://youtu.be/von4gD8-kUs?si=ukyzvmepmp6ByHka",
+                homepage: "",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/12bj3lZnc4JCm6vQsRBH3f?si=WDyk17qQRmehSQBDjltwZQ&utm_source=copy-link",
+                fanclub: "https://harunision-official.boosty.app/contents/963"
+            },
+            "Aivery": {
+                x: "https://x.com/Aivery__",
+                instagram: "https://www.instagram.com/aivery__official?stkn=NGJtazRxOGRvOGQ2",
+                tiktok: "https://www.tiktok.com/@aivery__official?_r=1&_t=ZS-99pVyh0LoW8",
+                youtube: "https://youtube.com/@aivery_official?si=bkhWRZXs2_vgmt9M",
+                homepage: "",
+                litlink: "https://lit.link/Aivery",
+                spotify: "https://open.spotify.com/artist/3A8DxrSkHUwQH8JvAZx8TS?si=BMGvG-tpQaCXmoBJfBTJMA&utm_source=copy-link",
+                fanclub: ""
+            },
+            "AOAO": {
+                x: "https://x.com/AOAO_info",
+                instagram: "https://www.instagram.com/aoao.info?stkn=MXhlNHJ0azFhb2tkdg==",
+                tiktok: "",
+                youtube: "",
+                homepage: "https://aoao.tokyo/",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/2v0MwtoEl3KnjD6294OjMa?si=LTC72z8gRQq1yc9F_sfIPg&utm_source=copy-link",
+                fanclub: ""
+            },
+            "UtaGe!": {
+                x: "https://x.com/info_UtaGe",
+                instagram: "",
+                tiktok: "https://www.tiktok.com/@utage.idol?_r=1&_t=ZS-99pWNI2r4Ow",
+                youtube: "https://youtube.com/@utage_idol?si=zcDXDv4nzoIilreQ",
+                homepage: "",
+                litlink: "https://lit.link/utageinfo",
+                spotify: "https://open.spotify.com/artist/66hYDiKinuMpGkfBZ1y8GG?si=wjHfLhM_Ti-5HunaN77F9g&utm_source=copy-link",
+                fanclub: ""
+            },
+            "こみっきゅおん！": {
+                x: "https://x.com/comiqon",
+                instagram: "https://www.instagram.com/comiqon_official?stkn=ZGxtb2o4NDc5NXN5",
+                tiktok: "https://www.tiktok.com/@comiqon__official?_r=1&_t=ZS-99pWUXBOaTi",
+                youtube: "https://youtube.com/@comiqon?si=kXppR2bwalYzDNqf",
+                homepage: "https://www.comiqon.com/",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/6ry7l9uercEsvy8Kq7mrhy?si=KcVe4gNcThmqkallswAchg&utm_source=copy-link",
+                fanclub: ""
+            },
+            "タイトル未定": {
+                x: "https://x.com/MiteiTitle",
+                instagram: "https://www.instagram.com/miteititle?stkn=cDhnOTZzeWw3MThj",
+                tiktok: "https://www.tiktok.com/@titlemitei?_r=1&_t=ZS-99pWfvKInti",
+                youtube: "https://youtube.com/@miteititle?si=fkMi3JfnCKqi8lTA",
+                homepage: "",
+                litlink: "https://lit.link/miteititle",
+                spotify: "https://open.spotify.com/artist/1qls7cxRI0qSWA7D8PCA96?si=UbrDnP5tTdeSfpfDWqDaJQ&utm_source=copy-link",
+                fanclub: ""
+            },
+            "ラフ×ラフ": {
+                x: "https://x.com/roughlaugh_o",
+                instagram: "https://www.instagram.com/roughlaugh_official?stkn=OHRtOW9peXZ0MGJp",
+                tiktok: "https://www.tiktok.com/@roughlaugh_official?_r=1&_t=ZS-99pX2Y5torS",
+                youtube: "https://youtube.com/@roughlaugh_official?si=zoPdyjUtx-OV5uT3",
+                homepage: "https://roughlaugh-official.com/",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/0bOCVWklbDomj5AtGVbzNO?si=7bwsJFzWR1esfeduzH4nCw&utm_source=copy-link",
+                fanclub: ""
+            },
+            "花いろは": {
+                x: "https://x.com/hanairoha_ww",
+                instagram: "",
+                tiktok: "https://www.tiktok.com/@hanairoha_official?_r=1&_t=ZS-99pXAv4Kfai",
+                youtube: "https://youtube.com/channel/UC8rRzQoafxs81aV7-bhWmeQ?si=opp3qkyFBD8jkOhn",
+                homepage: "https://hanairoha.com/",
+                litlink: "",
+                spotify: "https://open.spotify.com/artist/1MHhHof2OotAK9l2e1JDa0?si=xm2J2P33QdyHDlo37Vw0-w&utm_source=copy-link",
+                fanclub: ""
+            }
+        };
+
+        const LINK_META = {
+            x: { label: "X (Twitter)", icon: "fa-brands fa-x-twitter", color: "#000000" },
+            instagram: { label: "Instagram", icon: "fa-brands fa-instagram", color: "#e1306c" },
+            tiktok: { label: "TikTok", icon: "fa-brands fa-tiktok", color: "#000000" },
+            youtube: { label: "YouTube", icon: "fa-brands fa-youtube", color: "#ff0000" },
+            homepage: { label: "ホームページ", icon: "fa-solid fa-globe", color: "#0ea5e9" },
+            litlink: { label: "Lit.Link", icon: "fa-solid fa-link", color: "#a855f7" },
+            spotify: { label: "Spotify", icon: "fa-brands fa-spotify", color: "#1db954" },
+            fanclub: { label: "ファンクラブ", icon: "fa-solid fa-star", color: "#f59e0b" }
+        };
+
+        let groups = [
+            { name: "Onephony", color: "#f43f5e", visible: true },
+            { name: "マリークラウン", color: "#3b82f6", visible: true }
+        ];
+        let events = [];
+        let expandedEvents = new Set();
+        let favorites = new Set();
+        let activeFilters = new Set(); // 空 & !filtersExplicit = すべてのグループを表示
+        let filtersExplicit = false; // true になると activeFilters の中身がそのまま「選択中のグループ」を表す（空なら0件表示）
+        let personalMemos = {}; // { eventId: memoText } 自分だけのメモ（ローカル保存）
+        let eventHistory = {}; // { eventId: event } 一度取得した予定を残しておく履歴（ソースから消えても保持）
+        let showPastEvents = false; // 過去の予定を表示するかどうか（デフォルトは非表示）
+        let currentView = 'list';
+        let currentMonth = dayjs().startOf('month');
+        let selectedDate = dayjs().format('YYYY-MM-DD');
+
+        function loadUserData() {
+            const savedGroups = localStorage.getItem('oshi_cal_groups');
+            if (savedGroups) { try { groups = JSON.parse(savedGroups); } catch(e) {} }
+            const savedEvents = localStorage.getItem('oshi_cal_manual_events');
+            if (savedEvents) { try { events = JSON.parse(savedEvents); } catch(e) {} }
+            const savedFavorites = localStorage.getItem('oshi_cal_favorites');
+            if (savedFavorites) { try { favorites = new Set(JSON.parse(savedFavorites)); } catch(e) {} }
+            const savedMemos = localStorage.getItem('oshi_cal_personal_memos');
+            if (savedMemos) { try { personalMemos = JSON.parse(savedMemos); } catch(e) {} }
+            const savedHistory = localStorage.getItem('oshi_cal_event_history');
+            if (savedHistory) { try { eventHistory = JSON.parse(savedHistory); } catch(e) {} }
+            groups.forEach(g => {
+                if (typeof g.visible === 'undefined') g.visible = true;
+                if (typeof g.notify === 'undefined') g.notify = true;
+            });
+        }
+
+        function saveUserData() {
+            localStorage.setItem('oshi_cal_groups', JSON.stringify(groups));
+            localStorage.setItem('oshi_cal_manual_events', JSON.stringify(events));
+        }
+
+        function saveEventHistory() {
+            localStorage.setItem('oshi_cal_event_history', JSON.stringify(eventHistory));
+        }
+
+        function savePersonalMemos() {
+            localStorage.setItem('oshi_cal_personal_memos', JSON.stringify(personalMemos));
+        }
+
+        function saveFavorites() {
+            localStorage.setItem('oshi_cal_favorites', JSON.stringify([...favorites]));
+        }
+
+        async function fetchSheetData() {
+            if (!AUTO_SYNC_CSV_URL) return;
+            try {
+                const response = await fetch(AUTO_SYNC_CSV_URL);
+                if (!response.ok) return;
+                const csvText = await response.text();
+                parseCSV(csvText);
+            } catch (e) {
+                console.log("Auto sync failed:", e);
+            }
+        }
+
+        // ちゃんとしたCSV解析（ダブルクォートで囲まれた中のカンマ・改行はそのまま1つの値として扱う）
+        function parseCSVRows(text) {
+            const rows = [];
+            let row = [];
+            let field = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (inQuotes) {
+                    if (char === '"') {
+                        if (text[i + 1] === '"') { field += '"'; i++; }
+                        else { inQuotes = false; }
+                    } else {
+                        field += char;
+                    }
+                } else {
+                    if (char === '"') {
+                        inQuotes = true;
+                    } else if (char === ',') {
+                        row.push(field);
+                        field = '';
+                    } else if (char === '\r') {
+                        // 無視（\nで改行を処理する）
+                    } else if (char === '\n') {
+                        row.push(field);
+                        rows.push(row);
+                        row = [];
+                        field = '';
+                    } else {
+                        field += char;
+                    }
+                }
+            }
+            if (field.length > 0 || row.length > 0) {
+                row.push(field);
+                rows.push(row);
+            }
+            return rows;
+        }
+
+        function parseCSV(csvText) {
+            const rows = parseCSVRows(csvText);
+            let sheetEvents = [];
+            let newGroupsFound = false;
+
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i].map(c => c.trim());
+                if (!cols.some(c => c)) continue; // 完全に空の行はスキップ
+
+                if (cols.length >= 4) {
+                    const rawDate = cols[0];
+                    let parsedDate = dayjs(rawDate);
+                    
+                    // 年が含まれていない（または古い年になってしまう）場合は今年（2026年）を補う
+                    if (!parsedDate.isValid() || parsedDate.year() < 2025) {
+                        const currentYear = dayjs().year();
+                        parsedDate = dayjs(`${currentYear}-${rawDate.replace(/\//g, '-')}`);
+                    }
+                    const date = parsedDate.isValid() ? parsedDate.format('YYYY-MM-DD') : rawDate;
+
+                    const time = cols[1] || "00:00";
+                    const groupName = cols[2];
+                    const title = cols[3];
+                    const location = cols[4] || "";
+                    const regulation = cols[5] || "";
+
+                    if (date && groupName && title) {
+                        let group = groups.find(g => g.name === groupName);
+                        if (!group) {
+                            groups.push({ name: groupName, color: getRandomColor(), visible: true });
+                            newGroupsFound = true;
+                        }
+
+                        sheetEvents.push({
+                            id: 'sheet_' + i,
+                            date: date,
+                            time: time,
+                            group: groupName,
+                            title: title,
+                            location: location,
+                            regulation: regulation,
+                            isSheet: true
+                        });
+                    }
+                }
+            }
+
+            if (newGroupsFound) saveUserData();
+
+            // 履歴に保存（ソース側から後で消えても、参戦した記録を残せるように）
+            sheetEvents.forEach(e => { eventHistory[e.id] = e; });
+            saveEventHistory();
+
+            const manualEvents = events.filter(e => !e.isSheet);
+            const currentIds = new Set(sheetEvents.map(e => e.id));
+            const todayForHistory = dayjs().format('YYYY-MM-DD');
+            // 今回のソースには無いが、過去に取得済みで日付が今日以前の予定は履歴から復元する
+            const historicalOnly = Object.values(eventHistory).filter(e =>
+                !currentIds.has(e.id) && e.date <= todayForHistory
+            );
+            events = [...manualEvents, ...sheetEvents, ...historicalOnly];
+
+            checkForNewSheetEvents(sheetEvents);
+            
+            if (sheetEvents.length > 0) {
+                // スプレッドシートの行順（=日付順とは限らない）に依存せず、
+                // 日付でソートしてから「直近の予定」を基準に月表示を合わせる
+                const sortedByDate = sheetEvents.slice().sort((a, b) => a.date.localeCompare(b.date));
+                const todayStr = dayjs().format('YYYY-MM-DD');
+                const targetEvent = sortedByDate.find(e => e.date >= todayStr) || sortedByDate[sortedByDate.length - 1];
+                const targetDate = dayjs(targetEvent.date);
+                if (targetDate.isValid()) {
+                    currentMonth = targetDate.startOf('month');
+                    selectedDate = targetDate.format('YYYY-MM-DD');
+                }
+            }
+            render();
+        }
+
+        function mapsUrl(location) {
+            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+        }
+
+        function transitUrl(location) {
+            return `https://transit.yahoo.co.jp/search/result?to=${encodeURIComponent(location)}`;
+        }
+
+        // ==== イベント共有（LINEなどにシェア） ====
+        function eventShareText(e) {
+            const dateFormatted = dayjs(e.date).isValid() ? dayjs(e.date).format('M/D(dd)') : e.date;
+            const lines = [];
+            lines.push(`📅 ${dateFormatted} ${e.time}`);
+            lines.push(e.group ? `${e.group}「${e.title}」` : e.title);
+            if (e.location) lines.push(`📍 ${e.location}`);
+            lines.push('');
+            lines.push(SITE_URL);
+            return lines.join('\n');
+        }
+
+        async function shareEventById(id) {
+            const e = events.find(ev => ev.id === id);
+            if (!e) return;
+            const text = eventShareText(e);
+
+            if (navigator.share) {
+                try { await navigator.share({ title: 'Oshi-Cal', text }); return; } catch (err) { /* キャンセル時はフォールバックしない */ if (err && err.name === 'AbortError') return; }
+            }
+
+            // フォールバック: LINEで送る（別タブで開く）+ クリップボードにもコピー
+            window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text)}`, '_blank');
+            if (navigator.clipboard) {
+                try { await navigator.clipboard.writeText(text); } catch (err) {}
+            }
+        }
+
+        function gcalUrl(e) {
+            const start = dayjs(`${e.date} ${e.time}`);
+            const end = start.isValid() ? start.add(2, 'hour') : null;
+            const fmt = d => d.format('YYYYMMDD[T]HHmmss');
+            const params = new URLSearchParams({ action: 'TEMPLATE', text: e.group ? `${e.group} ${e.title}` : e.title });
+            if (start.isValid() && end) {
+                params.set('dates', `${fmt(start)}/${fmt(end)}`);
+                params.set('ctz', 'Asia/Tokyo');
+            }
+            if (e.location) params.set('location', e.location);
+            if (e.regulation) params.set('details', e.regulation);
+            return `https://calendar.google.com/calendar/render?${params.toString()}`;
+        }
+
+        // ==== ④ チケット締切の抽出 ====
+        // メモ本文から「〜9/13(日)23:59まで」のような締切日を拾う
+        function extractDeadlines(e) {
+            if (!e.regulation) return [];
+            const text = e.regulation
+                .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+                .replace(/／/g, '/').replace(/：/g, ':');
+
+            const found = [];
+            // 「9/13」「9.13」「9月13日」の直後〜60文字以内に「まで」がある箇所を締切とみなす
+            const re = /(\d{1,2})\s*[\/.月]\s*(\d{1,2})\s*日?[^\d]{0,40}?まで/g;
+            let m;
+            while ((m = re.exec(text)) !== null) {
+                const month = parseInt(m[1], 10);
+                const day = parseInt(m[2], 10);
+                if (month < 1 || month > 12 || day < 1 || day > 31) continue;
+
+                // 年は「そのライブの年」を基準に、月がライブより後なら前年とみなす
+                const evDate = dayjs(e.date);
+                let year = evDate.isValid() ? evDate.year() : dayjs().year();
+                if (evDate.isValid() && month > evDate.month() + 1) year -= 1;
+
+                const d = dayjs(`${year}-${('0'+month).slice(-2)}-${('0'+day).slice(-2)}`);
+                if (!d.isValid()) continue;
+                const key = d.format('YYYY-MM-DD');
+                if (found.some(f => f.date === key)) continue;
+
+                // マッチ位置の少し前（〜25文字）に「先行」「抽選」「FC」などがあれば先行受付とみなす
+                const contextStart = Math.max(0, m.index - 25);
+                const context = text.slice(contextStart, m.index + m[0].length);
+                const isPresale = /先行|抽選|FC先行|フォロワー|優先/i.test(context);
+
+                found.push({ date: key, label: m[0].trim(), isPresale });
+            }
+            return found;
+        }
+
+        // 今日以降で、締切が近い順に並べた一覧を返す
+        function getUpcomingDeadlines(daysAhead = 14) {
+            const today = dayjs().startOf('day');
+            const limit = today.add(daysAhead, 'day');
+            const list = [];
+
+            events.forEach(e => {
+                if (!matchesActiveFilters(e.group)) return;
+                extractDeadlines(e).forEach(d => {
+                    const dd = dayjs(d.date);
+                    if (dd.isBefore(today) || dd.isAfter(limit)) return;
+                    list.push({
+                        event: e,
+                        deadline: d.date,
+                        label: d.label,
+                        daysLeft: dd.diff(today, 'day')
+                    });
+                });
+            });
+
+            return list.sort((a, b) => a.deadline.localeCompare(b.deadline));
+        }
+
+        function updateDeadlineBadge() {
+            const badge = document.getElementById('deadline-count-badge');
+            if (!badge) return;
+            const n = getUpcomingDeadlines().length;
+            if (n > 0) {
+                badge.textContent = n;
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+        }
+
+        function toggleDeadlineMenu() {
+            const menu = document.getElementById('deadline-menu');
+            const panel = menu.querySelector('div > div');
+            if (menu.classList.contains('hidden')) {
+                renderDeadlineList();
+                menu.classList.remove('hidden');
+                setTimeout(() => {
+                    menu.classList.remove('opacity-0');
+                    panel.classList.remove('translate-x-full');
+                }, 10);
+            } else {
+                menu.classList.add('opacity-0');
+                panel.classList.add('translate-x-full');
+                setTimeout(() => menu.classList.add('hidden'), 300);
+            }
+        }
+
+        function deadlineCardHtml(d) {
+            const go = groups.find(g => g.name === d.event.group);
+            const c = go ? go.color : '#ec4899';
+            const urgent = d.daysLeft <= 2;
+            const dayLabel = d.daysLeft === 0 ? '今日まで' : `あと${d.daysLeft}日`;
+            return `
+                <div class="rounded-2xl p-3.5 border ${urgent ? 'bg-red-50 border-red-200' : 'bg-amber-50/60 border-amber-100'}">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${d.event.group || '個人の予定'}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${urgent ? 'bg-red-500 text-white' : 'bg-amber-400 text-white'}">${dayLabel}</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-800 mb-1 leading-snug">${escapeHtml(d.event.title)}</p>
+                    <p class="text-[10px] text-slate-500 mb-0.5">ライブ: ${dayjs(d.event.date).format('M/D(dd)')}</p>
+                    <p class="text-[10px] font-semibold ${urgent ? 'text-red-600' : 'text-amber-700'}">締切: ${dayjs(d.deadline).format('M/D(dd)')}</p>
+                </div>
+            `;
+        }
+
+        function renderDeadlineList() {
+            const container = document.getElementById('deadline-list');
+            if (!container) return;
+            const list = getUpcomingDeadlines();
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-xs text-slate-400">
+                        <i class="fa-regular fa-clock text-3xl text-amber-200 mb-2 block"></i>
+                        2週間以内の締切はありません
+                    </div>
+                `;
+                return;
+            }
+
+            const presale = list.filter(d => d.isPresale);
+            const general = list.filter(d => !d.isPresale);
+
+            let html = '';
+            if (presale.length > 0) {
+                html += `<p class="text-[11px] font-black text-pink-500 px-1 mb-1"><i class="fa-solid fa-star mr-1"></i>先行・抽選（要注意）</p>`;
+                html += presale.map(deadlineCardHtml).join('');
+            }
+            if (general.length > 0) {
+                html += `<p class="text-[11px] font-black text-slate-400 px-1 mb-1 ${presale.length > 0 ? 'mt-4' : ''}">一般販売など</p>`;
+                html += general.map(deadlineCardHtml).join('');
+            }
+
+            container.innerHTML = html;
+        }
+
+        // カード上に出す「締切間近」バッジ
+        function deadlineBadgeHtml(e) {
+            const today = dayjs().startOf('day');
+            const ds = extractDeadlines(e)
+                .map(d => ({ ...d, daysLeft: dayjs(d.date).diff(today, 'day') }))
+                .filter(d => d.daysLeft >= 0 && d.daysLeft <= 14)
+                // 先行・抽選を優先して表示する
+                .sort((a, b) => (b.isPresale - a.isPresale) || (a.daysLeft - b.daysLeft));
+            if (ds.length === 0) return '';
+            const d = ds[0];
+            const urgent = d.daysLeft <= 2;
+            const dayLabel = d.daysLeft === 0 ? '今日' : `あと${d.daysLeft}日`;
+            const label = d.isPresale ? `先行締切${dayLabel}` : `締切${dayLabel}`;
+            return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full ${d.isPresale ? 'bg-pink-500' : (urgent ? 'bg-red-500' : 'bg-amber-400')} text-white shadow-sm"><i class="fa-solid ${d.isPresale ? 'fa-star' : 'fa-clock'} mr-1 text-[9px]"></i>${label}</span>`;
+        }
+
+        function renderRegulationHtml(e) {
+            if (!e.regulation) return '';
+            const raw = e.regulation.trim();
+
+            // メモ全体がURLだけの場合は「詳細ページを見る」ボタンとして表示する
+            if (/^https?:\/\/\S+$/.test(raw)) {
+                return `<a href="${raw}" target="_blank" onclick="event.stopPropagation()" class="flex items-center justify-center space-x-1.5 w-full bg-purple-50 text-purple-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-circle-info"></i><span>会場・時間などの詳細を見る</span><i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-60"></i></a>`;
+            }
+
+            // 本文中のURLはリンクに変換する
+            const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+            const linesHtml = lines.map(l => {
+                const linked = escapeHtml(l).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" onclick="event.stopPropagation()" class="underline break-all">$1</a>');
+                return `<p>${linked}</p>`;
+            }).join('');
+            return `<div class="bg-purple-50/70 text-purple-700 text-[11px] font-semibold px-3 py-2.5 rounded-2xl flex items-start space-x-2"><i class="fa-solid fa-star mt-0.5 text-purple-400"></i><div class="space-y-0.5">${linesHtml}</div></div>`;
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function renderMemoHtml(e) {
+            const memo = personalMemos[e.id];
+            if (memo) {
+                const lines = memo.split('\n').map(l => `<p>${escapeHtml(l)}</p>`).join('');
+                return `
+                    <div onclick="event.stopPropagation(); openMemoModal('${e.id}')" class="flex items-start space-x-2 bg-amber-50 text-amber-700 text-[11px] font-semibold px-3 py-2.5 rounded-2xl cursor-pointer hover:bg-amber-100 transition">
+                        <i class="fa-solid fa-note-sticky mt-0.5"></i>
+                        <div class="flex-1 space-y-0.5">${lines}</div>
+                        <i class="fa-solid fa-pen text-[9px] opacity-50 mt-0.5"></i>
+                    </div>
+                `;
+            }
+            return `
+                <button onclick="event.stopPropagation(); openMemoModal('${e.id}')" class="w-full flex items-center justify-center space-x-1.5 text-[11px] font-semibold text-slate-400 border border-dashed border-slate-200 rounded-2xl py-2.5 hover:bg-slate-50 transition">
+                    <i class="fa-solid fa-plus"></i><span>自分用メモを追加</span>
+                </button>
+            `;
+        }
+
+        function openMemoModal(id) {
+            document.getElementById('memo-event-id').value = id;
+            document.getElementById('memo-text').value = personalMemos[id] || '';
+            document.getElementById('memo-modal').classList.remove('hidden');
+        }
+
+        function saveMemo(e) {
+            e.preventDefault();
+            const id = document.getElementById('memo-event-id').value;
+            const text = document.getElementById('memo-text').value.trim();
+            if (text) {
+                personalMemos[id] = text;
+            } else {
+                delete personalMemos[id];
+            }
+            savePersonalMemos();
+            closeModal('memo-modal');
+            render();
+            renderFavList();
+        }
+
+        function deleteMemo() {
+            const id = document.getElementById('memo-event-id').value;
+            delete personalMemos[id];
+            savePersonalMemos();
+            closeModal('memo-modal');
+            render();
+            renderFavList();
+        }
+
+        function getRandomColor() {
+            const colors = ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#8b5cf6', '#3b82f6', '#0ea5e9', '#10b981', '#f59e0b'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function sortGroups() {
+            groups.sort((a, b) => a.name.localeCompare(b.name, 'ja', { numeric: true }));
+        }
+
+        function render() {
+            sortGroups();
+            renderGroupDropdowns();
+            renderGroupManagementList();
+            renderFilterGroupList();
+            updateFilterSummaryLabel();
+            updateFavBadge();
+            updateDeadlineBadge();
+            updatePastToggleUI();
+
+            if (currentView === 'list') {
+                renderListView();
+            } else {
+                renderMonthView();
+            }
+        }
+
+        function toggleFavorite(id) {
+            if (favorites.has(id)) {
+                favorites.delete(id);
+            } else {
+                favorites.add(id);
+            }
+            saveFavorites();
+            render();
+            renderFavList();
+        }
+
+        function updateFavBadge() {
+            const badge = document.getElementById('fav-count-badge');
+            if (!badge) return;
+            if (favorites.size > 0) {
+                badge.textContent = favorites.size;
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+        }
+
+        function toggleFavMenu() {
+            const menu = document.getElementById('fav-menu');
+            const panel = menu.querySelector('div > div');
+            if (menu.classList.contains('hidden')) {
+                renderFavList();
+                menu.classList.remove('hidden');
+                setTimeout(() => {
+                    menu.classList.remove('opacity-0');
+                    panel.classList.remove('translate-x-full');
+                }, 10);
+            } else {
+                menu.classList.add('opacity-0');
+                panel.classList.add('translate-x-full');
+                setTimeout(() => menu.classList.add('hidden'), 300);
+            }
+        }
+
+        function favGroupKey(e) {
+            return `${e.date}__${e.title}`;
+        }
+
+        // 同じ日・同じタイトルのライブに出演する（表示中の）グループ一覧を返す
+        function coPerformingGroups(e) {
+            if (!e.group) return [];
+            const key = favGroupKey(e);
+            const names = [];
+            events.forEach(ev => {
+                if (!ev.group) return;
+                if (favGroupKey(ev) !== key) return;
+                if (!isGroupVisible(ev.group)) return;
+                if (!names.includes(ev.group)) names.push(ev.group);
+            });
+            return names;
+        }
+
+        // 複数グループ出演ライブの「〇組出演」バッジ
+        function coPerformBadgeHtml(e) {
+            const names = coPerformingGroups(e);
+            if (names.length < 2) return '';
+            return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${names.length}組出演</span>`;
+        }
+
+        // 展開したときに表示する、共演グループのチップ一覧
+        function coPerformListHtml(e) {
+            const names = coPerformingGroups(e);
+            if (names.length < 2) return '';
+            const chips = names.map(n => {
+                const go = groups.find(g => g.name === n);
+                const c = go ? go.color : '#ec4899';
+                const isSelf = n === e.group;
+                return `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isSelf ? 'ring-1' : ''}" style="background-color:${c}18;color:${c};${isSelf ? `--tw-ring-color:${c};` : ''}">${n}</span>`;
+            }).join('');
+            return `
+                <div class="bg-purple-50/60 border border-purple-100 rounded-2xl px-3 py-2.5">
+                    <p class="text-[10px] font-bold text-purple-500 mb-1.5"><i class="fa-solid fa-people-group mr-1"></i>このライブに出演するグループ</p>
+                    <div class="flex flex-wrap gap-1.5">${chips}</div>
+                </div>
+            `;
+        }
+
+        function renderFavList() {
+            const container = document.getElementById('fav-list');
+            if (!container) return;
+
+            // お気に入りが1件でも入っている「ライブ」(日付+タイトルが同じもの)ごとにまとめる
+            const favKeys = new Set(events.filter(e => favorites.has(e.id)).map(favGroupKey));
+
+            if (favKeys.size === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-xs text-slate-400">
+                        <i class="fa-regular fa-heart text-3xl text-pink-200 mb-2 block"></i>
+                        お気に入りはまだありません
+                    </div>
+                `;
+                return;
+            }
+
+            // 同じライブに出演する全グループ（お気に入りしてない子も含む）を集める
+            const liveMap = {};
+            events.forEach(e => {
+                const key = favGroupKey(e);
+                if (!favKeys.has(key)) return;
+                if (!liveMap[key]) liveMap[key] = [];
+                liveMap[key].push(e);
+            });
+
+            const sortedKeys = Object.keys(liveMap).sort((a, b) => {
+                const ea = liveMap[a][0], eb = liveMap[b][0];
+                return new Date(ea.date + ' ' + ea.time) - new Date(eb.date + ' ' + eb.time);
+            });
+
+            let html = '';
+            sortedKeys.forEach(key => {
+                const list = liveMap[key].slice().sort((a, b) => a.time.localeCompare(b.time));
+                const rep = list[0];
+                const dateFormatted = dayjs(rep.date).isValid() ? dayjs(rep.date).format('M/D(dd)') : rep.date;
+                const isMulti = list.length > 1;
+
+                const groupRows = list.map(ev => {
+                    const groupObj = groups.find(g => g.name === ev.group);
+                    const color = groupObj ? groupObj.color : '#ec4899';
+                    const isFav = favorites.has(ev.id);
+                    const hasMemo = !!personalMemos[ev.id];
+                    return `
+                        <div class="flex items-center justify-between bg-white/80 rounded-xl px-2.5 py-1.5">
+                            <div class="flex items-center space-x-1.5">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color: ${color}18; color: ${color};">${ev.group}</span>
+                                ${ev.time !== rep.time ? `<span class="text-[10px] text-slate-400 font-semibold">${ev.time}</span>` : ''}
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="openMemoModal('${ev.id}')" title="自分用メモ" class="w-6 h-6 flex items-center justify-center ${hasMemo ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}"><i class="fa-solid fa-note-sticky text-[10px]"></i></button>
+                                <a href="${gcalUrl(ev)}" target="_blank" title="カレンダーに追加" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-600"><i class="fa-solid fa-calendar-plus text-[10px]"></i></a>
+                                <button onclick="shareEventById('${ev.id}')" title="シェア" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-600"><i class="fa-solid fa-share-nodes text-[10px]"></i></button>
+                                <button onclick="toggleFavorite('${ev.id}')" title="お気に入り" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[10px]"></i></button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                html += `
+                    <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3.5">
+                        <p class="text-[11px] font-bold text-slate-500 mb-0.5">${dateFormatted} ${rep.time}</p>
+                        <p class="text-xs font-bold text-slate-800 mb-2 leading-snug">${rep.title}</p>
+                        ${isMulti ? `<p class="text-[10px] font-bold text-purple-400 mb-1.5 flex items-center"><i class="fa-solid fa-people-group mr-1.5"></i>${list.length}グループが出演</p>` : ''}
+                        <div class="space-y-1.5">${groupRows}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function shareFavoritesToSns() {
+            const favEvents = events
+                .filter(e => favorites.has(e.id))
+                .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+
+            if (favEvents.length === 0) {
+                alert('お気に入りのライブがまだありません');
+                return;
+            }
+
+            const lines = favEvents.map(e => {
+                const d = dayjs(e.date).isValid() ? dayjs(e.date).format('M/D(dd)') : e.date;
+                return `・${d} ${e.time} ${e.group}「${e.title}」`;
+            });
+            const text = `【推し活スケジュール】\n${lines.join('\n')}`;
+
+            if (navigator.share) {
+                try { await navigator.share({ title: 'Oshi-Cal', text }); } catch (e) {}
+            } else if (navigator.clipboard) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    alert('シェア内容をコピーしました。SNSアプリに貼り付けてね。');
+                } catch (e) {
+                    alert(text);
+                }
+            } else {
+                alert(text);
+            }
+        }
+
+        function getFavoriteLives() {
+            const favKeys = new Set(events.filter(e => favorites.has(e.id)).map(favGroupKey));
+            const liveMap = {};
+            events.forEach(e => {
+                const key = favGroupKey(e);
+                if (!favKeys.has(key)) return;
+                if (!liveMap[key]) liveMap[key] = [];
+                liveMap[key].push(e);
+            });
+            return Object.values(liveMap)
+                .map(list => list.slice().sort((a, b) => a.time.localeCompare(b.time)))
+                .sort((a, b) => new Date(a[0].date + ' ' + a[0].time) - new Date(b[0].date + ' ' + b[0].time));
+        }
+
+        function drawRoundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        function truncateText(ctx, text, maxWidth) {
+            if (ctx.measureText(text).width <= maxWidth) return text;
+            let t = text;
+            while (t.length > 1 && ctx.measureText(t + '…').width > maxWidth) {
+                t = t.slice(0, -1);
+            }
+            return t + '…';
+        }
+
+        function shareImageOfFavorites() {
+            const lives = getFavoriteLives();
+            if (lives.length === 0) {
+                alert('お気に入りのライブがまだありません');
+                return;
+            }
+
+            const WIDTH = 1080;
+            const PAD = 64;
+            const HEADER_H = 230;
+            const CARD_GAP = 28;
+            const CARD_PAD = 32;
+            const CHIP_H = 52;
+            const CHIP_GAP = 12;
+            const MAX_ITEMS = 8;
+            const shown = lives.slice(0, MAX_ITEMS);
+            const extra = lives.length - shown.length;
+            const contentWidth = WIDTH - PAD * 2 - CARD_PAD * 2;
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const cardsData = shown.map(list => {
+                const rep = list[0];
+                const chipRows = [[]];
+                let rowWidth = 0;
+                list.forEach(ev => {
+                    ctx.font = '700 26px sans-serif';
+                    const chipW = ctx.measureText(ev.group).width + 40;
+                    if (rowWidth + chipW + CHIP_GAP > contentWidth && rowWidth > 0) {
+                        chipRows.push([]);
+                        rowWidth = 0;
+                    }
+                    chipRows[chipRows.length - 1].push({ ev, chipW });
+                    rowWidth += chipW + CHIP_GAP;
+                });
+                const cardHeight = CARD_PAD * 2 + 46 + 16 + 40 + 16 + chipRows.length * (CHIP_H + 10);
+                return { rep, chipRows, cardHeight };
+            });
+
+            const totalCardsHeight = cardsData.reduce((sum, c) => sum + c.cardHeight + CARD_GAP, 0);
+            const extraNoteH = extra > 0 ? 60 : 0;
+            const footerH = 110;
+            const HEIGHT = Math.round(HEADER_H + totalCardsHeight + extraNoteH + footerH + PAD);
+
+            canvas.width = WIDTH;
+            canvas.height = HEIGHT;
+
+            const bg = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+            bg.addColorStop(0, '#fdf2f8');
+            bg.addColorStop(1, '#f5f3ff');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            ctx.fillStyle = '#ec4899';
+            ctx.font = '700 60px sans-serif';
+            ctx.fillText('推し活スケジュール', PAD, 128);
+
+            ctx.fillStyle = '#a855f7';
+            ctx.font = '600 28px sans-serif';
+            ctx.fillText('MY LIVE SCHEDULE', PAD, 172);
+
+            ctx.font = '60px sans-serif';
+            ctx.fillText('🎫', WIDTH - PAD - 70, 128);
+
+            let y = HEADER_H;
+            cardsData.forEach(card => {
+                const { rep, chipRows, cardHeight } = card;
+
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = 'rgba(236, 72, 153, 0.18)';
+                ctx.shadowBlur = 24;
+                ctx.shadowOffsetY = 10;
+                drawRoundRect(ctx, PAD, y, WIDTH - PAD * 2, cardHeight, 36);
+                ctx.fill();
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetY = 0;
+
+                let cy = y + CARD_PAD;
+                const dateFormatted = dayjs(rep.date).isValid() ? dayjs(rep.date).format('M/D(dd)') : rep.date;
+                ctx.fillStyle = '#64748b';
+                ctx.font = '700 32px sans-serif';
+                ctx.fillText(`${dateFormatted}  ${rep.time}`, PAD + CARD_PAD, cy + 32);
+                cy += 46 + 16;
+
+                ctx.fillStyle = '#1e293b';
+                ctx.font = '700 38px sans-serif';
+                ctx.fillText(truncateText(ctx, rep.title, contentWidth), PAD + CARD_PAD, cy + 34);
+                cy += 40 + 16;
+
+                chipRows.forEach(row => {
+                    let cx = PAD + CARD_PAD;
+                    row.forEach(({ ev, chipW }) => {
+                        const groupObj = groups.find(g => g.name === ev.group);
+                        const color = groupObj ? groupObj.color : '#ec4899';
+                        ctx.fillStyle = color;
+                        drawRoundRect(ctx, cx, cy, chipW, CHIP_H, CHIP_H / 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = '700 26px sans-serif';
+                        ctx.fillText(ev.group, cx + 20, cy + 35);
+                        cx += chipW + CHIP_GAP;
+                    });
+                    cy += CHIP_H + 10;
+                });
+
+                y += cardHeight + CARD_GAP;
+            });
+
+            if (extra > 0) {
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '600 28px sans-serif';
+                ctx.fillText(`ほか ${extra} 件`, PAD, y + 36);
+                y += extraNoteH;
+            }
+
+            ctx.fillStyle = '#c084fc';
+            ctx.font = '700 30px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('🩷 Oshi-Cal', WIDTH - PAD, y + 56);
+            ctx.textAlign = 'left';
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) { alert('画像の作成に失敗しました'); return; }
+                const file = new File([blob], 'oshi-cal-schedule.png', { type: 'image/png' });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({ files: [file], title: 'Oshi-Cal', text: '推し活スケジュール' });
+                        return;
+                    } catch (e) { /* キャンセルや失敗時はダウンロードにフォールバック */ }
+                }
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'oshi-cal-schedule.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                alert('画像を保存したよ。SNSアプリから画像を選んで投稿してね。');
+            }, 'image/png');
+        }
+
+        function escapeIcsText(str) {
+            return String(str).replace(/\\/g, '\\\\').replace(/([,;])/g, '\\$1').replace(/\n/g, '\\n');
+        }
+
+        function exportFavoritesToIcs() {
+            const favEvents = events.filter(e => favorites.has(e.id));
+            if (favEvents.length === 0) {
+                alert('お気に入りのライブがまだありません');
+                return;
+            }
+
+            let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Oshi-Cal//JP\r\nCALSCALE:GREGORIAN\r\n';
+            favEvents.forEach(e => {
+                const start = dayjs(`${e.date} ${e.time}`);
+                if (!start.isValid()) return;
+                const end = start.add(2, 'hour');
+                const fmt = d => d.format('YYYYMMDDTHHmmss');
+                ics += 'BEGIN:VEVENT\r\n';
+                ics += `UID:${e.id}@oshi-cal\r\n`;
+                ics += `DTSTAMP:${dayjs().format('YYYYMMDDTHHmmss')}\r\n`;
+                ics += `DTSTART:${fmt(start)}\r\n`;
+                ics += `DTEND:${fmt(end)}\r\n`;
+                ics += `SUMMARY:${escapeIcsText(e.group ? e.group + ' ' + e.title : e.title)}\r\n`;
+                if (e.location) ics += `LOCATION:${escapeIcsText(e.location)}\r\n`;
+                if (e.regulation) ics += `DESCRIPTION:${escapeIcsText(e.regulation)}\r\n`;
+                ics += 'END:VEVENT\r\n';
+            });
+            ics += 'END:VCALENDAR\r\n';
+
+            const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'oshi-cal-favorites.ics';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert('ファイルをダウンロードしました。Googleカレンダーの「設定」→「インポートとエクスポート」からこのファイルを選ぶと一括で登録できるよ。');
+        }
+
+        function renderGroupDropdowns() {
+            const modalSelect = document.getElementById('modal-group');
+            const currentModalVal = modalSelect.value;
+
+            let modalOpts = '<option value="">グループなし（自分だけの予定）</option>';
+            groups.forEach(g => {
+                modalOpts += `<option value="${g.name}">${g.name}</option>`;
+            });
+
+            modalSelect.innerHTML = modalOpts;
+            modalSelect.value = currentModalVal || '';
+        }
+
+        function openFilterModal() {
+            renderFilterGroupList();
+            document.getElementById('filter-modal').classList.remove('hidden');
+        }
+
+        function updateFilterSummaryLabel() {
+            const label = document.getElementById('filter-summary-label');
+            if (!label) return;
+            if (!filtersExplicit) {
+                label.innerHTML = '<i class="fa-solid fa-filter text-pink-400 text-xs mr-2"></i>すべてのグループ';
+            } else if (activeFilters.size === 0) {
+                label.innerHTML = '<i class="fa-solid fa-filter text-pink-400 text-xs mr-2"></i>0件のグループ（非表示中）';
+            } else if (activeFilters.size === 1) {
+                label.innerHTML = `<i class="fa-solid fa-filter text-pink-400 text-xs mr-2"></i>${[...activeFilters][0]}`;
+            } else {
+                label.innerHTML = `<i class="fa-solid fa-filter text-pink-400 text-xs mr-2"></i>${activeFilters.size}件のグループ`;
+            }
+        }
+
+        function renderFilterGroupList() {
+            const container = document.getElementById('filter-group-list');
+            if (!container) return;
+            const visibleGroups = groups.filter(g => g.visible !== false);
+            if (visibleGroups.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">表示中のグループがありません</p>`;
+                return;
+            }
+            let html = '';
+            visibleGroups.forEach(g => {
+                const checked = !filtersExplicit || activeFilters.has(g.name);
+                html += `
+                    <label class="flex items-center justify-between p-3 bg-pink-50/30 border border-pink-100/70 rounded-2xl">
+                        <span class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full" style="background-color:${g.color}"></span>
+                            <span class="text-xs font-bold text-slate-700">${g.name}</span>
+                        </span>
+                        <input type="checkbox" onchange="toggleFilterGroup('${g.name}')" ${checked ? 'checked' : ''} class="w-4 h-4 accent-pink-500">
+                    </label>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleFilterGroup(name) {
+            const visibleGroupNames = groups.filter(g => g.visible !== false).map(g => g.name);
+            if (!filtersExplicit) {
+                // 「すべて」状態から個別に外す操作なので、まず表示中のグループを選択済みとして展開する
+                filtersExplicit = true;
+                visibleGroupNames.forEach(n => activeFilters.add(n));
+            }
+            if (activeFilters.has(name)) {
+                activeFilters.delete(name);
+            } else {
+                activeFilters.add(name);
+            }
+            // 結果的に表示中のグループが全部選択された状態に戻ったら「すべて」に戻す
+            if (activeFilters.size === visibleGroupNames.length) {
+                filtersExplicit = false;
+                activeFilters.clear();
+            }
+            updateFilterSummaryLabel();
+            renderFilterGroupList();
+            if (currentView === 'list') {
+                renderListView();
+            } else {
+                renderMonthView();
+            }
+        }
+
+        function selectNoneFilters() {
+            filtersExplicit = true;
+            activeFilters.clear();
+            updateFilterSummaryLabel();
+            renderFilterGroupList();
+            if (currentView === 'list') {
+                renderListView();
+            } else {
+                renderMonthView();
+            }
+        }
+
+        function isGroupVisible(name) {
+            const g = groups.find(g => g.name === name);
+            return !g || g.visible !== false;
+        }
+
+        function toggleGroupVisible(index) {
+            const g = groups[index];
+            g.visible = g.visible === false ? true : false;
+            saveUserData();
+            render();
+        }
+
+        function isGroupNotifyEnabled(name) {
+            if (!name) return false; // グループなしの個人予定は通知対象外
+            const g = groups.find(g => g.name === name);
+            return !g || g.notify !== false;
+        }
+
+        function toggleGroupNotify(index) {
+            const g = groups[index];
+            g.notify = g.notify === false ? true : false;
+            saveUserData();
+            render();
+        }
+
+        function matchesActiveFilters(eventGroup) {
+            if (!eventGroup) return true; // グループ無しの個人予定は常に表示
+            if (!isGroupVisible(eventGroup)) return false;
+            if (!filtersExplicit) return true;
+            return activeFilters.has(eventGroup);
+        }
+
+        function hasAnyOfficialLink(name) {
+            const links = OFFICIAL_GROUP_LINKS[name];
+            if (!links) return false;
+            return Object.values(links).some(v => v && v.trim());
+        }
+
+        function renderGroupManagementList() {
+            const container = document.getElementById('group-management-list');
+            let html = '';
+            groups.forEach((g, index) => {
+                const linkCount = OFFICIAL_GROUP_LINKS[g.name]
+                    ? Object.values(OFFICIAL_GROUP_LINKS[g.name]).filter(v => v && v.trim()).length
+                    : 0;
+                const isHidden = g.visible === false;
+                const notifyOn = g.notify !== false;
+                html += `
+                    <div class="flex items-center justify-between p-3.5 bg-pink-50/40 border border-pink-100/80 rounded-2xl shadow-sm ${isHidden ? 'opacity-50' : ''}">
+                        <button onclick="openGroupLinksModal('${g.name}')" class="flex items-center space-x-3 text-left flex-1 min-w-0">
+                            <span class="w-4 h-4 rounded-full shadow-sm flex-shrink-0" style="background-color: ${g.color}"></span>
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-xs text-slate-800 truncate">${g.name}${isHidden ? '<span class="ml-1.5 text-[9px] font-bold text-slate-400 border border-slate-200 rounded-full px-1.5 py-0.5 align-middle">非表示中</span>' : ''}</h4>
+                                ${linkCount > 0 ? `<span class="text-[10px] font-semibold text-purple-500"><i class="fa-solid fa-link mr-1"></i>公式リンク ${linkCount}件</span>` : '<span class="text-[10px] text-slate-400">公式リンク未登録</span>'}
+                            </div>
+                        </button>
+                        <div class="flex items-center space-x-1 flex-shrink-0">
+                            <button onclick="toggleGroupNotify(${index})" title="${notifyOn ? '通知オフにする' : '通知オンにする'}" class="w-8 h-8 rounded-xl flex items-center justify-center transition ${notifyOn ? 'text-pink-500 hover:bg-pink-100' : 'text-slate-300 hover:text-pink-400 hover:bg-pink-50'}"><i class="fa-solid ${notifyOn ? 'fa-bell' : 'fa-bell-slash'} text-xs"></i></button>
+                            <button onclick="toggleGroupVisible(${index})" title="${isHidden ? '表示する' : '非表示にする'}" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'} text-xs"></i></button>
+                            <button onclick="openGroupEditModal(${index})" title="表示設定" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid fa-palette text-xs"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function openGroupLinksModal(groupName) {
+            const groupObj = groups.find(g => g.name === groupName);
+            const color = groupObj ? groupObj.color : '#ec4899';
+            document.getElementById('group-links-title').innerHTML = `<span class="w-3 h-3 rounded-full inline-block mr-2" style="background-color:${color}"></span>${groupName}`;
+
+            const links = OFFICIAL_GROUP_LINKS[groupName];
+            const container = document.getElementById('group-links-list');
+            const rows = Object.keys(LINK_META)
+                .filter(key => links && links[key] && links[key].trim())
+                .map(key => {
+                    const meta = LINK_META[key];
+                    return `
+                        <a href="${links[key]}" target="_blank" class="flex items-center justify-between p-3 bg-pink-50/40 border border-pink-100/80 rounded-2xl hover:bg-pink-100/60 transition">
+                            <span class="flex items-center space-x-2 text-xs font-bold text-slate-700">
+                                <i class="${meta.icon}" style="color:${meta.color}"></i>
+                                <span>${meta.label}</span>
+                            </span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></i>
+                        </a>
+                    `;
+                });
+
+            container.innerHTML = rows.length > 0
+                ? rows.join('')
+                : `<p class="text-xs text-slate-400 text-center py-6">公式リンクはまだ登録されていません</p>`;
+
+            document.getElementById('group-links-modal').classList.remove('hidden');
+        }
+
+        // ==== ⑥ 今日のライブ（現場モード）カード ====
+        // ==== ⑥ 今日の現場（常に上部に小さく固定表示、タップで詳細パネル） ====
+        function getTodayLiveGroups() {
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            const todays = events
+                .filter(e => e.date === todayStr && matchesActiveFilters(e.group))
+                .sort((a, b) => a.time.localeCompare(b.time));
+
+            const map = new Map();
+            todays.forEach(e => {
+                const key = e.group ? favGroupKey(e) : 'solo__' + e.id;
+                if (!map.has(key)) map.set(key, []);
+                map.get(key).push(e);
+            });
+            return [...map.values()];
+        }
+
+        function todayLiveCardHtml() {
+            const lives = getTodayLiveGroups();
+            if (lives.length === 0) return '';
+
+            return `
+                <div onclick="openTodayLiveModal()" class="sticky top-[92px] z-20 cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl px-4 py-3 shadow-md shadow-pink-500/40 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-star text-[10px]"></i></span>
+                        <span class="text-white font-black text-xs">今日の現場</span>
+                        <span class="text-white/70 text-[10px] font-bold">${dayjs().format('M月D日(dd)')}・${lives.length}件</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-white/80 text-xs"></i>
+                </div>
+            `;
+        }
+
+        function openTodayLiveModal() {
+            const lives = getTodayLiveGroups();
+            const container = document.getElementById('today-live-body');
+            if (!container) return;
+
+            if (lives.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 py-8">今日の予定はありません</p>`;
+            } else {
+                container.innerHTML = lives.map(list => {
+                    const rep = list[0];
+                    const isMulti = list.length > 1;
+
+                    const eventBlocks = list.map(e => {
+                        const go = groups.find(g => g.name === e.group);
+                        const c = go ? go.color : '#94a3b8';
+                        const memo = personalMemos[e.id];
+
+                        return `
+                            <div class="${isMulti ? 'border-t border-pink-100 pt-2 mt-2 first:border-t-0 first:pt-0 first:mt-0' : ''} space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group || '個人の予定'}${e.time !== '00:00' ? ' ' + e.time : ''}</span>
+                                    ${deadlineBadgeHtml(e)}
+                                </div>
+                                ${e.location ? `
+                                    <div class="flex space-x-2">
+                                        <a href="${mapsUrl(e.location)}" target="_blank" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-bold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-location-dot"></i><span>${e.location}</span></a>
+                                        <a href="${transitUrl(e.location)}" target="_blank" title="ルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl"><i class="fa-solid fa-train-subway"></i></a>
+                                    </div>
+                                ` : ''}
+                                ${renderRegulationHtml(e)}
+                                ${memo ? `<div class="bg-amber-50 rounded-2xl px-3 py-2.5 space-y-1">${memo.split('\n').map(l => `<p class="text-[11px] font-semibold text-amber-700">${escapeHtml(l)}</p>`).join('')}</div>` : ''}
+                                <div class="flex space-x-2">
+                                    <a href="${gcalUrl(e)}" target="_blank" class="flex-1 flex items-center justify-center space-x-1.5 bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-calendar-plus"></i><span>カレンダー</span></a>
+                                    <button onclick="shareEventById('${e.id}')" class="w-11 flex items-center justify-center bg-slate-50 text-slate-500 rounded-2xl"><i class="fa-solid fa-share-nodes"></i></button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3">
+                            <p class="text-slate-800 font-bold text-sm leading-snug mb-2">${escapeHtml(rep.title)}</p>
+                            ${eventBlocks}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('today-live-modal').classList.remove('hidden');
+        }
+
+        function closeTodayLiveModal() {
+            document.getElementById('today-live-modal').classList.add('hidden');
+        }
+
+        // ==== ② 推し活サマリー ====
+        // 12月は年間サマリーを既定で開く（年末のふりかえり用）
+        let summaryPeriod = (dayjs().month() === 11) ? 'year' : 'month';
+
+        function computeSummary(period) {
+            const now = dayjs();
+            const start = period === 'year' ? now.startOf('year') : now.startOf('month');
+            const end = period === 'year' ? now.endOf('year') : now.endOf('month');
+
+            // お気に入りに入れた予定＝「参戦した/する」とみなす
+            const targets = events.filter(e => {
+                if (!favorites.has(e.id)) return false;
+                const d = dayjs(e.date);
+                return d.isValid() && !d.isBefore(start) && !d.isAfter(end);
+            });
+
+            // ライブ本数（同じライブの複数グループは1本と数える）
+            const liveKeys = new Set(targets.map(e => e.group ? favGroupKey(e) : 'solo__' + e.id));
+
+            const groupCount = {};
+            const venueCount = {};
+            targets.forEach(e => {
+                if (e.group) groupCount[e.group] = (groupCount[e.group] || 0) + 1;
+                if (e.location) venueCount[e.location] = (venueCount[e.location] || 0) + 1;
+            });
+
+            const rank = obj => Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            // 一番参戦が多かった月（年間サマリー用）
+            let busiestMonth = null;
+            if (period === 'year') {
+                const byMonth = {};
+                targets.forEach(e => {
+                    const k = dayjs(e.date).format('M月');
+                    byMonth[k] = (byMonth[k] || 0) + 1;
+                });
+                const top = Object.entries(byMonth).sort((a, b) => b[1] - a[1])[0];
+                if (top) busiestMonth = { month: top[0], count: top[1] };
+            }
+
+            return {
+                period,
+                label: period === 'year' ? `${now.year()}年` : now.format('YYYY年M月'),
+                liveCount: liveKeys.size,
+                groupCount: Object.keys(groupCount).length,
+                topGroups: rank(groupCount),
+                topVenues: rank(venueCount),
+                busiestMonth
+            };
+        }
+
+        function toggleSummary() {
+            const modal = document.getElementById('summary-modal');
+            if (modal.classList.contains('hidden')) {
+                renderSummary();
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function setSummaryPeriod(p) {
+            summaryPeriod = p;
+            renderSummary();
+        }
+
+        function renderSummary() {
+            const s = computeSummary(summaryPeriod);
+            const container = document.getElementById('summary-body');
+            if (!container) return;
+
+            const isYear = summaryPeriod === 'year';
+            const monthCls = !isYear ? 'bg-white text-pink-600 shadow-sm' : 'text-white/70';
+            const yearCls = isYear ? 'bg-white text-pink-600 shadow-sm' : 'text-white/70';
+
+            if (s.liveCount === 0) {
+                container.innerHTML = `
+                    <div class="flex bg-white/20 p-1 rounded-full text-[11px] font-bold w-fit mx-auto mb-4">
+                        <button onclick="setSummaryPeriod('month')" class="px-4 py-1.5 rounded-full transition ${monthCls}">今月</button>
+                        <button onclick="setSummaryPeriod('year')" class="px-4 py-1.5 rounded-full transition ${yearCls}">今年</button>
+                    </div>
+                    <div class="text-center py-10">
+                        <i class="fa-regular fa-heart text-4xl text-white/50 mb-3 block"></i>
+                        <p class="text-xs text-white/80 font-medium">${s.label}のお気に入りがまだありません</p>
+                        <p class="text-[10px] text-white/60 mt-1.5">行くライブを♡しておくと、ここに記録がたまるよ</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const groupCards = s.topGroups.map(([name, n], i) => {
+                const go = groups.find(g => g.name === name);
+                const c = go ? go.color : '#ec4899';
+                return `
+                    <div class="flex items-center justify-between bg-white/90 rounded-2xl px-3 py-2.5">
+                        <div class="flex items-center space-x-2.5 min-w-0">
+                            <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style="background-color:${c}">${i + 1}</span>
+                            <span class="text-xs font-bold text-slate-800 truncate">${name}</span>
+                        </div>
+                        <span class="text-xs font-black text-slate-400 flex-shrink-0">${n}</span>
+                    </div>
+                `;
+            }).join('');
+
+            const venueCards = s.topVenues.length ? s.topVenues.map(([name, n], i) => `
+                    <div class="flex items-center justify-between bg-white/90 rounded-2xl px-3 py-2.5">
+                        <div class="flex items-center space-x-2.5 min-w-0">
+                            <span class="w-5 h-5 rounded-full bg-purple-400 flex items-center justify-center text-[10px] font-black text-white flex-shrink-0">${i + 1}</span>
+                            <span class="text-xs font-bold text-slate-800 truncate">${name}</span>
+                        </div>
+                        <span class="text-xs font-black text-slate-400 flex-shrink-0">${n}</span>
+                    </div>
+            `).join('') : '<p class="text-[11px] text-white/70 px-1">会場の記録がまだありません</p>';
+
+            container.innerHTML = `
+                <div class="flex bg-white/20 p-1 rounded-full text-[11px] font-bold w-fit mx-auto mb-4">
+                    <button onclick="setSummaryPeriod('month')" class="px-4 py-1.5 rounded-full transition ${monthCls}">今月</button>
+                    <button onclick="setSummaryPeriod('year')" class="px-4 py-1.5 rounded-full transition ${yearCls}">今年</button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5 mb-4">
+                    <div class="bg-white/90 rounded-2xl p-3.5">
+                        <p class="text-[10px] font-bold text-slate-400 mb-0.5">参戦本数</p>
+                        <p class="text-3xl font-black text-slate-800 leading-none">${s.liveCount}<span class="text-sm ml-1">本</span></p>
+                    </div>
+                    <div class="bg-white/90 rounded-2xl p-3.5">
+                        <p class="text-[10px] font-bold text-slate-400 mb-0.5">推しグループ</p>
+                        <p class="text-3xl font-black text-slate-800 leading-none">${s.groupCount}<span class="text-sm ml-1">組</span></p>
+                    </div>
+                </div>
+
+                ${s.busiestMonth ? `
+                    <div class="bg-white/90 rounded-2xl p-3.5 mb-4">
+                        <p class="text-[10px] font-bold text-slate-400 mb-0.5">一番通った月</p>
+                        <p class="text-xl font-black text-slate-800">${s.busiestMonth.month} <span class="text-xs text-slate-400 font-bold">(${s.busiestMonth.count}本)</span></p>
+                    </div>
+                ` : ''}
+
+                <p class="text-[11px] font-black text-white mb-2 px-1">よく観たグループ</p>
+                <div class="space-y-1.5 mb-4">${groupCards}</div>
+
+                <p class="text-[11px] font-black text-white mb-2 px-1">よく行った会場</p>
+                <div class="space-y-1.5">${venueCards}</div>
+            `;
+        }
+
+        async function shareSummary() {
+            const s = computeSummary(summaryPeriod);
+            if (s.liveCount === 0) { alert('まだ記録がありません'); return; }
+            const lines = [
+                `【推し活まとめ ${s.label}】`,
+                `参戦 ${s.liveCount}本 / ${s.groupCount}組`,
+                ...s.topGroups.slice(0, 3).map(([n, c], i) => `${i + 1}. ${n}（${c}）`),
+                '',
+                '#推し活 #OshiCal',
+                SITE_URL
+            ];
+            const text = lines.join('\n');
+            if (navigator.share) {
+                try { await navigator.share({ title: 'Oshi-Cal', text }); return; } catch (e) {}
+            }
+            if (navigator.clipboard) {
+                try { await navigator.clipboard.writeText(text); alert('コピーしました。SNSに貼り付けてね。'); return; } catch (e) {}
+            }
+            alert(text);
+        }
+
+        function shareSummaryImage() {
+            const s = computeSummary(summaryPeriod);
+            if (s.liveCount === 0) { alert('まだ記録がありません'); return; }
+
+            const WIDTH = 1080;
+            const PAD = 70;
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const topGroups = s.topGroups.slice(0, 5);
+            const topVenues = s.topVenues.slice(0, 3);
+            const ROW_H = 92;
+            const HEADER_H = 300;
+            const STAT_H = 190;
+            const SECTION_GAP = 60;
+            const groupsH = topGroups.length ? 70 + topGroups.length * ROW_H : 0;
+            const venuesH = topVenues.length ? 70 + topVenues.length * ROW_H : 0;
+            const footerH = 160;
+            const HEIGHT = HEADER_H + STAT_H + SECTION_GAP + groupsH + (venuesH ? SECTION_GAP + venuesH : 0) + footerH + PAD;
+
+            canvas.width = WIDTH;
+            canvas.height = HEIGHT;
+
+            // 背景グラデーション
+            const bg = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+            bg.addColorStop(0, '#ec4899');
+            bg.addColorStop(1, '#a855f7');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            // 装飾の丸（ふんわり）
+            ctx.globalAlpha = 0.15;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(WIDTH - 60, 60, 160, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(40, HEIGHT - 80, 130, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+
+            // ヘッダー
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '700 30px sans-serif';
+            ctx.fillText('MY 推し活まとめ', PAD, 100);
+            ctx.font = '900 66px sans-serif';
+            ctx.fillText(s.label, PAD, 175);
+            ctx.font = '64px sans-serif';
+            ctx.fillText('🎫', WIDTH - PAD - 70, 110);
+
+            let y = HEADER_H;
+
+            // 統計カード（参戦本数 / 推しグループ）
+            const statW = (WIDTH - PAD * 2 - 24) / 2;
+            [
+                { label: '参戦本数', value: `${s.liveCount}`, unit: '本' },
+                { label: '推しグループ', value: `${s.groupCount}`, unit: '組' }
+            ].forEach((stat, i) => {
+                const x = PAD + i * (statW + 24);
+                ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                drawRoundRect(ctx, x, y, statW, STAT_H, 28);
+                ctx.fill();
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '700 26px sans-serif';
+                ctx.fillText(stat.label, x + 28, y + 50);
+                ctx.fillStyle = '#1e293b';
+                ctx.font = '900 72px sans-serif';
+                ctx.fillText(stat.value, x + 28, y + 130);
+                const vw = ctx.measureText(stat.value).width;
+                ctx.font = '700 30px sans-serif';
+                ctx.fillText(stat.unit, x + 28 + vw + 12, y + 130);
+            });
+            y += STAT_H + SECTION_GAP;
+
+            const contentW = WIDTH - PAD * 2;
+
+            function drawRankSection(title, items, dotColorFn) {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '900 32px sans-serif';
+                ctx.fillText(title, PAD, y + 40);
+                y += 70;
+                items.forEach(([name, count], i) => {
+                    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                    drawRoundRect(ctx, PAD, y, contentW, ROW_H - 16, 22);
+                    ctx.fill();
+
+                    const badgeR = 22;
+                    const cy = y + (ROW_H - 16) / 2;
+                    ctx.fillStyle = dotColorFn(name);
+                    ctx.beginPath(); ctx.arc(PAD + 40, cy, badgeR, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '900 24px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(String(i + 1), PAD + 40, cy + 8);
+                    ctx.textAlign = 'left';
+
+                    ctx.fillStyle = '#1e293b';
+                    ctx.font = '700 32px sans-serif';
+                    ctx.fillText(truncateText(ctx, name, contentW - 220), PAD + 84, cy + 11);
+
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '900 30px sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(String(count), PAD + contentW - 24, cy + 10);
+                    ctx.textAlign = 'left';
+
+                    y += ROW_H;
+                });
+            }
+
+            if (topGroups.length) {
+                drawRankSection('よく観たグループ', topGroups, (name) => {
+                    const go = groups.find(g => g.name === name);
+                    return go ? go.color : '#ec4899';
+                });
+                y += SECTION_GAP;
+            }
+
+            if (topVenues.length) {
+                drawRankSection('よく行った会場', topVenues, () => '#a855f7');
+                y += SECTION_GAP;
+            }
+
+            // フッター：ハッシュタグ + URL
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.font = '700 28px sans-serif';
+            ctx.fillText('#推し活 #OshiCal', PAD, y + 40);
+            ctx.font = '600 24px sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.75)';
+            ctx.fillText(SITE_URL, PAD, y + 78);
+
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 30px sans-serif';
+            ctx.fillText('🩷 Oshi-Cal', WIDTH - PAD, y + 60);
+            ctx.textAlign = 'left';
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) { alert('画像の作成に失敗しました'); return; }
+                const file = new File([blob], 'oshi-cal-summary.png', { type: 'image/png' });
+                const shareText = `【推し活まとめ ${s.label}】参戦${s.liveCount}本 / ${s.groupCount}組\n#推し活 #OshiCal\n${SITE_URL}`;
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({ files: [file], title: 'Oshi-Cal', text: shareText });
+                        return;
+                    } catch (e) { /* キャンセル・失敗時はダウンロードにフォールバック */ }
+                }
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'oshi-cal-summary.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                alert('画像を保存したよ。SNSアプリから画像を選んで投稿してね。');
+            }, 'image/png');
+        }
+
+        function renderListView() {
+            const container = document.getElementById('view-list');
+
+            let filtered = events.slice().sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+            filtered = filtered.filter(e => matchesActiveFilters(e.group));
+
+            // 過去の予定（今日より前）は、トグルがオフの間は表示しない
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            if (!showPastEvents) {
+                filtered = filtered.filter(e => e.date >= todayStr);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = todayLiveCardHtml() + `
+                    <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
+                        <i class="fa-regular fa-calendar-xmark text-4xl text-pink-300 mb-3"></i>
+                        <p class="text-xs text-slate-400 font-medium">予定がありません</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 同じ日・同じタイトルのライブは1枚のカードにまとめる
+            const liveMap = new Map();
+            filtered.forEach(e => {
+                const key = e.group ? favGroupKey(e) : 'solo__' + e.id;
+                if (!liveMap.has(key)) liveMap.set(key, []);
+                liveMap.get(key).push(e);
+            });
+
+            const lives = [...liveMap.values()].sort(
+                (a, b) => new Date(a[0].date + ' ' + a[0].time) - new Date(b[0].date + ' ' + b[0].time)
+            );
+
+            let html = todayLiveCardHtml();
+            let lastDate = '';
+
+            lives.forEach(list => {
+                const rep = list[0];
+                const isMulti = list.length > 1;
+                const dateFormatted = dayjs(rep.date).isValid() ? dayjs(rep.date).format('M月D日(dd)') : rep.date;
+                const isToday = dayjs(rep.date).isToday();
+
+                if (rep.date !== lastDate) {
+                    html += `
+                        <div data-date="${rep.date}" class="scroll-mt-24 flex items-center space-x-2 pt-3 pb-1 px-1">
+                            <h3 class="font-bold text-slate-700 text-xs">${dateFormatted}</h3>
+                            ${isToday ? '<span class="px-2 py-0.5 bg-pink-500 text-white text-[10px] font-bold rounded-full shadow-sm shadow-pink-500/30">今日</span>' : ''}
+                        </div>
+                    `;
+                    lastDate = rep.date;
+                }
+
+                const cardKey = 'live_' + list.map(e => e.id).join('|');
+                const isExpanded = expandedEvents.has(cardKey);
+                const anyFav = list.some(e => favorites.has(e.id));
+
+                const repGroupObj = groups.find(g => g.name === rep.group);
+                const repColor = repGroupObj ? repGroupObj.color : (rep.group ? '#ec4899' : '#94a3b8');
+
+                // 左端のカラーバー：複数グループならその色を積み重ねる
+                const barHtml = isMulti
+                    ? `<div class="w-2 flex flex-col">${list.map(e => {
+                            const go = groups.find(g => g.name === e.group);
+                            return `<div class="flex-1" style="background-color:${go ? go.color : '#ec4899'}"></div>`;
+                        }).join('')}</div>`
+                    : `<div class="w-2" style="background-color: ${repColor}"></div>`;
+
+                // グループチップ：複数ならまとめて並べる
+                const chipsHtml = rep.group
+                    ? list.map(e => {
+                        const go = groups.find(g => g.name === e.group);
+                        const c = go ? go.color : '#ec4899';
+                        return `<span onclick="event.stopPropagation(); openGroupLinksModal('${e.group}')" class="text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer" style="background-color: ${c}18; color: ${c};">${e.group}</span>`;
+                      }).join('')
+                    : `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-user text-[9px] mr-1"></i>個人の予定</span>`;
+
+                // 時間：グループごとに違う場合はまとめて1つに表示できないので代表の時間を出す
+                const times = [...new Set(list.map(e => e.time))];
+                const timeHtml = times.length === 1
+                    ? `<span class="text-2xl font-black text-slate-800 tracking-tight">${times[0]}</span>`
+                    : `<span class="text-2xl font-black text-slate-800 tracking-tight">${times[0]}<span class="text-xs font-bold text-slate-400 ml-1">ほか</span></span>`;
+
+                // 展開時：グループごとの詳細
+                const detailsHtml = list.map(e => {
+                    const go = groups.find(g => g.name === e.group);
+                    const c = go ? go.color : (e.group ? '#ec4899' : '#94a3b8');
+                    const isFav = favorites.has(e.id);
+                    return `
+                        <div class="rounded-2xl border border-pink-50 p-3 space-y-2">
+                            ${isMulti ? `
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group}</span>
+                                        <span class="text-[11px] font-bold text-slate-400">${e.time}</span>
+                                    </div>
+                                    <button onclick="event.stopPropagation(); toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
+                                </div>
+                            ` : ''}
+                            ${e.location ? `<div class="flex space-x-2"><a href="${mapsUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-pink-100 transition"><i class="fa-solid fa-location-dot"></i><span>${e.location}</span></a><a href="${transitUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" title="乗換案内でルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-train-subway"></i></a></div>` : ''}
+                            ${renderRegulationHtml(e)}
+                            ${renderMemoHtml(e)}
+                            <div class="flex space-x-2">
+                                <a href="${gcalUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center justify-center space-x-1.5 bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-calendar-plus"></i><span>Googleカレンダーに追加</span></a>
+                                <button onclick="event.stopPropagation(); shareEventById('${e.id}')" title="シェア" class="w-11 flex items-center justify-center bg-slate-50 text-slate-500 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-share-nodes"></i></button>
+                            </div>
+                            ${!e.isSheet ? `<div class="flex justify-end"><button onclick="event.stopPropagation(); deleteEvent('${e.id}')" class="text-slate-300 hover:text-red-500 text-[11px] transition"><i class="fa-solid fa-trash"></i> 削除</button></div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                html += `
+                    <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${isMulti ? 'border-2 border-purple-200' : 'border border-pink-100/60'}">
+                        ${barHtml}
+                        <div class="flex-1 p-4 cursor-pointer" onclick="toggleEventDetail('${cardKey}')">
+                            <div class="flex items-center justify-between mb-2">
+                                ${timeHtml}
+                                <div class="flex items-center space-x-2">
+                                    ${!isMulti ? `<button onclick="event.stopPropagation(); toggleFavorite('${rep.id}')" class="w-7 h-7 rounded-full flex items-center justify-center transition ${anyFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-xs"></i></button>` : ''}
+                                    <span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"><i class="fa-solid fa-chevron-down text-[10px]"></i></span>
+                                </div>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm leading-snug mb-2">${rep.title}</h4>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
+                                ${deadlineBadgeHtml(rep)}
+                                ${chipsHtml}
+                            </div>
+                            ${isExpanded ? `<div class="mt-3 pt-3 border-t border-pink-50 space-y-2">${detailsHtml}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderMonthView() {
+            document.getElementById('calendar-title').innerText = currentMonth.format('YYYY年 M月');
+            const grid = document.getElementById('calendar-grid');
+            
+            const startDay = currentMonth.startOf('month').day();
+            const daysInMonth = currentMonth.daysInMonth();
+            
+            let html = '';
+            for (let i = 0; i < startDay; i++) {
+                html += `<div></div>`;
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = currentMonth.date(day).format('YYYY-MM-DD');
+                const hasEvent = events.some(e => e.date === dateStr && matchesActiveFilters(e.group));
+                const isSelected = selectedDate === dateStr;
+                const isToday = dayjs().format('YYYY-MM-DD') === dateStr;
+
+                let classes = "h-11 rounded-2xl flex flex-col items-center justify-center text-xs font-bold relative transition cursor-pointer ";
+                if (isSelected) {
+                    classes += "bg-gradient-to-tr from-pink-500 to-purple-500 text-white shadow-md shadow-pink-500/30 ";
+                } else if (isToday) {
+                    classes += "border-2 border-pink-400 text-pink-500 bg-pink-50/50 ";
+                } else {
+                    classes += "hover:bg-pink-50 text-slate-700 ";
+                }
+
+                html += `
+                    <div onclick="selectDate('${dateStr}')" class="${classes}">
+                        <span>${day}</span>
+                        ${hasEvent ? `<span class="w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-white' : 'bg-pink-500'}"></span>` : ''}
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
+            renderSelectedDayEvents();
+        }
+
+        function goToToday() {
+            if (currentView === 'month') {
+                currentMonth = dayjs().startOf('month');
+                selectedDate = dayjs().format('YYYY-MM-DD');
+                renderMonthView();
+            } else {
+                scrollToToday();
+            }
+        }
+
+        function scrollToToday() {
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            const headers = Array.from(document.querySelectorAll('#view-list [data-date]'));
+            if (!headers.length) return;
+            const target = headers.find(h => h.dataset.date >= todayStr) || headers[headers.length - 1];
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function toggleEventDetail(id) {
+            if (expandedEvents.has(id)) {
+                expandedEvents.delete(id);
+            } else {
+                expandedEvents.add(id);
+            }
+            renderListView();
+        }
+
+        function selectDate(dateStr) {
+            selectedDate = dateStr;
+            renderMonthView();
+        }
+
+        function renderSelectedDayEvents() {
+            const container = document.getElementById('selected-day-events');
+            const dayEvents = events.filter(e => e.date === selectedDate).sort((a,b) => a.time.localeCompare(b.time));
+            const filtered = dayEvents.filter(e => matchesActiveFilters(e.group));
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-4 text-center border border-pink-100/60 text-xs text-slate-400 shadow-sm">
+                        ${dayjs(selectedDate).format('M月D日')}の予定はありません
+                    </div>
+                `;
+                return;
+            }
+
+            // 同じタイトルのライブは1枚にまとめる
+            const liveMap = new Map();
+            filtered.forEach(e => {
+                const key = e.group ? favGroupKey(e) : 'solo__' + e.id;
+                if (!liveMap.has(key)) liveMap.set(key, []);
+                liveMap.get(key).push(e);
+            });
+            const lives = [...liveMap.values()].sort((a, b) => a[0].time.localeCompare(b[0].time));
+
+            let html = `<h4 class="text-xs font-bold text-slate-500 px-1">${dayjs(selectedDate).format('M月D日')}の予定</h4>`;
+
+            lives.forEach(list => {
+                const rep = list[0];
+                const isMulti = list.length > 1;
+                const repGroupObj = groups.find(g => g.name === rep.group);
+                const repColor = repGroupObj ? repGroupObj.color : (rep.group ? '#ec4899' : '#94a3b8');
+
+                const barHtml = isMulti
+                    ? `<span class="w-1.5 rounded-full overflow-hidden flex flex-col">${list.map(e => {
+                            const go = groups.find(g => g.name === e.group);
+                            return `<span class="flex-1" style="background-color:${go ? go.color : '#ec4899'}"></span>`;
+                        }).join('')}</span>`
+                    : `<span class="w-1.5 rounded-full" style="background-color: ${repColor}"></span>`;
+
+                const chipsHtml = rep.group
+                    ? list.map(e => {
+                        const go = groups.find(g => g.name === e.group);
+                        const c = go ? go.color : '#ec4899';
+                        return `<span onclick="openGroupLinksModal('${e.group}')" class="text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer" style="background-color: ${c}15; color: ${c};">${e.group}</span>`;
+                      }).join('')
+                    : `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-user text-[9px] mr-1"></i>個人の予定</span>`;
+
+                const detailsHtml = list.map(e => {
+                    const go = groups.find(g => g.name === e.group);
+                    const c = go ? go.color : (e.group ? '#ec4899' : '#94a3b8');
+                    const isFav = favorites.has(e.id);
+                    return `
+                        <div class="${isMulti ? 'rounded-xl border border-pink-50 p-2.5 mt-2' : ''}">
+                            ${isMulti ? `
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}15;color:${c};">${e.group}</span>
+                                        <span class="text-[11px] font-semibold text-slate-400">${e.time}</span>
+                                    </div>
+                                    <button onclick="toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
+                                </div>
+                            ` : ''}
+                            ${e.location ? `<div class="flex items-center space-x-3 mb-1"><a href="${mapsUrl(e.location)}" target="_blank" class="text-[11px] text-pink-600 font-semibold flex items-center hover:underline"><i class="fa-solid fa-location-dot mr-1.5 text-pink-400"></i>${e.location}</a><a href="${transitUrl(e.location)}" target="_blank" class="text-[11px] text-purple-500 font-semibold flex items-center hover:underline"><i class="fa-solid fa-train-subway mr-1"></i>ルート検索</a></div>` : ''}
+                            ${renderRegulationHtml(e)}
+                            <div class="mt-1.5">${renderMemoHtml(e)}</div>
+                            <div class="flex items-center space-x-3 mt-1.5">
+                                <a href="${gcalUrl(e)}" target="_blank" class="inline-flex items-center text-[11px] text-slate-500 font-semibold hover:underline"><i class="fa-solid fa-calendar-plus mr-1.5"></i>Googleカレンダーに追加</a>
+                                <button onclick="shareEventById('${e.id}')" class="inline-flex items-center text-[11px] text-slate-500 font-semibold hover:underline"><i class="fa-solid fa-share-nodes mr-1.5"></i>シェア</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                html += `
+                    <div class="bg-white p-3.5 rounded-2xl shadow-sm flex items-stretch space-x-3 ${isMulti ? 'border-2 border-purple-200' : 'border border-pink-100/60'}">
+                        ${barHtml}
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-bold text-slate-400">${rep.time}${isMulti && [...new Set(list.map(e => e.time))].length > 1 ? ' ほか' : ''}</span>
+                                ${!isMulti ? `<button onclick="toggleFavorite('${rep.id}')" class="w-6 h-6 flex items-center justify-center transition ${favorites.has(rep.id) ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-xs"></i></button>` : ''}
+                            </div>
+                            <h5 class="font-bold text-xs text-slate-800 mb-1.5">${rep.title}</h5>
+                            <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
+                                ${chipsHtml}
+                            </div>
+                            ${detailsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function switchView(view) {
+            currentView = view;
+            const listBtn = document.getElementById('tab-list');
+            const monthBtn = document.getElementById('tab-month');
+            const listDiv = document.getElementById('view-list');
+            const monthDiv = document.getElementById('view-month');
+
+            if (view === 'list') {
+                listBtn.className = "px-4 py-1.5 rounded-full transition bg-white text-pink-600 shadow-sm";
+                monthBtn.className = "px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700";
+                listDiv.classList.remove('hidden');
+                monthDiv.classList.add('hidden');
+            } else {
+                monthBtn.className = "px-4 py-1.5 rounded-full transition bg-white text-pink-600 shadow-sm";
+                listBtn.className = "px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700";
+                monthDiv.classList.remove('hidden');
+                listDiv.classList.add('hidden');
+            }
+            render();
+        }
+
+        function changeMonth(direction) {
+            currentMonth = currentMonth.add(direction, 'month');
+            renderMonthView();
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            const panel = menu.querySelector('div > div');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                setTimeout(() => {
+                    menu.classList.remove('opacity-0');
+                    panel.classList.remove('translate-x-full');
+                }, 10);
+            } else {
+                menu.classList.add('opacity-0');
+                panel.classList.add('translate-x-full');
+                setTimeout(() => menu.classList.add('hidden'), 300);
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('modal-date').value = dayjs().format('YYYY-MM-DD');
+            document.getElementById('modal-time').value = '19:00';
+            document.getElementById('modal-group').value = '';
+            document.getElementById('event-modal').classList.remove('hidden');
+        }
+
+        function openGroupEditModal(index) {
+            const g = groups[index];
+            document.getElementById('group-edit-index').value = index;
+            document.getElementById('group-modal-name-label').innerText = g.name;
+            document.getElementById('group-modal-color').value = g.color;
+            document.getElementById('group-modal-visible').checked = g.visible !== false;
+            document.getElementById('group-modal-notify').checked = g.notify !== false;
+            document.getElementById('group-modal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function saveEvent(e) {
+            e.preventDefault();
+            const newEvent = {
+                id: 'manual_' + Date.now(),
+                group: document.getElementById('modal-group').value,
+                title: document.getElementById('modal-title').value,
+                date: document.getElementById('modal-date').value,
+                time: document.getElementById('modal-time').value,
+                location: document.getElementById('modal-location').value,
+                regulation: document.getElementById('modal-regulation').value,
+                isSheet: false
+            };
+            events.push(newEvent);
+            saveUserData();
+            closeModal('event-modal');
+            render();
+            document.getElementById('event-form').reset();
+        }
+
+        function saveGroup(e) {
+            e.preventDefault();
+            const editIndex = document.getElementById('group-edit-index').value;
+            if (editIndex === "") return;
+
+            const index = parseInt(editIndex, 10);
+            groups[index].color = document.getElementById('group-modal-color').value;
+            groups[index].visible = document.getElementById('group-modal-visible').checked;
+            groups[index].notify = document.getElementById('group-modal-notify').checked;
+
+            saveUserData();
+            closeModal('group-modal');
+            render();
+        }
+
+        function deleteEvent(id) {
+            if (confirm('この予定を削除しますか？')) {
+                events = events.filter(e => e.id !== id);
+                saveUserData();
+                render();
+            }
+        }
+
+        function clearFilter() {
+            filtersExplicit = false;
+            activeFilters.clear();
+            render();
+        }
+
+        function togglePastEvents() {
+            showPastEvents = !showPastEvents;
+            updatePastToggleUI();
+            render();
+        }
+
+        function updatePastToggleUI() {
+            const btn = document.getElementById('past-toggle-btn');
+            if (!btn) return;
+            if (showPastEvents) {
+                btn.className = "w-9 h-9 flex items-center justify-center text-white bg-pink-500 border border-pink-500 rounded-xl transition";
+            } else {
+                btn.className = "w-9 h-9 flex items-center justify-center text-slate-400 hover:text-pink-600 bg-pink-50/50 border border-pink-100 rounded-xl transition";
+            }
+        }
+
+        // ==== お気に入りを新しいタブで開く ====
+        function openFavInNewTab() {
+            const url = new URL(window.location.href);
+            url.hash = '';
+            url.searchParams.set('view', 'favorites');
+            window.open(url.toString(), '_blank');
+        }
+
+        // ==== 通知まわり ====
+        function updateNotifyToggleUI() {
+            const label = document.getElementById('notify-toggle-label');
+            if (!label || !('Notification' in window)) {
+                if (label) label.textContent = 'このブラウザは通知に対応していません';
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                label.textContent = '新着ライブの通知：オン';
+            } else if (Notification.permission === 'denied') {
+                label.textContent = '通知がブロックされています（ブラウザ設定から許可してね）';
+            } else {
+                label.textContent = '新着ライブの通知を受け取る';
+            }
+        }
+
+        async function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('このブラウザは通知に対応していません');
+                return;
+            }
+            if (Notification.permission === 'default') {
+                await Notification.requestPermission();
+            } else if (Notification.permission === 'denied') {
+                alert('通知がブロックされています。ブラウザのサイト設定から「通知」を許可にしてね。');
+            }
+            updateNotifyToggleUI();
+        }
+
+        async function showLocalNotification(title, body) {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+            try {
+                if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.ready;
+                    if (reg.active) {
+                        reg.active.postMessage({ type: 'SHOW_NOTIFICATION', title, body });
+                        return;
+                    }
+                }
+                new Notification(title, { body, icon: './icon-192.png' });
+            } catch (e) { /* 通知に失敗しても致命的ではないので握りつぶす */ }
+        }
+
+        // スプレッドシートを再取得した際、前回チェック時になかった予定を検出して通知する
+        function checkForNewSheetEvents(sheetEvents) {
+            const KEY = 'oshi_cal_known_sheet_ids';
+            let knownIds = null;
+            try { knownIds = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+
+            const currentIds = sheetEvents.map(e => e.id);
+
+            if (!Array.isArray(knownIds)) {
+                // 初回はまだ「新着」の基準がないので、今の状態を基準として保存するだけ
+                localStorage.setItem(KEY, JSON.stringify(currentIds));
+                return;
+            }
+
+            const knownSet = new Set(knownIds);
+            let newOnes = sheetEvents.filter(e => !knownSet.has(e.id));
+
+            localStorage.setItem(KEY, JSON.stringify(currentIds));
+
+            // グループごとの通知設定がオフのものは除外する
+            newOnes = newOnes.filter(e => isGroupNotifyEnabled(e.group));
+
+            if (newOnes.length === 0) return;
+
+            const sorted = newOnes.slice().sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+            const first = sorted[0];
+            const dateFormatted = dayjs(first.date).isValid() ? dayjs(first.date).format('M/D') : first.date;
+            const body = newOnes.length === 1
+                ? `${dateFormatted} ${first.group}「${first.title}」`
+                : `${dateFormatted} ${first.group}「${first.title}」ほか${newOnes.length - 1}件`;
+
+            showLocalNotification('新しいライブ予定が追加されました🎫', body);
+        }
+
+        // PWA: Service Worker登録（インストール対応 + 通知の土台）
+        function registerServiceWorker() {
+            if (!('serviceWorker' in navigator)) return;
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
+        }
+
+        window.onload = async () => {
+            loadUserData();
+            render();
+            updateNotifyToggleUI();
+            registerServiceWorker();
+            await fetchSheetData();
+
+            // アプリを開いたままにしている間も、一定間隔で新着をチェックする
+            setInterval(fetchSheetData, 15 * 60 * 1000);
+
+            // ?view=favorites 付きで開かれた場合は、お気に入りパネルを自動で開く
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('view') === 'favorites') {
+                toggleFavMenu();
+            }
+        };
+    </script>
+</body>
+</html>
