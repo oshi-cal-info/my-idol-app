@@ -318,6 +318,7 @@
 
     <script>
         const AUTO_SYNC_CSV_URL = "https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/export?format=csv";
+        const SITE_URL = 'https://oshi-cal-info.github.io/my-idol-app/'; // このサイトのURL（シェア文・画像に入れる）
 
         // ==== 公式SNSリンク（管理者だけがここを編集する。コードを書き換えてデプロイしない限り、
         // 閲覧者側からは書き換えられない） ====
@@ -401,7 +402,7 @@
                 youtube: "https://youtube.com/@aivery_official?si=bkhWRZXs2_vgmt9M",
                 homepage: "",
                 litlink: "https://lit.link/Aivery",
-                spotify: "",
+                spotify: "https://open.spotify.com/artist/3A8DxrSkHUwQH8JvAZx8TS?si=BMGvG-tpQaCXmoBJfBTJMA&utm_source=copy-link",
                 fanclub: ""
             },
             "AOAO": {
@@ -411,7 +412,7 @@
                 youtube: "",
                 homepage: "https://aoao.tokyo/",
                 litlink: "",
-                spotify: "",
+                spotify: "https://open.spotify.com/artist/2v0MwtoEl3KnjD6294OjMa?si=LTC72z8gRQq1yc9F_sfIPg&utm_source=copy-link",
                 fanclub: ""
             },
             "UtaGe!": {
@@ -421,7 +422,7 @@
                 youtube: "https://youtube.com/@utage_idol?si=zcDXDv4nzoIilreQ",
                 homepage: "",
                 litlink: "https://lit.link/utageinfo",
-                spotify: "",
+                spotify: "https://open.spotify.com/artist/66hYDiKinuMpGkfBZ1y8GG?si=wjHfLhM_Ti-5HunaN77F9g&utm_source=copy-link",
                 fanclub: ""
             },
             "こみっきゅおん！": {
@@ -431,7 +432,7 @@
                 youtube: "https://youtube.com/@comiqon?si=kXppR2bwalYzDNqf",
                 homepage: "https://www.comiqon.com/",
                 litlink: "",
-                spotify: "",
+                spotify: "https://open.spotify.com/artist/6ry7l9uercEsvy8Kq7mrhy?si=KcVe4gNcThmqkallswAchg&utm_source=copy-link",
                 fanclub: ""
             },
             "タイトル未定": {
@@ -441,7 +442,7 @@
                 youtube: "https://youtube.com/@miteititle?si=fkMi3JfnCKqi8lTA",
                 homepage: "",
                 litlink: "https://lit.link/miteititle",
-                spotify: "",
+                spotify: "https://open.spotify.com/artist/1qls7cxRI0qSWA7D8PCA96?si=UbrDnP5tTdeSfpfDWqDaJQ&utm_source=copy-link",
                 fanclub: ""
             },
             "ラフ×ラフ": {
@@ -451,7 +452,7 @@
                 youtube: "https://youtube.com/@roughlaugh_official?si=zoPdyjUtx-OV5uT3",
                 homepage: "https://roughlaugh-official.com/",
                 litlink: "",
-                spotify: "",
+                spotify: "https://open.spotify.com/artist/0bOCVWklbDomj5AtGVbzNO?si=7bwsJFzWR1esfeduzH4nCw&utm_source=copy-link",
                 fanclub: ""
             },
             "花いろは": {
@@ -461,7 +462,7 @@
                 youtube: "https://youtube.com/channel/UC8rRzQoafxs81aV7-bhWmeQ?si=opp3qkyFBD8jkOhn",
                 homepage: "https://hanairoha.com/",
                 litlink: "",
-                spotify: "",
+                spotify: "https://open.spotify.com/artist/1MHhHof2OotAK9l2e1JDa0?si=xm2J2P33QdyHDlo37Vw0-w&utm_source=copy-link",
                 fanclub: ""
             }
         };
@@ -665,6 +666,34 @@
 
         function transitUrl(location) {
             return `https://transit.yahoo.co.jp/search/result?to=${encodeURIComponent(location)}`;
+        }
+
+        // ==== イベント共有（LINEなどにシェア） ====
+        function eventShareText(e) {
+            const dateFormatted = dayjs(e.date).isValid() ? dayjs(e.date).format('M/D(dd)') : e.date;
+            const lines = [];
+            lines.push(`📅 ${dateFormatted} ${e.time}`);
+            lines.push(e.group ? `${e.group}「${e.title}」` : e.title);
+            if (e.location) lines.push(`📍 ${e.location}`);
+            lines.push('');
+            lines.push(SITE_URL);
+            return lines.join('\n');
+        }
+
+        async function shareEventById(id) {
+            const e = events.find(ev => ev.id === id);
+            if (!e) return;
+            const text = eventShareText(e);
+
+            if (navigator.share) {
+                try { await navigator.share({ title: 'Oshi-Cal', text }); return; } catch (err) { /* キャンセル時はフォールバックしない */ if (err && err.name === 'AbortError') return; }
+            }
+
+            // フォールバック: LINEで送る（別タブで開く）+ クリップボードにもコピー
+            window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text)}`, '_blank');
+            if (navigator.clipboard) {
+                try { await navigator.clipboard.writeText(text); } catch (err) {}
+            }
         }
 
         function gcalUrl(e) {
@@ -1070,6 +1099,7 @@
                             <div class="flex items-center space-x-1">
                                 <button onclick="openMemoModal('${ev.id}')" title="自分用メモ" class="w-6 h-6 flex items-center justify-center ${hasMemo ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}"><i class="fa-solid fa-note-sticky text-[10px]"></i></button>
                                 <a href="${gcalUrl(ev)}" target="_blank" title="カレンダーに追加" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-600"><i class="fa-solid fa-calendar-plus text-[10px]"></i></a>
+                                <button onclick="shareEventById('${ev.id}')" title="シェア" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-600"><i class="fa-solid fa-share-nodes text-[10px]"></i></button>
                                 <button onclick="toggleFavorite('${ev.id}')" title="お気に入り" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[10px]"></i></button>
                             </div>
                         </div>
@@ -1592,7 +1622,10 @@
                                 ` : ''}
                                 ${renderRegulationHtml(e)}
                                 ${memo ? `<div class="bg-amber-50 rounded-2xl px-3 py-2.5 space-y-1">${memo.split('\n').map(l => `<p class="text-[11px] font-semibold text-amber-700">${escapeHtml(l)}</p>`).join('')}</div>` : ''}
-                                <a href="${gcalUrl(e)}" target="_blank" class="flex items-center justify-center space-x-1.5 w-full bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-calendar-plus"></i><span>Googleカレンダーに追加</span></a>
+                                <div class="flex space-x-2">
+                                    <a href="${gcalUrl(e)}" target="_blank" class="flex-1 flex items-center justify-center space-x-1.5 bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-calendar-plus"></i><span>カレンダー</span></a>
+                                    <button onclick="shareEventById('${e.id}')" class="w-11 flex items-center justify-center bg-slate-50 text-slate-500 rounded-2xl"><i class="fa-solid fa-share-nodes"></i></button>
+                                </div>
                             </div>
                         `;
                     }).join('');
@@ -1779,9 +1812,6 @@
             }
             alert(text);
         }
-
-        // このサイトのURL（画像・シェア文の下部に入れる）
-        const SITE_URL = 'https://oshi-cal-info.github.io/my-idol-app/';
 
         function shareSummaryImage() {
             const s = computeSummary(summaryPeriod);
@@ -2042,7 +2072,10 @@
                             ${e.location ? `<div class="flex space-x-2"><a href="${mapsUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-pink-100 transition"><i class="fa-solid fa-location-dot"></i><span>${e.location}</span></a><a href="${transitUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" title="乗換案内でルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-train-subway"></i></a></div>` : ''}
                             ${renderRegulationHtml(e)}
                             ${renderMemoHtml(e)}
-                            <a href="${gcalUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex items-center justify-center space-x-1.5 w-full bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-calendar-plus"></i><span>Googleカレンダーに追加</span></a>
+                            <div class="flex space-x-2">
+                                <a href="${gcalUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center justify-center space-x-1.5 bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-calendar-plus"></i><span>Googleカレンダーに追加</span></a>
+                                <button onclick="event.stopPropagation(); shareEventById('${e.id}')" title="シェア" class="w-11 flex items-center justify-center bg-slate-50 text-slate-500 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-share-nodes"></i></button>
+                            </div>
                             ${!e.isSheet ? `<div class="flex justify-end"><button onclick="event.stopPropagation(); deleteEvent('${e.id}')" class="text-slate-300 hover:text-red-500 text-[11px] transition"><i class="fa-solid fa-trash"></i> 削除</button></div>` : ''}
                         </div>
                     `;
@@ -2207,7 +2240,10 @@
                             ${e.location ? `<div class="flex items-center space-x-3 mb-1"><a href="${mapsUrl(e.location)}" target="_blank" class="text-[11px] text-pink-600 font-semibold flex items-center hover:underline"><i class="fa-solid fa-location-dot mr-1.5 text-pink-400"></i>${e.location}</a><a href="${transitUrl(e.location)}" target="_blank" class="text-[11px] text-purple-500 font-semibold flex items-center hover:underline"><i class="fa-solid fa-train-subway mr-1"></i>ルート検索</a></div>` : ''}
                             ${renderRegulationHtml(e)}
                             <div class="mt-1.5">${renderMemoHtml(e)}</div>
-                            <a href="${gcalUrl(e)}" target="_blank" class="mt-1.5 inline-flex items-center text-[11px] text-slate-500 font-semibold hover:underline"><i class="fa-solid fa-calendar-plus mr-1.5"></i>Googleカレンダーに追加</a>
+                            <div class="flex items-center space-x-3 mt-1.5">
+                                <a href="${gcalUrl(e)}" target="_blank" class="inline-flex items-center text-[11px] text-slate-500 font-semibold hover:underline"><i class="fa-solid fa-calendar-plus mr-1.5"></i>Googleカレンダーに追加</a>
+                                <button onclick="shareEventById('${e.id}')" class="inline-flex items-center text-[11px] text-slate-500 font-semibold hover:underline"><i class="fa-solid fa-share-nodes mr-1.5"></i>シェア</button>
+                            </div>
                         </div>
                     `;
                 }).join('');
