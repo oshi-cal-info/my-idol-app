@@ -360,11 +360,14 @@
         let currentUser = null;
         let cloudSaveTimer = null;
 
+        let messaging = null;
+
         function initFirebase() {
             try {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 db = firebase.firestore();
+                try { messaging = firebase.messaging(); } catch (e) { /* 通知非対応ブラウザは無視 */ }
                 auth.onAuthStateChanged(handleAuthChange);
             } catch (e) {
                 console.log('Firebaseの初期化に失敗:', e);
@@ -376,6 +379,25 @@
             updateAuthUI();
             if (user) {
                 await loadCloudData();
+                if (Notification.permission === 'granted') {
+                    registerPushToken();
+                }
+            }
+        }
+
+        // 通知トークンを取得して、自分のクラウドデータに保存する
+        async function registerPushToken() {
+            if (!currentUser || !db || !messaging) return;
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
+                if (token) {
+                    await db.collection('users').doc(currentUser.uid).set({
+                        fcmTokens: firebase.firestore.FieldValue.arrayUnion(token)
+                    }, { merge: true });
+                }
+            } catch (e) {
+                console.log('通知トークンの登録に失敗:', e);
             }
         }
 
@@ -2558,6 +2580,9 @@
                 alert('通知がブロックされています。ブラウザのサイト設定から「通知」を許可にしてね。');
             }
             updateNotifyToggleUI();
+            if (Notification.permission === 'granted') {
+                registerPushToken();
+            }
         }
 
         async function showLocalNotification(title, body) {
