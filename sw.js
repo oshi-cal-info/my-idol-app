@@ -1,3 +1,30 @@
+// ==== Firebase Cloud Messaging（バックグラウンド通知） ====
+importScripts('https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+    apiKey: "AIzaSyAAAwAdsciNyukTSzLvwTZ9P27_vs63k_g",
+    authDomain: "oshi-cal-d3091.firebaseapp.com",
+    projectId: "oshi-cal-d3091",
+    storageBucket: "oshi-cal-d3091.firebasestorage.app",
+    messagingSenderId: "896634384335",
+    appId: "1:896634384335:web:8ebb3207a612fe0676acba"
+});
+
+const messaging = firebase.messaging();
+
+// アプリが閉じている・バックグラウンドの時に届いた通知を表示する
+messaging.onBackgroundMessage((payload) => {
+    const title = (payload.notification && payload.notification.title) || '新しいライブ予定が追加されました🎫';
+    const body = (payload.notification && payload.notification.body) || '';
+    self.registration.showNotification(title, {
+        body: body,
+        icon: './icon-192.png',
+        badge: './icon-192.png',
+        tag: 'oshi-cal-new-event'
+    });
+});
+
 const CACHE_NAME = 'oshi-cal-v1';
 const CORE_ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
