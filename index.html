@@ -44,10 +44,6 @@
                 <i class="fa-solid fa-clock text-base"></i>
                 <span id="deadline-count-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold items-center justify-center"></span>
             </button>
-            <button onclick="toggleFavMenu()" class="relative w-11 h-11 rounded-full bg-white flex items-center justify-center text-pink-500 hover:bg-pink-50 transition shadow-sm shadow-pink-200/60">
-                <i class="fa-solid fa-heart text-base"></i>
-                <span id="fav-count-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-pink-500 text-white text-[9px] font-bold items-center justify-center"></span>
-            </button>
             <button onclick="toggleMenu()" class="w-11 h-11 rounded-full bg-white flex items-center justify-center text-pink-500 hover:bg-pink-50 transition shadow-sm shadow-pink-200/60">
                 <i class="fa-solid fa-bars text-base"></i>
             </button>
@@ -64,6 +60,7 @@
             <div class="flex items-center space-x-2">
                 <div class="flex bg-pink-100/60 p-1 rounded-full text-xs font-bold">
                     <button id="tab-list" onclick="switchView('list')" class="px-4 py-1.5 rounded-full transition bg-white text-pink-600 shadow-sm">リスト</button>
+                    <button id="tab-going" onclick="switchView('going')" class="px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700">行く予定<span id="going-count-badge" class="hidden ml-1 text-[10px] font-bold text-pink-500"></span></button>
                     <button id="tab-month" onclick="switchView('month')" class="px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700">月表示</button>
                 </div>
             </div>
@@ -85,6 +82,20 @@
 
         <!-- リストビュー -->
         <div id="view-list" class="space-y-3"></div>
+
+        <!-- 行く予定ビュー -->
+        <div id="view-going" class="hidden space-y-3">
+            <div class="flex space-x-2">
+                <button onclick="shareImageOfFavorites()" class="flex-1 py-2.5 bg-white text-pink-600 font-bold rounded-2xl text-[11px] shadow-sm border border-pink-100 flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-image"></i><span>画像でシェア</span>
+                </button>
+                <button onclick="exportFavoritesToIcs()" class="flex-1 py-2.5 bg-white text-purple-600 font-bold rounded-2xl text-[11px] shadow-sm border border-purple-100 flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-calendar-plus"></i><span>一括カレンダー登録</span>
+                </button>
+            </div>
+            <button onclick="shareFavoritesToSns()" class="w-full text-center text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline">テキストでシェアする</button>
+            <div id="going-list" class="space-y-3"></div>
+        </div>
 
         <!-- 月表示ビュー -->
         <div id="view-month" class="hidden space-y-4">
@@ -334,29 +345,6 @@
             </div>
             <p class="text-[10px] text-slate-400 mb-4 leading-relaxed">スケジュールのメモから自動で拾った、2週間以内の締切です。拾えていないものもあるので、詳細は必ず公式でも確認してね。</p>
             <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="deadline-list"></div>
-        </div>
-    </div>
-
-    <!-- お気に入りメニュー -->
-    <div id="fav-menu" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" onclick="toggleFavMenu()">
-        <div class="absolute right-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white shadow-2xl p-6 flex flex-col transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-4 border-b border-pink-50 pb-4">
-                <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-heart mr-2 text-pink-500"></i>お気に入り</h3>
-                <div class="flex items-center space-x-1">
-                    <button onclick="openFavInNewTab()" title="新しいタブで開く" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center"><i class="fa-solid fa-up-right-from-square text-xs"></i></button>
-                    <button onclick="toggleFavMenu()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-            </div>
-            <div class="flex space-x-2 mb-2">
-                <button onclick="shareImageOfFavorites()" class="flex-1 py-2.5 bg-pink-50 text-pink-600 font-bold rounded-2xl text-[10px] border border-pink-100 hover:bg-pink-100 transition flex items-center justify-center space-x-1">
-                    <i class="fa-solid fa-image"></i><span>画像でシェア</span>
-                </button>
-                <button onclick="exportFavoritesToIcs()" class="flex-1 py-2.5 bg-purple-50 text-purple-600 font-bold rounded-2xl text-[10px] border border-purple-100 hover:bg-purple-100 transition flex items-center justify-center space-x-1">
-                    <i class="fa-solid fa-calendar-plus"></i><span>一括カレンダー登録</span>
-                </button>
-            </div>
-            <button onclick="shareFavoritesToSns()" class="w-full text-center text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline mb-4">テキストでシェアする</button>
-            <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="fav-list"></div>
         </div>
     </div>
 
@@ -1127,6 +1115,8 @@
 
             if (currentView === 'list') {
                 renderListView();
+            } else if (currentView === 'going') {
+                renderGoingView();
             } else {
                 renderMonthView();
             }
@@ -1143,16 +1133,22 @@
             renderFavList();
         }
 
+        // 「行く予定」タブからの削除（＝お気に入りを外すのと同じ操作）
+        function removeFromGoing(id) {
+            favorites.delete(id);
+            saveFavorites();
+            render();
+            renderFavList();
+        }
+
         function updateFavBadge() {
-            const badge = document.getElementById('fav-count-badge');
+            const badge = document.getElementById('going-count-badge');
             if (!badge) return;
             if (favorites.size > 0) {
-                badge.textContent = favorites.size;
+                badge.textContent = `(${favorites.size})`;
                 badge.classList.remove('hidden');
-                badge.classList.add('flex');
             } else {
                 badge.classList.add('hidden');
-                badge.classList.remove('flex');
             }
         }
 
@@ -1614,6 +1610,8 @@
             renderFilterGroupList();
             if (currentView === 'list') {
                 renderListView();
+            } else if (currentView === 'going') {
+                renderGoingView();
             } else {
                 renderMonthView();
             }
@@ -1626,6 +1624,8 @@
             renderFilterGroupList();
             if (currentView === 'list') {
                 renderListView();
+            } else if (currentView === 'going') {
+                renderGoingView();
             } else {
                 renderMonthView();
             }
@@ -2229,6 +2229,38 @@
                 return;
             }
 
+            container.innerHTML = todayLiveCardHtml() + buildEventCardsHtml(filtered);
+        }
+
+        // ==== 行く予定ビュー（お気に入りだけを表示） ====
+        function renderGoingView() {
+            const container = document.getElementById('going-list');
+
+            let filtered = events.filter(e => favorites.has(e.id));
+            filtered = filtered.filter(e => matchesActiveFilters(e.group));
+            filtered = filtered.sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            if (!showPastEvents) {
+                filtered = filtered.filter(e => e.date >= todayStr);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
+                        <i class="fa-regular fa-heart text-4xl text-pink-300 mb-3"></i>
+                        <p class="text-xs text-slate-400 font-medium">まだ「行く予定」がありません</p>
+                        <p class="text-[10px] text-slate-400 mt-1.5">リストの♡をタップすると、ここに追加されるよ</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = buildEventCardsHtml(filtered, true);
+        }
+
+        // リスト用カードのHTMLを組み立てる共通処理（フィルタ済みの予定配列を受け取る）
+        function buildEventCardsHtml(filtered, isGoingView) {
             // 同じ日・同じタイトルのライブは1枚のカードにまとめる
             const liveMap = new Map();
             filtered.forEach(e => {
@@ -2241,7 +2273,7 @@
                 (a, b) => new Date(a[0].date + ' ' + a[0].time) - new Date(b[0].date + ' ' + b[0].time)
             );
 
-            let html = todayLiveCardHtml();
+            let html = '';
             let lastDate = '';
 
             lives.forEach(list => {
@@ -2303,7 +2335,9 @@
                                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group}</span>
                                         <span class="text-[11px] font-bold text-slate-400">${e.time}</span>
                                     </div>
-                                    <button onclick="event.stopPropagation(); toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
+                                    ${isGoingView
+                                        ? `<button onclick="event.stopPropagation(); removeFromGoing('${e.id}')" title="行く予定から削除" class="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-red-500 transition"><i class="fa-solid fa-trash text-[11px]"></i></button>`
+                                        : `<button onclick="event.stopPropagation(); toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>`}
                                 </div>
                             ` : ''}
                             ${e.location ? `<div class="flex space-x-2"><a href="${mapsUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-pink-100 transition"><i class="fa-solid fa-location-dot"></i><span>${e.location}</span></a><a href="${transitUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" title="乗換案内でルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-train-subway"></i></a></div>` : ''}
@@ -2325,7 +2359,10 @@
                             <div class="flex items-center justify-between mb-2">
                                 ${timeHtml}
                                 <div class="flex items-center space-x-2">
-                                    ${!isMulti ? `<button onclick="event.stopPropagation(); toggleFavorite('${rep.id}')" class="w-7 h-7 rounded-full flex items-center justify-center transition ${anyFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-xs"></i></button>` : ''}
+                                    ${!isMulti ? (isGoingView
+                                        ? `<button onclick="event.stopPropagation(); removeFromGoing('${rep.id}')" title="行く予定から削除" class="w-7 h-7 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition"><i class="fa-solid fa-trash text-xs"></i></button>`
+                                        : `<button onclick="event.stopPropagation(); toggleFavorite('${rep.id}')" class="w-7 h-7 rounded-full flex items-center justify-center transition ${anyFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-xs"></i></button>`
+                                    ) : ''}
                                     <span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"><i class="fa-solid fa-chevron-down text-[10px]"></i></span>
                                 </div>
                             </div>
@@ -2340,7 +2377,7 @@
                     </div>
                 `;
             });
-            container.innerHTML = html;
+            return html;
         }
 
         function renderMonthView() {
@@ -2405,7 +2442,11 @@
             } else {
                 expandedEvents.add(id);
             }
-            renderListView();
+            if (currentView === 'going') {
+                renderGoingView();
+            } else {
+                renderListView();
+            }
         }
 
         function selectDate(dateStr) {
@@ -2509,21 +2550,23 @@
         function switchView(view) {
             currentView = view;
             const listBtn = document.getElementById('tab-list');
+            const goingBtn = document.getElementById('tab-going');
             const monthBtn = document.getElementById('tab-month');
             const listDiv = document.getElementById('view-list');
+            const goingDiv = document.getElementById('view-going');
             const monthDiv = document.getElementById('view-month');
 
-            if (view === 'list') {
-                listBtn.className = "px-4 py-1.5 rounded-full transition bg-white text-pink-600 shadow-sm";
-                monthBtn.className = "px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700";
-                listDiv.classList.remove('hidden');
-                monthDiv.classList.add('hidden');
-            } else {
-                monthBtn.className = "px-4 py-1.5 rounded-full transition bg-white text-pink-600 shadow-sm";
-                listBtn.className = "px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700";
-                monthDiv.classList.remove('hidden');
-                listDiv.classList.add('hidden');
-            }
+            const activeCls = "px-4 py-1.5 rounded-full transition bg-white text-pink-600 shadow-sm";
+            const inactiveCls = "px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700";
+
+            listBtn.className = view === 'list' ? activeCls : inactiveCls;
+            goingBtn.className = view === 'going' ? activeCls : inactiveCls;
+            monthBtn.className = view === 'month' ? activeCls : inactiveCls;
+
+            listDiv.classList.toggle('hidden', view !== 'list');
+            goingDiv.classList.toggle('hidden', view !== 'going');
+            monthDiv.classList.toggle('hidden', view !== 'month');
+
             render();
         }
 
@@ -2727,6 +2770,31 @@
             navigator.serviceWorker.register('./sw.js').catch(() => {});
         }
 
+        // ==== 他アプリ（TimeTreeなど）からの共有を受け取る ====
+        function handleIncomingShare() {
+            const params = new URLSearchParams(window.location.search);
+            const sharedTitle = params.get('shared_title') || '';
+            const sharedText = params.get('shared_text') || '';
+            const sharedUrl = params.get('shared_url') || '';
+            if (!sharedTitle && !sharedText && !sharedUrl) return;
+
+            // タイトル候補：共有タイトル → 共有テキストの1行目 の順で使う
+            const guessedTitle = sharedTitle || sharedText.split('\n')[0] || '共有された予定';
+
+            openAddModal();
+            document.getElementById('modal-title').value = guessedTitle.slice(0, 60);
+
+            const memoLines = [];
+            if (sharedText) memoLines.push(sharedText);
+            if (sharedUrl) memoLines.push(sharedUrl);
+            document.getElementById('modal-regulation').value = memoLines.join('\n');
+
+            alert('他のアプリから共有された内容を予定に入力したよ。日付・グループを確認して保存してね。');
+
+            // URLをきれいに戻しておく（リロード時に再度モーダルが開かないように）
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+
         window.onload = async () => {
             loadUserData();
             render();
@@ -2738,11 +2806,13 @@
             // アプリを開いたままにしている間も、一定間隔で新着をチェックする
             setInterval(fetchSheetData, 15 * 60 * 1000);
 
-            // ?view=favorites 付きで開かれた場合は、お気に入りパネルを自動で開く
+            // ?view=favorites 付きで開かれた場合は、「行く予定」タブを自動で開く
             const params = new URLSearchParams(window.location.search);
             if (params.get('view') === 'favorites') {
-                toggleFavMenu();
+                switchView('going');
             }
+
+            handleIncomingShare();
         };
     </script>
 </body>
