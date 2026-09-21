@@ -37,6 +37,9 @@
             <h1 class="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent tracking-wide">Oshi-Cal</h1>
         </div>
         <div class="flex items-center space-x-2">
+            <button onclick="openSearchModal()" title="予定を検索" class="w-11 h-11 rounded-full bg-white flex items-center justify-center text-purple-500 hover:bg-purple-50 transition shadow-sm shadow-pink-200/60">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+            </button>
             <button onclick="toggleDeadlineMenu()" title="チケット締切" class="relative w-11 h-11 rounded-full bg-white flex items-center justify-center text-amber-500 hover:bg-amber-50 transition shadow-sm shadow-pink-200/60">
                 <i class="fa-solid fa-clock text-base"></i>
                 <span id="deadline-count-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold items-center justify-center"></span>
@@ -159,6 +162,9 @@
             <a href="timetree.html" target="_blank" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100 flex items-center justify-center">
                 <i class="fa-solid fa-calendar-days mr-1.5"></i> TimeTreeのスケジュールを見る
             </a>
+            <button onclick="shareSite()" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100 flex items-center justify-center">
+                <i class="fa-solid fa-share-nodes mr-1.5"></i> サイトをシェアする
+            </button>
         </div>
     </div>
 
@@ -274,6 +280,20 @@
                     <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-amber-400 to-pink-400 text-white font-bold rounded-2xl shadow-md text-xs">保存する</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- 予定検索 -->
+    <div id="search-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-start justify-center p-4 pt-16" onclick="closeSearchModal()">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl max-h-[80vh] flex flex-col" onclick="event.stopPropagation()">
+            <div class="flex items-center space-x-2 mb-3">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
+                    <input id="search-input" type="text" placeholder="タイトル・グループ・会場で検索" oninput="renderSearchResults()" class="w-full pl-9 pr-3 py-2.5 bg-pink-50/50 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                </div>
+                <button onclick="closeSearchModal()" class="w-9 h-9 rounded-full bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="search-results" class="flex-1 overflow-y-auto space-y-2"></div>
         </div>
     </div>
 
@@ -2117,6 +2137,74 @@
                 URL.revokeObjectURL(url);
                 alert('画像を保存したよ。SNSアプリから画像を選んで投稿してね。');
             }, 'image/png');
+        }
+
+        // ==== サイトをSNSでシェア ====
+        async function shareSite() {
+            const text = 'Oshi-Cal📅 各グループのLit.LinkやGoogleカレンダーに載ってるライブ予定を自動でまとめて表示してくれる、推し活専用スケジュール管理サイト';
+            if (navigator.share) {
+                try { await navigator.share({ title: 'Oshi-Cal', text, url: SITE_URL }); return; } catch (e) { /* キャンセル時は何もしない */ }
+            }
+            const full = `${text}\n${SITE_URL}`;
+            if (navigator.clipboard) {
+                try { await navigator.clipboard.writeText(full); alert('コピーしました。SNSに貼り付けてね。'); return; } catch (e) {}
+            }
+            alert(full);
+        }
+
+        // ==== 予定検索 ====
+        function openSearchModal() {
+            document.getElementById('search-modal').classList.remove('hidden');
+            document.getElementById('search-input').value = '';
+            document.getElementById('search-input').focus();
+            renderSearchResults();
+        }
+
+        function closeSearchModal() {
+            document.getElementById('search-modal').classList.add('hidden');
+        }
+
+        function renderSearchResults() {
+            const container = document.getElementById('search-results');
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+
+            if (!query) {
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 py-8">タイトル・グループ名・会場で検索できます</p>`;
+                return;
+            }
+
+            const matches = events
+                .filter(e => {
+                    const haystack = `${e.title} ${e.group || ''} ${e.location || ''}`.toLowerCase();
+                    return haystack.includes(query);
+                })
+                .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time))
+                .slice(0, 50);
+
+            if (matches.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 py-8">見つかりませんでした</p>`;
+                return;
+            }
+
+            container.innerHTML = matches.map(e => {
+                const go = groups.find(g => g.name === e.group);
+                const c = go ? go.color : (e.group ? '#ec4899' : '#94a3b8');
+                const isFav = favorites.has(e.id);
+                const dateFormatted = dayjs(e.date).isValid() ? dayjs(e.date).format('YYYY/M/D(dd)') : e.date;
+                return `
+                    <div class="flex items-center justify-between bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style="background-color:${c}18;color:${c};">${e.group || '個人の予定'}</span>
+                                <span class="text-[10px] font-semibold text-slate-400 flex-shrink-0">${dateFormatted} ${e.time}</span>
+                            </div>
+                            <p class="text-xs font-bold text-slate-800 truncate">${escapeHtml(e.title)}</p>
+                            ${e.location ? `<p class="text-[10px] text-slate-400 truncate"><i class="fa-solid fa-location-dot mr-1"></i>${escapeHtml(e.location)}</p>` : ''}
+                        </div>
+                        <button onclick="toggleFavorite('${e.id}'); renderSearchResults();" class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ml-2 transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart"></i></button>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderListView() {
