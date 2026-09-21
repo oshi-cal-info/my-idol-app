@@ -190,7 +190,9 @@
             <form id="event-form" onsubmit="saveEvent(event)" class="space-y-3">
                 <div>
                     <label class="block text-[11px] font-bold text-slate-500 mb-1">グループ（任意）</label>
-                    <select id="modal-group" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400"></select>
+                    <input type="text" id="modal-group" list="modal-group-list" placeholder="例: Onephony（新しいグループ名でもOK）" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <datalist id="modal-group-list"></datalist>
+                    <p class="text-[10px] text-slate-400 mt-1 px-1">空欄なら「個人の予定」に。まだ登録されてないグループ名を入力すると、新しいグループとして追加されます。</p>
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold text-slate-500 mb-1">タイトル</label>
@@ -1534,16 +1536,8 @@
         }
 
         function renderGroupDropdowns() {
-            const modalSelect = document.getElementById('modal-group');
-            const currentModalVal = modalSelect.value;
-
-            let modalOpts = '<option value="">グループなし（自分だけの予定）</option>';
-            groups.forEach(g => {
-                modalOpts += `<option value="${g.name}">${g.name}</option>`;
-            });
-
-            modalSelect.innerHTML = modalOpts;
-            modalSelect.value = currentModalVal || '';
+            const datalist = document.getElementById('modal-group-list');
+            datalist.innerHTML = groups.map(g => `<option value="${escapeHtml(g.name)}"></option>`).join('');
         }
 
         function openFilterModal() {
@@ -2614,9 +2608,16 @@
 
         function saveEvent(e) {
             e.preventDefault();
+            const groupName = document.getElementById('modal-group').value.trim();
+
+            // まだ登録されてないグループ名なら、新しいグループとして追加する
+            if (groupName && !groups.some(g => g.name === groupName)) {
+                groups.push({ name: groupName, color: getRandomColor(), visible: true, notify: true });
+            }
+
             const newEvent = {
                 id: 'manual_' + Date.now(),
-                group: document.getElementById('modal-group').value,
+                group: groupName,
                 title: document.getElementById('modal-title').value,
                 date: document.getElementById('modal-date').value,
                 time: document.getElementById('modal-time').value,
