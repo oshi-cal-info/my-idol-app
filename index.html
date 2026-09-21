@@ -2141,7 +2141,7 @@
 
         // ==== サイトをSNSでシェア ====
         async function shareSite() {
-            const text = 'Oshi-Cal📅 各グループのLit.LinkやGoogleカレンダーに載ってるライブ予定を自動でまとめて表示してくれる、推し活専用スケジュール管理サイト';
+            const text = 'Oshi-Cal📅 各グループのリットリンクやGoogleカレンダーに載ってるライブ予定を自動でまとめて表示してくれる、推し活専用スケジュール管理サイト';
             if (navigator.share) {
                 try { await navigator.share({ title: 'Oshi-Cal', text, url: SITE_URL }); return; } catch (e) { /* キャンセル時は何もしない */ }
             }
