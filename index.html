@@ -86,19 +86,26 @@
         <!-- 行く予定ビュー -->
         <div id="view-going" class="hidden space-y-3">
             <div class="flex space-x-2">
+                <button onclick="openGoingMonth()" class="flex-1 py-2.5 bg-white text-slate-600 font-bold rounded-2xl text-[11px] shadow-sm border border-slate-100 flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-calendar-days"></i><span>月表示で見る</span>
+                </button>
                 <button onclick="shareImageOfFavorites()" class="flex-1 py-2.5 bg-white text-pink-600 font-bold rounded-2xl text-[11px] shadow-sm border border-pink-100 flex items-center justify-center space-x-1.5">
                     <i class="fa-solid fa-image"></i><span>画像でシェア</span>
                 </button>
-                <button onclick="exportFavoritesToIcs()" class="flex-1 py-2.5 bg-white text-purple-600 font-bold rounded-2xl text-[11px] shadow-sm border border-purple-100 flex items-center justify-center space-x-1.5">
-                    <i class="fa-solid fa-calendar-plus"></i><span>一括カレンダー登録</span>
-                </button>
             </div>
+            <button onclick="exportFavoritesToIcs()" class="w-full py-2.5 bg-white text-purple-600 font-bold rounded-2xl text-[11px] shadow-sm border border-purple-100 flex items-center justify-center space-x-1.5">
+                <i class="fa-solid fa-calendar-plus"></i><span>一括カレンダー登録</span>
+            </button>
             <button onclick="shareFavoritesToSns()" class="w-full text-center text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline">テキストでシェアする</button>
             <div id="going-list" class="space-y-3"></div>
         </div>
 
         <!-- 月表示ビュー -->
         <div id="view-month" class="hidden space-y-4">
+            <div class="flex bg-pink-100/60 p-1 rounded-full text-[11px] font-bold w-fit mx-auto">
+                <button id="month-mode-all-btn" onclick="setMonthShowFavoritesOnly(false)" class="px-4 py-1.5 rounded-full transition">すべて</button>
+                <button id="month-mode-going-btn" onclick="setMonthShowFavoritesOnly(true)" class="px-4 py-1.5 rounded-full transition">行く予定だけ</button>
+            </div>
             <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/60">
                 <div class="flex justify-between items-center mb-4 px-2">
                     <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 hover:bg-pink-100 transition"><i class="fa-solid fa-chevron-left text-xs"></i></button>
@@ -164,6 +171,9 @@
             <p class="mt-3 text-[10px] text-slate-400 leading-relaxed px-1">
                 グループはライブスケジュールから自動で追加されます。ここでは表示色や表示オン/オフを、自分の端末用に設定できます。
             </p>
+            <button onclick="resetGroupsToDefault()" class="mt-2 w-full py-2.5 bg-white text-slate-400 font-bold rounded-2xl hover:bg-slate-50 transition text-[11px] border border-slate-100">
+                <i class="fa-solid fa-rotate-left mr-1.5"></i> グループ一覧をリセットする
+            </button>
             <button id="notify-toggle-btn" onclick="requestNotificationPermission()" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
                 <i class="fa-solid fa-bell mr-1.5"></i> <span id="notify-toggle-label">新着ライブの通知を受け取る</span>
             </button>
@@ -179,20 +189,21 @@
         </div>
     </div>
 
-    <!-- イベント追加モーダル -->
+    <!-- イベント追加・編集モーダル -->
     <div id="event-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50 max-h-[85vh] overflow-y-auto">
             <div class="flex justify-between items-center">
-                <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-calendar-plus text-pink-500 mr-2"></i>自分の予定を追加</h3>
+                <h3 id="event-modal-heading" class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-calendar-plus text-pink-500 mr-2"></i>自分の予定を追加</h3>
                 <button onclick="closeModal('event-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-[10px] text-slate-400 -mt-2">例: ライブの合間にご飯を食べる予定など。ここで追加した予定は、あなたのこの端末だけに保存されます（他の人には見えません）。</p>
+            <p class="text-[10px] text-slate-400 -mt-2">例: ライブの合間にご飯を食べる予定など。ここで追加した予定はあなただけに保存され（ログイン中なら他の端末にも反映）、他の人には見えません。</p>
             <form id="event-form" onsubmit="saveEvent(event)" class="space-y-3">
+                <input type="hidden" id="modal-edit-id" value="">
                 <div>
                     <label class="block text-[11px] font-bold text-slate-500 mb-1">グループ（任意）</label>
-                    <input type="text" id="modal-group" list="modal-group-list" placeholder="例: Onephony（新しいグループ名でもOK）" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
-                    <datalist id="modal-group-list"></datalist>
-                    <p class="text-[10px] text-slate-400 mt-1 px-1">空欄なら「個人の予定」に。まだ登録されてないグループ名を入力すると、新しいグループとして追加されます。</p>
+                    <div id="modal-group-chips" class="flex flex-wrap gap-1.5 mb-2"></div>
+                    <input type="text" id="modal-group-custom" oninput="renderGroupChips()" placeholder="上から選ぶか、新しいグループ名を入力" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <p class="text-[10px] text-slate-400 mt-1 px-1">チップをタップで選択。空欄なら「個人の予定」、まだ無いグループ名を入力すると新しく追加されます。</p>
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold text-slate-500 mb-1">タイトル</label>
@@ -216,7 +227,47 @@
                     <label class="block text-[11px] font-bold text-slate-500 mb-1">入場特典・時間などのメモ</label>
                     <textarea id="modal-regulation" rows="3" placeholder="例: 入場 17:00／特典会 18:00〜／開演 19:00" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400 resize-none"></textarea>
                 </div>
-                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-2xl shadow-md shadow-pink-500/30 hover:opacity-95 transition text-xs mt-2">保存する</button>
+                <button type="submit" id="event-modal-submit-btn" class="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-2xl shadow-md shadow-pink-500/30 hover:opacity-95 transition text-xs mt-2">保存する</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 予定の修正モーダル（スプレッドシート由来の予定を自分だけ修正する） -->
+    <div id="edit-event-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-pen text-pink-500 mr-2"></i>予定を修正</h3>
+                <button onclick="closeModal('edit-event-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-[10px] text-slate-400 -mt-2">誤字などをその場で直せます。この修正はあなただけに保存され（ログイン中なら他の端末にも反映）、他の人には見えません。</p>
+            <form onsubmit="saveEventEdit(event)" class="space-y-3">
+                <input type="hidden" id="edit-event-id" value="">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">タイトル</label>
+                    <input type="text" id="edit-modal-title" required class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-1">日付</label>
+                        <input type="date" id="edit-modal-date" required class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-1">時間</label>
+                        <input type="time" id="edit-modal-time" required class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">場所</label>
+                    <input type="text" id="edit-modal-location" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">メモ・レギュレーション</label>
+                    <textarea id="edit-modal-regulation" rows="3" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400 resize-none"></textarea>
+                </div>
+                <div class="flex space-x-2">
+                    <button type="button" onclick="clearEventOverride()" class="flex-1 py-3 bg-slate-50 text-slate-400 font-bold rounded-2xl text-xs border border-slate-100">元に戻す</button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-2xl shadow-md text-xs">保存する</button>
+                </div>
             </form>
         </div>
     </div>
@@ -450,9 +501,16 @@
                     if (data.groups) groups = data.groups;
                     if (data.favorites) favorites = new Set(data.favorites);
                     if (data.personalMemos) personalMemos = data.personalMemos;
+                    if (data.eventOverrides) eventOverrides = data.eventOverrides;
+                    if (data.manualEvents) {
+                        // クラウド上の「自分の予定」で、この端末のシート由来の予定はそのまま残す
+                        events = [...data.manualEvents, ...events.filter(e => e.isSheet)];
+                    }
+                    events = applyEventOverrides(events);
                     saveUserData();
                     saveFavorites();
                     savePersonalMemos();
+                    saveEventOverrides();
                     render();
                 } else {
                     // 初回ログイン：今のローカルデータをクラウドにアップロードする
@@ -471,6 +529,8 @@
                     groups: groups,
                     favorites: [...favorites],
                     personalMemos: personalMemos,
+                    eventOverrides: eventOverrides,
+                    manualEvents: events.filter(e => !e.isSheet),
                     updatedAt: new Date().toISOString()
                 }, { merge: true }).catch(e => console.log('クラウド保存に失敗:', e));
             }, 800);
@@ -645,7 +705,9 @@
         let filtersExplicit = false; // true になると activeFilters の中身がそのまま「選択中のグループ」を表す（空なら0件表示）
         let personalMemos = {}; // { eventId: memoText } 自分だけのメモ（ローカル保存）
         let eventHistory = {}; // { eventId: event } 一度取得した予定を残しておく履歴（ソースから消えても保持）
+        let eventOverrides = {}; // { eventId: { title, date, time, location, regulation } } 自分だけの修正（この端末のみ・クラウド同期しない）
         let showPastEvents = false; // 過去の予定を表示するかどうか（デフォルトは非表示）
+        let monthShowFavoritesOnly = false; // 月表示で「行く予定だけ」表示するかどうか
         let currentView = 'list';
         let currentMonth = dayjs().startOf('month');
         let selectedDate = dayjs().format('YYYY-MM-DD');
@@ -661,6 +723,8 @@
             if (savedMemos) { try { personalMemos = JSON.parse(savedMemos); } catch(e) {} }
             const savedHistory = localStorage.getItem('oshi_cal_event_history');
             if (savedHistory) { try { eventHistory = JSON.parse(savedHistory); } catch(e) {} }
+            const savedOverrides = localStorage.getItem('oshi_cal_event_overrides');
+            if (savedOverrides) { try { eventOverrides = JSON.parse(savedOverrides); } catch(e) {} }
             groups.forEach(g => {
                 if (typeof g.visible === 'undefined') g.visible = true;
                 if (typeof g.notify === 'undefined') g.notify = true;
@@ -675,6 +739,55 @@
 
         function saveEventHistory() {
             localStorage.setItem('oshi_cal_event_history', JSON.stringify(eventHistory));
+        }
+
+        // 自分だけの修正内容を保存する（ログイン中は自分の他の端末にも同期。他の人には見えない）
+        function saveEventOverrides() {
+            localStorage.setItem('oshi_cal_event_overrides', JSON.stringify(eventOverrides));
+            saveCloudData();
+        }
+
+        // 予定配列に、自分だけの修正内容を上書き適用する
+        function applyEventOverrides(list) {
+            return list.map(e => eventOverrides[e.id] ? { ...e, ...eventOverrides[e.id] } : e);
+        }
+
+        function openEditEventModal(id) {
+            const e = events.find(ev => ev.id === id);
+            if (!e) return;
+            document.getElementById('edit-event-id').value = id;
+            document.getElementById('edit-modal-title').value = e.title;
+            document.getElementById('edit-modal-date').value = e.date;
+            document.getElementById('edit-modal-time').value = e.time;
+            document.getElementById('edit-modal-location').value = e.location || '';
+            document.getElementById('edit-modal-regulation').value = e.regulation || '';
+            document.getElementById('edit-event-modal').classList.remove('hidden');
+        }
+
+        function saveEventEdit(ev) {
+            ev.preventDefault();
+            const id = document.getElementById('edit-event-id').value;
+            const override = {
+                title: document.getElementById('edit-modal-title').value,
+                date: document.getElementById('edit-modal-date').value,
+                time: document.getElementById('edit-modal-time').value,
+                location: document.getElementById('edit-modal-location').value,
+                regulation: document.getElementById('edit-modal-regulation').value
+            };
+            eventOverrides[id] = override;
+            saveEventOverrides();
+            const idx = events.findIndex(e => e.id === id);
+            if (idx !== -1) events[idx] = { ...events[idx], ...override };
+            closeModal('edit-event-modal');
+            render();
+        }
+
+        function clearEventOverride() {
+            const id = document.getElementById('edit-event-id').value;
+            delete eventOverrides[id];
+            saveEventOverrides();
+            closeModal('edit-event-modal');
+            fetchSheetData(); // 元の内容に戻すため、ソースから読み込み直す
         }
 
         function savePersonalMemos() {
@@ -800,7 +913,7 @@
             const historicalOnly = Object.values(eventHistory).filter(e =>
                 !currentIds.has(e.id) && e.date <= todayForHistory
             );
-            events = [...manualEvents, ...sheetEvents, ...historicalOnly];
+            events = applyEventOverrides([...manualEvents, ...sheetEvents, ...historicalOnly]);
 
             checkForNewSheetEvents(sheetEvents);
             
@@ -1536,8 +1649,29 @@
         }
 
         function renderGroupDropdowns() {
-            const datalist = document.getElementById('modal-group-list');
-            datalist.innerHTML = groups.map(g => `<option value="${escapeHtml(g.name)}"></option>`).join('');
+            renderGroupChips();
+        }
+
+        function renderGroupChips() {
+            const container = document.getElementById('modal-group-chips');
+            const input = document.getElementById('modal-group-custom');
+            if (!container || !input) return;
+            const current = input.value;
+
+            let html = `<button type="button" onclick="selectGroupChip('')" class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition ${current === '' ? 'bg-slate-700 text-white border-slate-700' : 'bg-white text-slate-500 border-slate-200'}">個人の予定</button>`;
+            html += groups.map(g => {
+                const isSelected = current === g.name;
+                const style = isSelected
+                    ? `background-color:${g.color};color:#fff;border-color:${g.color};`
+                    : `background-color:${g.color}12;color:${g.color};border-color:${g.color}33;`;
+                return `<button type="button" onclick="selectGroupChip('${g.name.replace(/'/g, "\\'")}')" style="${style}" class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition">${escapeHtml(g.name)}</button>`;
+            }).join('');
+            container.innerHTML = html;
+        }
+
+        function selectGroupChip(name) {
+            document.getElementById('modal-group-custom').value = name;
+            renderGroupChips();
         }
 
         function openFilterModal() {
@@ -1685,11 +1819,29 @@
                             <button onclick="toggleGroupNotify(${index})" title="${notifyOn ? '通知オフにする' : '通知オンにする'}" class="w-8 h-8 rounded-xl flex items-center justify-center transition ${notifyOn ? 'text-pink-500 hover:bg-pink-100' : 'text-slate-300 hover:text-pink-400 hover:bg-pink-50'}"><i class="fa-solid ${notifyOn ? 'fa-bell' : 'fa-bell-slash'} text-xs"></i></button>
                             <button onclick="toggleGroupVisible(${index})" title="${isHidden ? '表示する' : '非表示にする'}" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'} text-xs"></i></button>
                             <button onclick="openGroupEditModal(${index})" title="表示設定" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid fa-palette text-xs"></i></button>
+                            <button onclick="deleteGroupFromManagement(${index})" title="このグループを削除" class="w-8 h-8 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition"><i class="fa-solid fa-trash text-xs"></i></button>
                         </div>
                     </div>
                 `;
             });
             container.innerHTML = html;
+        }
+
+        function deleteGroupFromManagement(index) {
+            const g = groups[index];
+            if (!g) return;
+            if (!confirm(`「${g.name}」をグループ一覧から削除しますか？\n※スプレッドシートに実際にあるグループの場合、次の自動更新で再び表示されます。`)) return;
+            groups.splice(index, 1);
+            saveUserData();
+            render();
+        }
+
+        function resetGroupsToDefault() {
+            if (!confirm('グループの色・表示・通知設定を全部リセットして、スプレッドシートの内容から作り直しますか？\n（この端末で追加した独自のグループも消えます）')) return;
+            groups = [];
+            saveUserData();
+            render();
+            fetchSheetData();
         }
 
         function openGroupLinksModal(groupName) {
@@ -2341,7 +2493,9 @@
                                 <a href="${gcalUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center justify-center space-x-1.5 bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-calendar-plus"></i><span>Googleカレンダーに追加</span></a>
                                 <button onclick="event.stopPropagation(); shareEventById('${e.id}')" title="シェア" class="w-11 flex items-center justify-center bg-slate-50 text-slate-500 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-share-nodes"></i></button>
                             </div>
-                            ${!e.isSheet ? `<div class="flex justify-end"><button onclick="event.stopPropagation(); deleteEvent('${e.id}')" class="text-slate-300 hover:text-red-500 text-[11px] transition"><i class="fa-solid fa-trash"></i> 削除</button></div>` : ''}
+                            ${!e.isSheet
+                                ? `<div class="flex justify-end space-x-3"><button onclick="event.stopPropagation(); openEditManualEventModal('${e.id}')" class="text-slate-300 hover:text-pink-500 text-[11px] transition"><i class="fa-solid fa-pen"></i> 編集</button><button onclick="event.stopPropagation(); deleteEvent('${e.id}')" class="text-slate-300 hover:text-red-500 text-[11px] transition"><i class="fa-solid fa-trash"></i> 削除</button></div>`
+                                : `<div class="flex justify-end"><button onclick="event.stopPropagation(); openEditEventModal('${e.id}')" class="text-slate-300 hover:text-pink-500 text-[11px] transition"><i class="fa-solid fa-pen"></i> 修正する</button></div>`}
                         </div>
                     `;
                 }).join('');
@@ -2375,6 +2529,7 @@
         }
 
         function renderMonthView() {
+            updateMonthModeButtons();
             document.getElementById('calendar-title').innerText = currentMonth.format('YYYY年 M月');
             const grid = document.getElementById('calendar-grid');
             
@@ -2388,7 +2543,7 @@
 
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = currentMonth.date(day).format('YYYY-MM-DD');
-                const hasEvent = events.some(e => e.date === dateStr && matchesActiveFilters(e.group));
+                const hasEvent = events.some(e => e.date === dateStr && matchesActiveFilters(e.group) && (!monthShowFavoritesOnly || favorites.has(e.id)));
                 const isSelected = selectedDate === dateStr;
                 const isToday = dayjs().format('YYYY-MM-DD') === dateStr;
 
@@ -2451,7 +2606,7 @@
         function renderSelectedDayEvents() {
             const container = document.getElementById('selected-day-events');
             const dayEvents = events.filter(e => e.date === selectedDate).sort((a,b) => a.time.localeCompare(b.time));
-            const filtered = dayEvents.filter(e => matchesActiveFilters(e.group));
+            const filtered = dayEvents.filter(e => matchesActiveFilters(e.group) && (!monthShowFavoritesOnly || favorites.has(e.id)));
 
             if (filtered.length === 0) {
                 container.innerHTML = `
@@ -2516,6 +2671,9 @@
                                 <a href="${gcalUrl(e)}" target="_blank" class="inline-flex items-center text-[11px] text-slate-500 font-semibold hover:underline"><i class="fa-solid fa-calendar-plus mr-1.5"></i>Googleカレンダーに追加</a>
                                 <button onclick="shareEventById('${e.id}')" class="inline-flex items-center text-[11px] text-slate-500 font-semibold hover:underline"><i class="fa-solid fa-share-nodes mr-1.5"></i>シェア</button>
                             </div>
+                            ${!e.isSheet
+                                ? `<div class="flex justify-end space-x-3 mt-1"><button onclick="openEditManualEventModal('${e.id}')" class="text-slate-300 hover:text-pink-500 text-[11px] transition"><i class="fa-solid fa-pen"></i> 編集</button><button onclick="deleteEvent('${e.id}')" class="text-slate-300 hover:text-red-500 text-[11px] transition"><i class="fa-solid fa-trash"></i> 削除</button></div>`
+                                : `<div class="flex justify-end mt-1"><button onclick="openEditEventModal('${e.id}')" class="text-slate-300 hover:text-pink-500 text-[11px] transition"><i class="fa-solid fa-pen"></i> 修正する</button></div>`}
                         </div>
                     `;
                 }).join('');
@@ -2564,6 +2722,29 @@
             render();
         }
 
+        function setMonthShowFavoritesOnly(value) {
+            monthShowFavoritesOnly = value;
+            updateMonthModeButtons();
+            renderMonthView();
+        }
+
+        function updateMonthModeButtons() {
+            const allBtn = document.getElementById('month-mode-all-btn');
+            const goingBtn = document.getElementById('month-mode-going-btn');
+            if (!allBtn || !goingBtn) return;
+            const activeCls = "px-4 py-1.5 rounded-full transition bg-white text-pink-600 shadow-sm";
+            const inactiveCls = "px-4 py-1.5 rounded-full transition text-slate-500";
+            allBtn.className = !monthShowFavoritesOnly ? activeCls : inactiveCls;
+            goingBtn.className = monthShowFavoritesOnly ? activeCls : inactiveCls;
+        }
+
+        // 「行く予定」タブから、行く予定だけの月表示にワンタップで移動する
+        function openGoingMonth() {
+            monthShowFavoritesOnly = true;
+            switchView('month');
+            updateMonthModeButtons();
+        }
+
         function changeMonth(direction) {
             currentMonth = currentMonth.add(direction, 'month');
             renderMonthView();
@@ -2586,9 +2767,31 @@
         }
 
         function openAddModal() {
+            document.getElementById('event-form').reset();
+            document.getElementById('modal-edit-id').value = '';
             document.getElementById('modal-date').value = dayjs().format('YYYY-MM-DD');
             document.getElementById('modal-time').value = '19:00';
-            document.getElementById('modal-group').value = '';
+            document.getElementById('modal-group-custom').value = '';
+            document.getElementById('event-modal-heading').innerHTML = '<i class="fa-solid fa-calendar-plus text-pink-500 mr-2"></i>自分の予定を追加';
+            document.getElementById('event-modal-submit-btn').textContent = '保存する';
+            renderGroupChips();
+            document.getElementById('event-modal').classList.remove('hidden');
+        }
+
+        // 手入力の予定を編集する
+        function openEditManualEventModal(id) {
+            const e = events.find(ev => ev.id === id);
+            if (!e) return;
+            document.getElementById('modal-edit-id').value = id;
+            document.getElementById('modal-group-custom').value = e.group || '';
+            document.getElementById('modal-title').value = e.title;
+            document.getElementById('modal-date').value = e.date;
+            document.getElementById('modal-time').value = e.time;
+            document.getElementById('modal-location').value = e.location || '';
+            document.getElementById('modal-regulation').value = e.regulation || '';
+            document.getElementById('event-modal-heading').innerHTML = '<i class="fa-solid fa-pen text-pink-500 mr-2"></i>予定を編集';
+            document.getElementById('event-modal-submit-btn').textContent = '更新する';
+            renderGroupChips();
             document.getElementById('event-modal').classList.remove('hidden');
         }
 
@@ -2608,24 +2811,31 @@
 
         function saveEvent(e) {
             e.preventDefault();
-            const groupName = document.getElementById('modal-group').value.trim();
+            const groupName = document.getElementById('modal-group-custom').value.trim();
+            const editId = document.getElementById('modal-edit-id').value;
 
             // まだ登録されてないグループ名なら、新しいグループとして追加する
             if (groupName && !groups.some(g => g.name === groupName)) {
                 groups.push({ name: groupName, color: getRandomColor(), visible: true, notify: true });
             }
 
-            const newEvent = {
-                id: 'manual_' + Date.now(),
+            const fields = {
                 group: groupName,
                 title: document.getElementById('modal-title').value,
                 date: document.getElementById('modal-date').value,
                 time: document.getElementById('modal-time').value,
                 location: document.getElementById('modal-location').value,
-                regulation: document.getElementById('modal-regulation').value,
-                isSheet: false
+                regulation: document.getElementById('modal-regulation').value
             };
-            events.push(newEvent);
+
+            if (editId) {
+                // 既存の手入力予定を更新する
+                const idx = events.findIndex(ev => ev.id === editId);
+                if (idx !== -1) events[idx] = { ...events[idx], ...fields };
+            } else {
+                events.push({ id: 'manual_' + Date.now(), isSheet: false, ...fields });
+            }
+
             saveUserData();
             closeModal('event-modal');
             render();
