@@ -1259,8 +1259,10 @@
         function updateFavBadge() {
             const badge = document.getElementById('going-count-badge');
             if (!badge) return;
-            if (favorites.size > 0) {
-                badge.textContent = `(${favorites.size})`;
+            // 実際に存在する予定だけを数える（消えた予定のお気に入りIDが残ってても数えない）
+            const count = events.filter(e => favorites.has(e.id)).length;
+            if (count > 0) {
+                badge.textContent = `(${count})`;
                 badge.classList.remove('hidden');
             } else {
                 badge.classList.add('hidden');
@@ -2481,9 +2483,7 @@
                                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group}</span>
                                         <span class="text-[11px] font-bold text-slate-400">${e.time}</span>
                                     </div>
-                                    ${isGoingView
-                                        ? `<button onclick="event.stopPropagation(); removeFromGoing('${e.id}')" title="行く予定から削除" class="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-red-500 transition"><i class="fa-solid fa-trash text-[11px]"></i></button>`
-                                        : `<button onclick="event.stopPropagation(); toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>`}
+                                    <button onclick="event.stopPropagation(); toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
                                 </div>
                             ` : ''}
                             ${e.location ? `<div class="flex space-x-2"><a href="${mapsUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-pink-100 transition"><i class="fa-solid fa-location-dot"></i><span>${e.location}</span></a><a href="${transitUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" title="乗換案内でルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-train-subway"></i></a></div>` : ''}
@@ -2507,10 +2507,7 @@
                             <div class="flex items-center justify-between mb-2">
                                 ${timeHtml}
                                 <div class="flex items-center space-x-2">
-                                    ${!isMulti ? (isGoingView
-                                        ? `<button onclick="event.stopPropagation(); removeFromGoing('${rep.id}')" title="行く予定から削除" class="w-7 h-7 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition"><i class="fa-solid fa-trash text-xs"></i></button>`
-                                        : `<button onclick="event.stopPropagation(); toggleFavorite('${rep.id}')" class="w-7 h-7 rounded-full flex items-center justify-center transition ${anyFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-xs"></i></button>`
-                                    ) : ''}
+                                    ${!isMulti ? `<button onclick="event.stopPropagation(); toggleFavorite('${rep.id}')" class="w-7 h-7 rounded-full flex items-center justify-center transition ${anyFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-xs"></i></button>` : ''}
                                     <span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"><i class="fa-solid fa-chevron-down text-[10px]"></i></span>
                                 </div>
                             </div>
