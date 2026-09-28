@@ -499,9 +499,9 @@
                 if (doc.exists) {
                     const data = doc.data();
                     if (data.groups) groups = data.groups;
-                    if (data.favorites) favorites = new Set(data.favorites);
-                    if (data.personalMemos) personalMemos = data.personalMemos;
-                    if (data.eventOverrides) eventOverrides = data.eventOverrides;
+                    if (data.favorites) favorites = new Set(data.favorites.map(migrateId));
+                    if (data.personalMemos) personalMemos = migrateIdKeyedObject(data.personalMemos);
+                    if (data.eventOverrides) eventOverrides = migrateIdKeyedObject(data.eventOverrides);
                     if (data.manualEvents) {
                         // クラウド上の「自分の予定」で、この端末のシート由来の予定はそのまま残す
                         events = [...data.manualEvents, ...events.filter(e => e.isSheet)];
@@ -729,11 +729,13 @@
                 if (typeof g.visible === 'undefined') g.visible = true;
                 if (typeof g.notify === 'undefined') g.notify = true;
             });
+            migrateLegacyIds();
         }
 
         function saveUserData() {
             localStorage.setItem('oshi_cal_groups', JSON.stringify(groups));
-            localStorage.setItem('oshi_cal_manual_events', JSON.stringify(events));
+            // 手入力の予定だけを保存する（スプレッドシート由来の予定は毎回読み込み直すので保存不要）
+            localStorage.setItem('oshi_cal_manual_events', JSON.stringify(events.filter(e => !e.isSheet)));
             saveCloudData();
         }
 
@@ -853,6 +855,62 @@
             return rows;
         }
 
+        // ==== 予定の固定ID ====
+        // 以前は「行番号」でIDを作っていたため、毎日の同期で行がズレると
+        // ♡や履歴が別の予定に付け替わってしまっていた。日付＋グループ＋タイトルから作るIDに変更。
+        function stableSheetId(date, group, title) {
+            const s = `${date}|${group}|${title}`;
+            let h1 = 5381, h2 = 52711;
+            for (let i = 0; i < s.length; i++) {
+                const c = s.charCodeAt(i);
+                h1 = (h1 * 33) ^ c;
+                h2 = (h2 * 33) ^ c;
+            }
+            return 'sheet_' + (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
+        }
+
+        const LEGACY_ID_MAP_KEY = 'oshi_cal_legacy_id_map';
+        let legacyIdMap = {};
+
+        // 旧形式（sheet_数字）のIDを、新しい固定IDに変換する
+        function migrateId(id) {
+            if (/^sheet_\d+$/.test(id) && legacyIdMap[id]) return legacyIdMap[id];
+            return id;
+        }
+
+        function migrateIdKeyedObject(obj) {
+            const out = {};
+            Object.keys(obj || {}).forEach(k => { out[migrateId(k)] = obj[k]; });
+            return out;
+        }
+
+        // 端末に残っている旧IDのデータ（♡・メモ・修正・履歴）を新しいIDに一度だけ移し替える
+        function migrateLegacyIds() {
+            try { legacyIdMap = JSON.parse(localStorage.getItem(LEGACY_ID_MAP_KEY) || '{}'); } catch (e) { legacyIdMap = {}; }
+            if (localStorage.getItem('oshi_cal_id_v2_migrated')) return;
+
+            // 履歴には「その行に最後に入っていた予定の中身」が残っているので、それを手がかりに対応表を作る
+            const newHistory = {};
+            Object.entries(eventHistory).forEach(([oldId, e]) => {
+                if (!e || !e.date || !e.title) return;
+                const newId = stableSheetId(e.date, e.group, e.title);
+                if (/^sheet_\d+$/.test(oldId)) legacyIdMap[oldId] = newId;
+                newHistory[newId] = { ...e, id: newId };
+            });
+            eventHistory = newHistory;
+
+            favorites = new Set([...favorites].map(migrateId));
+            personalMemos = migrateIdKeyedObject(personalMemos);
+            eventOverrides = migrateIdKeyedObject(eventOverrides);
+
+            localStorage.setItem(LEGACY_ID_MAP_KEY, JSON.stringify(legacyIdMap));
+            localStorage.setItem('oshi_cal_event_history', JSON.stringify(eventHistory));
+            localStorage.setItem('oshi_cal_favorites', JSON.stringify([...favorites]));
+            localStorage.setItem('oshi_cal_personal_memos', JSON.stringify(personalMemos));
+            localStorage.setItem('oshi_cal_event_overrides', JSON.stringify(eventOverrides));
+            localStorage.setItem('oshi_cal_id_v2_migrated', '1');
+        }
+
         function parseCSV(csvText) {
             const rows = parseCSVRows(csvText);
             let sheetEvents = [];
@@ -886,8 +944,10 @@
                             newGroupsFound = true;
                         }
 
+                        const stableId = stableSheetId(date, groupName, title);
+                        if (sheetEvents.some(se => se.id === stableId)) continue; // 同じ予定の重複行はスキップ
                         sheetEvents.push({
-                            id: 'sheet_' + i,
+                            id: stableId,
                             date: date,
                             time: time,
                             group: groupName,
@@ -2940,7 +3000,7 @@
 
         // スプレッドシートを再取得した際、前回チェック時になかった予定を検出して通知する
         function checkForNewSheetEvents(sheetEvents) {
-            const KEY = 'oshi_cal_known_sheet_ids';
+            const KEY = 'oshi_cal_known_sheet_ids_v2';
             let knownIds = null;
             try { knownIds = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
 
