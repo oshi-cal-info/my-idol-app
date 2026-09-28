@@ -532,7 +532,11 @@
                     eventOverrides: eventOverrides,
                     manualEvents: events.filter(e => !e.isSheet),
                     updatedAt: new Date().toISOString()
-                }, { merge: true }).catch(e => console.log('クラウド保存に失敗:', e));
+                }, {
+                    // 指定した項目は「丸ごと置き換え」にする（merge:trueだと消したメモや修正がクラウドに残って復活してしまうため）
+                    // 通知用のfcmTokensなど、ここに無い項目はそのまま残る
+                    mergeFields: ['groups', 'favorites', 'personalMemos', 'eventOverrides', 'manualEvents', 'updatedAt']
+                }).catch(e => console.log('クラウド保存に失敗:', e));
             }, 800);
         }
 
