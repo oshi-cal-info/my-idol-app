@@ -1203,8 +1203,9 @@
         }
 
         function renderRegulationHtml(e) {
-            if (!e.regulation) return '';
-            const raw = e.regulation.trim();
+    if (!e.regulation) return '';
+    const raw = stripRegulationHtml(e.regulation.trim());
+    if (!raw) return '';
 
             // メモ全体がURLだけの場合は「詳細ページを見る」ボタンとして表示する
             if (/^https?:\/\/\S+$/.test(raw)) {
