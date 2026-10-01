@@ -1,4 +1,4 @@
-く<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -1042,7 +1042,7 @@
                 params.set('ctz', 'Asia/Tokyo');
             }
             if (e.location) params.set('location', e.location);
-            if (e.regulation) params.set('details', e.regulation);
+            if (e.regulation) params.set('details', stripRegulationHtml(e.regulation));
             return `https://calendar.google.com/calendar/render?${params.toString()}`;
         }
 
@@ -1050,7 +1050,7 @@
         // メモ本文から「〜9/13(日)23:59まで」のような締切日を拾う
         function extractDeadlines(e) {
             if (!e.regulation) return [];
-            const text = e.regulation
+            const text = stripRegulationHtml(e.regulation)
                 .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
                 .replace(/／/g, '/').replace(/：/g, ':');
 
@@ -1202,10 +1202,27 @@
             return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full ${d.isPresale ? 'bg-pink-500' : (urgent ? 'bg-red-500' : 'bg-amber-400')} text-white shadow-sm"><i class="fa-solid ${d.isPresale ? 'fa-star' : 'fa-clock'} mr-1 text-[9px]"></i>${label}</span>`;
         }
 
+        // スプレッドシート側に<p>や<br>などのHTMLタグが文字として入っていることがあるため、
+        // 表示前に読みやすいテキスト（改行）へ変換する
+        function stripRegulationHtml(str) {
+            return String(str || '')
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<\/p\s*>/gi, '\n')
+                .replace(/<[^>]+>/g, '')
+                .replace(/&nbsp;/gi, ' ')
+                .replace(/&lt;/gi, '<')
+                .replace(/&gt;/gi, '>')
+                .replace(/&quot;/gi, '"')
+                .replace(/&#39;/gi, "'")
+                .replace(/&amp;/gi, '&')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+        }
+
         function renderRegulationHtml(e) {
-    if (!e.regulation) return '';
-    const raw = stripRegulationHtml(e.regulation.trim());
-    if (!raw) return '';
+            if (!e.regulation) return '';
+            const raw = stripRegulationHtml(e.regulation);
+            if (!raw) return '';
 
             // メモ全体がURLだけの場合は「詳細ページを見る」ボタンとして表示する
             if (/^https?:\/\/\S+$/.test(raw)) {
@@ -1313,7 +1330,6 @@
             renderFavList();
         }
 
-        // 「行く予定」タブからの削除（＝お気に入りを外すのと同じ操作）
         function removeFromGoing(id) {
             favorites.delete(id);
             saveFavorites();
@@ -1324,7 +1340,6 @@
         function updateFavBadge() {
             const badge = document.getElementById('going-count-badge');
             if (!badge) return;
-            // 実際に存在する予定だけを数える（消えた予定のお気に入りIDが残ってても数えない）
             const count = events.filter(e => favorites.has(e.id)).length;
             if (count > 0) {
                 badge.textContent = `(${count})`;
@@ -1355,7 +1370,6 @@
             return `${e.date}__${e.title}`;
         }
 
-        // 同じ日・同じタイトルのライブに出演する（表示中の）グループ一覧を返す
         function coPerformingGroups(e) {
             if (!e.group) return [];
             const key = favGroupKey(e);
@@ -1528,6 +1542,26 @@
             return t + '…';
         }
 
+        // 文字を指定幅で折り返し、最大maxLines行に収める（はみ出す分は…で省略）
+        // 文字を指定幅で折り返し、最大maxLines行に収める（はみ出す分は…で省略）
+        function wrapTextLines(ctx, text, maxWidth, maxLines) {
+            const lines = [];
+            let current = '';
+            for (const ch of String(text)) {
+                if (ctx.measureText(current + ch).width > maxWidth && current) {
+                    lines.push(current);
+                    current = ch;
+                } else {
+                    current += ch;
+                }
+            }
+            if (current) lines.push(current);
+            if (lines.length <= maxLines) return lines;
+            const kept = lines.slice(0, maxLines);
+            kept[maxLines - 1] = truncateText(ctx, kept[maxLines - 1] + lines[maxLines], maxWidth);
+            return kept;
+        }
+
         function shareImageOfFavorites() {
             const lives = getFavoriteLives();
             if (lives.length === 0) {
@@ -1535,43 +1569,69 @@
                 return;
             }
 
-            const WIDTH = 1080;
-            const PAD = 64;
-            const HEADER_H = 230;
-            const CARD_GAP = 28;
-            const CARD_PAD = 32;
-            const CHIP_H = 52;
-            const CHIP_GAP = 12;
-            const MAX_ITEMS = 20;
+            const MAX_ITEMS = 40; // 画像に入れる最大件数
+            const GRID_THRESHOLD = 6; // これより多いと2列（横並び）表示に切り替える
             const shown = lives.slice(0, MAX_ITEMS);
             const extra = lives.length - shown.length;
-            const contentWidth = WIDTH - PAD * 2 - CARD_PAD * 2;
+            const useGrid = shown.length > GRID_THRESHOLD;
+
+            const WIDTH = 1080;
+            const PAD = 56;
+            const HEADER_H = 230;
+            const COLS = useGrid ? 2 : 1;
+            const COL_GAP = 24;
+            const ROW_GAP = useGrid ? 24 : 28;
+            const CARD_PAD = useGrid ? 26 : 32;
+            const CHIP_H = useGrid ? 42 : 52;
+            const CHIP_GAP = 10;
+            const CHIP_FONT = useGrid ? '700 22px sans-serif' : '700 26px sans-serif';
+            const CHIP_TEXT_PAD = useGrid ? 16 : 20;
+            const DATE_FONT = useGrid ? '700 26px sans-serif' : '700 32px sans-serif';
+            const DATE_H = useGrid ? 34 : 46;
+            const TITLE_FONT = useGrid ? '700 30px sans-serif' : '700 38px sans-serif';
+            const TITLE_LINE_H = useGrid ? 38 : 46;
+            const TITLE_MAX_LINES = useGrid ? 2 : 1;
+            const cardW = (WIDTH - PAD * 2 - COL_GAP * (COLS - 1)) / COLS;
+            const contentWidth = cardW - CARD_PAD * 2;
 
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
+            // 各カードの中身と高さを先に計算する
             const cardsData = shown.map(list => {
                 const rep = list[0];
+                ctx.font = TITLE_FONT;
+                const titleLines = wrapTextLines(ctx, rep.title, contentWidth, TITLE_MAX_LINES);
+
+                ctx.font = CHIP_FONT;
                 const chipRows = [[]];
                 let rowWidth = 0;
                 list.forEach(ev => {
-                    ctx.font = '700 26px sans-serif';
-                    const chipW = ctx.measureText(ev.group).width + 40;
-                    if (rowWidth + chipW + CHIP_GAP > contentWidth && rowWidth > 0) {
+                    const label = truncateText(ctx, ev.group || '個人の予定', contentWidth - CHIP_TEXT_PAD * 2);
+                    const chipW = ctx.measureText(label).width + CHIP_TEXT_PAD * 2;
+                    if (rowWidth + chipW > contentWidth && rowWidth > 0) {
                         chipRows.push([]);
                         rowWidth = 0;
                     }
-                    chipRows[chipRows.length - 1].push({ ev, chipW });
+                    chipRows[chipRows.length - 1].push({ ev, label, chipW });
                     rowWidth += chipW + CHIP_GAP;
                 });
-                const cardHeight = CARD_PAD * 2 + 46 + 16 + 40 + 16 + chipRows.length * (CHIP_H + 10);
-                return { rep, chipRows, cardHeight };
+
+                const cardHeight = CARD_PAD * 2 + DATE_H + 12 + titleLines.length * TITLE_LINE_H + 14 + chipRows.length * (CHIP_H + 10) - 10;
+                return { rep, titleLines, chipRows, cardHeight };
             });
 
-            const totalCardsHeight = cardsData.reduce((sum, c) => sum + c.cardHeight + CARD_GAP, 0);
+            // 行ごとに並べる（2列のときは同じ行のカードの高さをそろえる）
+            const rows = [];
+            for (let i = 0; i < cardsData.length; i += COLS) {
+                const rowCards = cardsData.slice(i, i + COLS);
+                rows.push({ cards: rowCards, height: Math.max(...rowCards.map(c => c.cardHeight)) });
+            }
+
+            const totalRowsHeight = rows.reduce((sum, r) => sum + r.height + ROW_GAP, 0);
             const extraNoteH = extra > 0 ? 60 : 0;
             const footerH = 110;
-            const HEIGHT = Math.round(HEADER_H + totalCardsHeight + extraNoteH + footerH + PAD);
+            const HEIGHT = Math.round(HEADER_H + totalRowsHeight + extraNoteH + footerH + PAD);
 
             canvas.width = WIDTH;
             canvas.height = HEIGHT;
@@ -1588,54 +1648,66 @@
 
             ctx.fillStyle = '#a855f7';
             ctx.font = '600 28px sans-serif';
-            ctx.fillText('MY LIVE SCHEDULE', PAD, 172);
+            ctx.fillText(`MY LIVE SCHEDULE  ${lives.length}件`, PAD, 172);
 
             ctx.font = '60px sans-serif';
             ctx.fillText('🎫', WIDTH - PAD - 70, 128);
 
             let y = HEADER_H;
-            cardsData.forEach(card => {
-                const { rep, chipRows, cardHeight } = card;
+            rows.forEach(row => {
+                row.cards.forEach((card, colIndex) => {
+                    const { rep, titleLines, chipRows } = card;
+                    const x = PAD + colIndex * (cardW + COL_GAP);
+                    const h = row.height;
 
-                ctx.fillStyle = '#ffffff';
-                ctx.shadowColor = 'rgba(236, 72, 153, 0.18)';
-                ctx.shadowBlur = 24;
-                ctx.shadowOffsetY = 10;
-                drawRoundRect(ctx, PAD, y, WIDTH - PAD * 2, cardHeight, 36);
-                ctx.fill();
-                ctx.shadowColor = 'transparent';
-                ctx.shadowBlur = 0;
-                ctx.shadowOffsetY = 0;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowColor = 'rgba(236, 72, 153, 0.18)';
+                    ctx.shadowBlur = 24;
+                    ctx.shadowOffsetY = 10;
+                    drawRoundRect(ctx, x, y, cardW, h, useGrid ? 28 : 36);
+                    ctx.fill();
+                    ctx.shadowColor = 'transparent';
+                    ctx.shadowBlur = 0;
+                    ctx.shadowOffsetY = 0;
 
-                let cy = y + CARD_PAD;
-                const dateFormatted = dayjs(rep.date).isValid() ? dayjs(rep.date).format('M/D(dd)') : rep.date;
-                ctx.fillStyle = '#64748b';
-                ctx.font = '700 32px sans-serif';
-                ctx.fillText(`${dateFormatted}  ${rep.time}`, PAD + CARD_PAD, cy + 32);
-                cy += 46 + 16;
+                    // 左端にグループ色のライン
+                    const firstGroup = groups.find(g => g.name === rep.group);
+                    ctx.fillStyle = firstGroup ? firstGroup.color : '#ec4899';
+                    drawRoundRect(ctx, x + 10, y + 22, 6, h - 44, 3);
+                    ctx.fill();
 
-                ctx.fillStyle = '#1e293b';
-                ctx.font = '700 38px sans-serif';
-                ctx.fillText(truncateText(ctx, rep.title, contentWidth), PAD + CARD_PAD, cy + 34);
-                cy += 40 + 16;
+                    let cy = y + CARD_PAD;
+                    const dateFormatted = dayjs(rep.date).isValid() ? dayjs(rep.date).format('M/D(dd)') : rep.date;
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = DATE_FONT;
+                    ctx.fillText(`${dateFormatted}  ${rep.time}`, x + CARD_PAD, cy + DATE_H - 10);
+                    cy += DATE_H + 12;
 
-                chipRows.forEach(row => {
-                    let cx = PAD + CARD_PAD;
-                    row.forEach(({ ev, chipW }) => {
-                        const groupObj = groups.find(g => g.name === ev.group);
-                        const color = groupObj ? groupObj.color : '#ec4899';
-                        ctx.fillStyle = color;
-                        drawRoundRect(ctx, cx, cy, chipW, CHIP_H, CHIP_H / 2);
-                        ctx.fill();
-                        ctx.fillStyle = '#ffffff';
-                        ctx.font = '700 26px sans-serif';
-                        ctx.fillText(ev.group, cx + 20, cy + 35);
-                        cx += chipW + CHIP_GAP;
+                    ctx.fillStyle = '#1e293b';
+                    ctx.font = TITLE_FONT;
+                    titleLines.forEach(line => {
+                        ctx.fillText(line, x + CARD_PAD, cy + TITLE_LINE_H - 10);
+                        cy += TITLE_LINE_H;
                     });
-                    cy += CHIP_H + 10;
-                });
+                    cy += 14;
 
-                y += cardHeight + CARD_GAP;
+                    chipRows.forEach(chipRow => {
+                        let cx = x + CARD_PAD;
+                        chipRow.forEach(({ ev, label, chipW }) => {
+                            const groupObj = groups.find(g => g.name === ev.group);
+                            const color = groupObj ? groupObj.color : '#ec4899';
+                            ctx.fillStyle = color;
+                            drawRoundRect(ctx, cx, cy, chipW, CHIP_H, CHIP_H / 2);
+                            ctx.fill();
+                            ctx.fillStyle = '#ffffff';
+                            ctx.font = CHIP_FONT;
+                            ctx.fillText(label, cx + CHIP_TEXT_PAD, cy + CHIP_H / 2 + (useGrid ? 8 : 9));
+                            cx += chipW + CHIP_GAP;
+                        });
+                        cy += CHIP_H + 10;
+                    });
+                });
+                y += row.height + ROW_GAP;
             });
 
             if (extra > 0) {
@@ -1698,7 +1770,7 @@
                 ics += `DTEND:${fmt(end)}\r\n`;
                 ics += `SUMMARY:${escapeIcsText(e.group ? e.group + ' ' + e.title : e.title)}\r\n`;
                 if (e.location) ics += `LOCATION:${escapeIcsText(e.location)}\r\n`;
-                if (e.regulation) ics += `DESCRIPTION:${escapeIcsText(e.regulation)}\r\n`;
+                if (e.regulation) ics += `DESCRIPTION:${escapeIcsText(stripRegulationHtml(e.regulation))}\r\n`;
                 ics += 'END:VEVENT\r\n';
             });
             ics += 'END:VCALENDAR\r\n';
@@ -1940,7 +2012,6 @@
             document.getElementById('group-links-modal').classList.remove('hidden');
         }
 
-        // ==== ⑥ 今日のライブ（現場モード）カード ====
         // ==== ⑥ 今日の現場（常に上部に小さく固定表示、タップで詳細パネル） ====
         function getTodayLiveGroups() {
             const todayStr = dayjs().format('YYYY-MM-DD');
