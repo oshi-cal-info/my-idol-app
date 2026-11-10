@@ -14,18 +14,23 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // アプリが閉じている・バックグラウンドの時に届いた通知を表示する
+// フェーズ5: 送信側が付けた data（eventId / type / url）を受け取り、
+// 通知タップでそのイベントを開けるようにする。tagもイベント単位にする
+// （同じイベントの変更通知が何枚も重ならないように）。
 messaging.onBackgroundMessage((payload) => {
-    const title = (payload.notification && payload.notification.title) || '新しいライブ予定が追加されました🎫';
-    const body = (payload.notification && payload.notification.body) || '';
+    const data = payload.data || {};
+    const title = (payload.notification && payload.notification.title) || data.title || '新しいライブ予定が追加されました🎫';
+    const body = (payload.notification && payload.notification.body) || data.body || '';
     self.registration.showNotification(title, {
         body: body,
         icon: './icon-192.png',
         badge: './icon-192.png',
-        tag: 'oshi-cal-new-event'
+        tag: data.eventId ? 'oshi-cal-' + (data.type || 'event') + '-' + data.eventId : 'oshi-cal-new-event',
+        data: { url: data.url || './index.html', eventId: data.eventId || '' }
     });
 });
 
-const CACHE_NAME = 'oshi-cal-v1';
+const CACHE_NAME = 'oshi-cal-v2';
 const CORE_ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -66,20 +71,27 @@ self.addEventListener('message', (event) => {
             body: body,
             icon: './icon-192.png',
             badge: './icon-192.png',
-            tag: 'oshi-cal-new-event'
+            tag: 'oshi-cal-new-event',
+            data: { url: event.data.url || './index.html' }
         });
     }
 });
 
-// 通知タップでアプリを前面に
+// 通知タップでアプリを前面に（data.url があればそのイベントへ直接開く）
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
+    const targetUrl = (event.notification.data && event.notification.data.url) || './index.html';
     event.waitUntil(
         self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
             for (const client of clientList) {
-                if ('focus' in client) return client.focus();
+                if ('focus' in client) {
+                    if ('navigate' in client) {
+                        return client.navigate(targetUrl).then((c) => (c || client).focus()).catch(() => client.focus());
+                    }
+                    return client.focus();
+                }
             }
-            if (self.clients.openWindow) return self.clients.openWindow('./index.html');
+            if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
         })
     );
 });

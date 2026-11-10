@@ -3204,6 +3204,29 @@
                 switchView('going');
             }
 
+            // ?event=<id> 付きで開かれた場合は、その予定まで移動して詳細を開く（プッシュ通知タップ用・フェーズ5）
+            const eventIdParam = params.get('event');
+            if (eventIdParam) {
+                const targetEvent = events.find(e => e.id === eventIdParam);
+                if (targetEvent) {
+                    if (targetEvent.date < dayjs().format('YYYY-MM-DD') && !showPastEvents) {
+                        showPastEvents = true;
+                        updatePastToggleUI();
+                    }
+                    const sameLive = events
+                        .filter(e => targetEvent.group ? favGroupKey(e) === favGroupKey(targetEvent) : e.id === targetEvent.id)
+                        .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+                    expandedEvents.add('live_' + sameLive.map(e => e.id).join('|'));
+                    switchView('list');
+                    render();
+                    setTimeout(() => {
+                        const headers = Array.from(document.querySelectorAll('#view-list [data-date]'));
+                        const target = headers.find(h => h.dataset.date === targetEvent.date);
+                        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 150);
+                }
+            }
+
             handleIncomingShare();
         };
     </script>
