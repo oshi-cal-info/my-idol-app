@@ -2209,6 +2209,115 @@
             }, 150);
         }
 
+        // ==== 暇な日ルーレット ====
+        // 今日から1週間のうち、まだ行く予定に入れていないライブから1本ランダムで勧める。
+        // 推しと同じライブに出たことのあるグループ（共演）が出るライブは「発見枠」として当たりやすくする。
+        let roulettePickId = null;
+        let rouletteLastKey = null;
+
+        function rouletteCandidates() {
+            const today = dayjs().startOf('day');
+            const until = today.add(6, 'day');
+            const favLiveKeys = new Set(events.filter(e => favorites.has(e.id)).map(favGroupKey));
+            const favGroups = new Set(events.filter(e => favorites.has(e.id) && e.group).map(e => e.group));
+
+            // 推しと共演したことのあるグループを集める
+            const liveGroups = {};
+            events.forEach(e => {
+                if (!e.group) return;
+                const k = favGroupKey(e);
+                (liveGroups[k] = liveGroups[k] || new Set()).add(e.group);
+            });
+            const relatedGroups = new Set();
+            Object.values(liveGroups).forEach(set => {
+                if ([...set].some(g => favGroups.has(g))) set.forEach(g => relatedGroups.add(g));
+            });
+
+            const byLive = new Map();
+            events.forEach(e => {
+                if (!e.group) return;
+                const d = dayjs(e.date);
+                if (!d.isValid() || d.isBefore(today) || d.isAfter(until)) return;
+                if (!matchesActiveFilters(e.group)) return;
+                const k = favGroupKey(e);
+                if (favLiveKeys.has(k)) return;
+                if (!byLive.has(k)) byLive.set(k, []);
+                byLive.get(k).push(e);
+            });
+
+            return [...byLive.values()].map(list => {
+                list.sort((a, b) => a.time.localeCompare(b.time));
+                const groupsInLive = [...new Set(list.map(e => e.group))];
+                const discovery = groupsInLive.some(g => relatedGroups.has(g) && !favGroups.has(g));
+                return { list, rep: list[0], discovery };
+            });
+        }
+
+        function rollRoulette() {
+            const pool = rouletteCandidates();
+            if (pool.length === 0) return;
+            let choices = pool;
+            if (pool.length > 1 && rouletteLastKey) {
+                const rest = pool.filter(c => favGroupKey(c.rep) !== rouletteLastKey);
+                if (rest.length > 0) choices = rest;
+            }
+            const totalWeight = choices.reduce((s, c) => s + (c.discovery ? 3 : 1), 0);
+            let r = Math.random() * totalWeight;
+            let picked = choices[choices.length - 1];
+            for (const c of choices) {
+                r -= (c.discovery ? 3 : 1);
+                if (r <= 0) { picked = c; break; }
+            }
+            roulettePickId = picked.rep.id;
+            rouletteLastKey = favGroupKey(picked.rep);
+            render();
+        }
+
+        function rouletteCardHtml() {
+            const pool = rouletteCandidates();
+            if (pool.length === 0) return '';
+            const pickedEvent = roulettePickId ? events.find(e => e.id === roulettePickId) : null;
+            let resultHtml = '';
+            if (pickedEvent) {
+                const found = pool.find(c => favGroupKey(c.rep) === favGroupKey(pickedEvent));
+                const p = found || { list: [pickedEvent], rep: pickedEvent, discovery: false };
+                const rep = p.rep;
+                const dateLabel = dayjs(rep.date).isValid() ? dayjs(rep.date).format('M月D日(dd)') : rep.date;
+                const chips = [...new Set(p.list.map(e => e.group))].map(n => {
+                    const go = groups.find(g => g.name === n);
+                    const c = go ? go.color : '#ec4899';
+                    return `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${n}</span>`;
+                }).join('');
+                resultHtml = `
+                    <div class="mt-3 pt-3 border-t border-purple-100">
+                        ${p.discovery ? `<p class="text-[10px] font-bold text-purple-500 mb-1.5"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>発見枠：推しと共演したグループが出演</p>` : ''}
+                        <div class="flex flex-wrap items-center gap-1.5 mb-1">${chips}${specialBadgeHtml(rep)}</div>
+                        <p class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(rep.title)}</p>
+                        <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${rep.time && rep.time !== '00:00' ? ' ' + rep.time : ''}${rep.location ? ' ・ ' + escapeHtml(rep.location) : ''}</p>
+                        <div class="flex space-x-2 mt-2.5">
+                            <button onclick="jumpToEvent('${rep.id}')" class="flex-1 bg-purple-500 text-white text-[11px] font-bold px-3 py-2 rounded-2xl shadow-sm shadow-purple-500/30">この予定を見る</button>
+                            <button onclick="rollRoulette()" class="flex-1 bg-purple-50 text-purple-600 text-[11px] font-bold px-3 py-2 rounded-2xl">もう一回引く</button>
+                        </div>
+                    </div>
+                `;
+            }
+            return `
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-3xl px-4 py-3.5 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-dice text-[10px]"></i></span>
+                            <div>
+                                <p class="text-xs font-black text-slate-800">暇な日ルーレット</p>
+                                <p class="text-[10px] text-slate-400 font-semibold">向こう1週間・まだ行く予定じゃないライブから</p>
+                            </div>
+                        </div>
+                        ${pickedEvent ? '' : `<button onclick="rollRoulette()" class="bg-purple-500 text-white text-[11px] font-bold px-3.5 py-2 rounded-full shadow-sm shadow-purple-500/30 flex-shrink-0">おすすめを引く</button>`}
+                    </div>
+                    ${resultHtml}
+                </div>
+            `;
+        }
+
         function todayLiveCardHtml() {
             const lives = getTodayLiveGroups();
             if (lives.length === 0) return '';
@@ -2687,7 +2796,7 @@
             }
 
             if (filtered.length === 0) {
-                container.innerHTML = countdownCardHtml() + todayLiveCardHtml() + `
+                container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + `
                     <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
                         <i class="fa-regular fa-calendar-xmark text-4xl text-pink-300 mb-3"></i>
                         <p class="text-xs text-slate-400 font-medium">予定がありません</p>
@@ -2696,7 +2805,7 @@
                 return;
             }
 
-            container.innerHTML = countdownCardHtml() + todayLiveCardHtml() + buildEventCardsHtml(filtered);
+            container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + buildEventCardsHtml(filtered);
         }
 
         // ==== 行く予定ビュー（お気に入りだけを表示） ====
