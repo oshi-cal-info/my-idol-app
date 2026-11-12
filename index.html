@@ -1602,7 +1602,7 @@
                 html += `
                     <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3.5">
                         <p class="text-[11px] font-bold text-slate-500 mb-0.5">${dateFormatted} ${rep.time}</p>
-                        ${specialBadge || weatherBadgeHtml(rep) ? `<div class="mb-1.5 flex flex-wrap gap-1.5">${specialBadge}${weatherBadgeHtml(rep)}</div>` : ''}
+                        ${specialBadge || weatherBadgeHtml(rep) || multiVenueBadgeHtml(rep) ? `<div class="mb-1.5 flex flex-wrap gap-1.5">${specialBadge}${weatherBadgeHtml(rep)}${multiVenueBadgeHtml(rep)}</div>` : ''}
                         <p class="text-xs font-bold text-slate-800 mb-2 leading-snug">${rep.title}</p>
                         ${isMulti ? `<p class="text-[10px] font-bold text-purple-400 mb-1.5 flex items-center"><i class="fa-solid fa-people-group mr-1.5"></i>${list.length}グループが出演</p>` : ''}
                         <div class="space-y-1.5">${groupRows}</div>
@@ -2195,6 +2195,70 @@
             return [...map.values()];
         }
 
+        // ==== 複数会場（サーキット）対応 ====
+        // 会場文字列を個別の会場に分ける。「A / B」形式のほか、
+        // 末尾の「 · 地域」や注記（【…】・（…）・(...)）を取り除いてから分ける。
+        function splitVenues(location) {
+            if (!location) return [];
+            let s = String(location).trim();
+            if (!s) return [];
+            if (/\d{4}\/\d{1,2}\/\d{1,2}/.test(s)) return [s]; // 日付が紛れ込んだ行は分割しない
+            s = s.replace(/[╱\/]+$/, '').trim();
+            s = s.split(/\s+·\s+/)[0].trim();
+            const parts = s.split(/\s*\/\s*/)
+                .map(p => p.replace(/【[^】]*】/g, '').replace(/（[^）]*）/g, '').replace(/\([^)]*\)/g, '').trim())
+                .filter(Boolean);
+            return parts.length ? parts : [s];
+        }
+
+        // 「全N会場」「他N会場」表記も含めた総会場数
+        function venueTotalCount(location, splitCount) {
+            const s = String(location || '');
+            let m = s.match(/全(\d+)会場/);
+            if (m) return parseInt(m[1], 10);
+            m = s.match(/他(\d+)会場/);
+            if (m) return parseInt(m[1], 10) + 1;
+            m = s.match(/(\d+)会場/);
+            if (m) return parseInt(m[1], 10);
+            return splitCount;
+        }
+
+        function multiVenueBadgeHtml(e) {
+            if (!e || !e.location) return '';
+            const parts = splitVenues(e.location);
+            const total = venueTotalCount(e.location, parts.length);
+            const isCircuit = String(e.location).includes('サーキット');
+            if (total >= 2) {
+                return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-500"><i class="fa-solid fa-location-dot mr-1"></i>${total}会場${isCircuit ? 'サーキット' : ''}</span>`;
+            }
+            if (isCircuit) {
+                return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-500"><i class="fa-solid fa-location-dot mr-1"></i>サーキット</span>`;
+            }
+            return '';
+        }
+
+        // 会場リンク（地図＋乗換）を会場ごとに並べる。1会場なら従来どおり1行。
+        function venueLinksHtml(e, inCard) {
+            if (!e || !e.location) return '';
+            const parts = splitVenues(e.location);
+            const stop = inCard ? ' onclick="event.stopPropagation()"' : '';
+            const weight = inCard ? 'font-semibold' : 'font-bold';
+            const hover = inCard ? ' hover:bg-pink-100 transition' : '';
+            const row = (name) => `<div class="flex space-x-2"><a href="${mapsUrl(name)}" target="_blank"${stop} class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] ${weight} px-3 py-2.5 rounded-2xl${hover}"><i class="fa-solid fa-location-dot"></i><span>${escapeHtml(name)}</span></a><a href="${transitUrl(name)}" target="_blank"${stop} title="乗換案内でルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-train-subway"></i></a></div>`;
+            return parts.map(row).join('');
+        }
+
+        // 月表示の選択日カード用（インライン形式）。1会場なら従来どおりの表示。
+        function venueInlineLinksHtml(e) {
+            if (!e || !e.location) return '';
+            const parts = splitVenues(e.location);
+            if (parts.length <= 1) {
+                const p = parts[0] || e.location;
+                return `<div class="flex items-center space-x-3 mb-1"><a href="${mapsUrl(p)}" target="_blank" class="text-[11px] text-pink-600 font-semibold flex items-center hover:underline"><i class="fa-solid fa-location-dot mr-1.5 text-pink-400"></i>${escapeHtml(p)}</a><a href="${transitUrl(p)}" target="_blank" class="text-[11px] text-purple-500 font-semibold flex items-center hover:underline"><i class="fa-solid fa-train-subway mr-1"></i>ルート検索</a></div>`;
+            }
+            return `<div class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">${parts.map(p => `<span class="inline-flex items-center space-x-2"><a href="${mapsUrl(p)}" target="_blank" class="text-[11px] text-pink-600 font-semibold flex items-center hover:underline"><i class="fa-solid fa-location-dot mr-1.5 text-pink-400"></i>${escapeHtml(p)}</a><a href="${transitUrl(p)}" target="_blank" title="ルート検索" class="text-[11px] text-purple-500 font-semibold flex items-center hover:underline"><i class="fa-solid fa-train-subway mr-1"></i>ルート</a></span>`).join('')}</div>`;
+        }
+
         // ==== 天気（Open-Meteo・APIキー不要） ====
         // 会場名から座標を引く辞書。載っている会場だけ、今日・明日の予定に天気バッジを出す。
         // 座標は会場の最寄り駅・エリアの位置（天気予報の粒度ならこれで十分）。
@@ -2352,6 +2416,7 @@
                             ${e.group ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group}</span>` : ''}
                             ${specialBadgeHtml(e)}
                             ${weatherBadgeHtml(e)}
+                            ${multiVenueBadgeHtml(e)}
                         </div>
                         <p class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(e.title)}</p>
                         <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${e.time && e.time !== '00:00' ? ' ' + e.time : ''}${e.location ? ' ・ ' + escapeHtml(e.location) : ''}</p>
@@ -2460,7 +2525,7 @@
                 resultHtml = `
                     <div class="mt-3 pt-3 border-t border-purple-100">
                         ${p.discovery ? `<p class="text-[10px] font-bold text-purple-500 mb-1.5"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>発見枠：推しと共演したグループが出演</p>` : ''}
-                        <div class="flex flex-wrap items-center gap-1.5 mb-1">${chips}${specialBadgeHtml(rep)}${weatherBadgeHtml(rep)}</div>
+                        <div class="flex flex-wrap items-center gap-1.5 mb-1">${chips}${specialBadgeHtml(rep)}${weatherBadgeHtml(rep)}${multiVenueBadgeHtml(rep)}</div>
                         <p class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(rep.title)}</p>
                         <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${rep.time && rep.time !== '00:00' ? ' ' + rep.time : ''}${rep.location ? ' ・ ' + escapeHtml(rep.location) : ''}</p>
                         <div class="flex space-x-2 mt-2.5">
@@ -2527,12 +2592,7 @@
                                     <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group || '個人の予定'}${e.time !== '00:00' ? ' ' + e.time : ''}</span>
                                     ${deadlineBadgeHtml(e)}
                                 </div>
-                                ${e.location ? `
-                                    <div class="flex space-x-2">
-                                        <a href="${mapsUrl(e.location)}" target="_blank" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-bold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-location-dot"></i><span>${e.location}</span></a>
-                                        <a href="${transitUrl(e.location)}" target="_blank" title="ルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl"><i class="fa-solid fa-train-subway"></i></a>
-                                    </div>
-                                ` : ''}
+                                ${venueLinksHtml(e, false)}
                                 ${weatherBadgeHtml(e)}
                                 ${renderRegulationHtml(e)}
                                 ${memo ? `<div class="bg-amber-50 rounded-2xl px-3 py-2.5 space-y-1">${memo.split('\n').map(l => `<p class="text-[11px] font-semibold text-amber-700">${escapeHtml(l)}</p>`).join('')}</div>` : ''}
@@ -2548,7 +2608,7 @@
                     return `
                         <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3">
                             <p class="text-slate-800 font-bold text-sm leading-snug mb-2">${escapeHtml(rep.title)}</p>
-                            ${specialBadge ? `<div class="flex flex-wrap gap-1.5 mb-2">${specialBadge}</div>` : ''}
+                            ${specialBadge || multiVenueBadgeHtml(rep) ? `<div class="flex flex-wrap gap-1.5 mb-2">${specialBadge}${multiVenueBadgeHtml(rep)}</div>` : ''}
                             ${eventBlocks}
                         </div>
                     `;
@@ -3138,7 +3198,7 @@
                                     <button onclick="event.stopPropagation(); toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
                                 </div>
                             ` : ''}
-                            ${e.location ? `<div class="flex space-x-2"><a href="${mapsUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center space-x-2 bg-pink-50/70 text-pink-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-pink-100 transition"><i class="fa-solid fa-location-dot"></i><span>${e.location}</span></a><a href="${transitUrl(e.location)}" target="_blank" onclick="event.stopPropagation()" title="乗換案内でルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-train-subway"></i></a></div>` : ''}
+                            ${venueLinksHtml(e, true)}
                             ${renderRegulationHtml(e)}
                             ${renderMemoHtml(e)}
                             <div class="flex space-x-2">
@@ -3169,6 +3229,7 @@
                                 ${specialBadgeHtml(rep)}
                                 ${deadlineBadgeHtml(rep)}
                                 ${weatherBadgeHtml(rep)}
+                                ${multiVenueBadgeHtml(rep)}
                                 ${chipsHtml}
                             </div>
                             ${isExpanded ? `<div class="mt-3 pt-3 border-t border-pink-50 space-y-2">${detailsHtml}</div>` : ''}
@@ -3317,7 +3378,7 @@
                                     <button onclick="toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
                                 </div>
                             ` : ''}
-                            ${e.location ? `<div class="flex items-center space-x-3 mb-1"><a href="${mapsUrl(e.location)}" target="_blank" class="text-[11px] text-pink-600 font-semibold flex items-center hover:underline"><i class="fa-solid fa-location-dot mr-1.5 text-pink-400"></i>${e.location}</a><a href="${transitUrl(e.location)}" target="_blank" class="text-[11px] text-purple-500 font-semibold flex items-center hover:underline"><i class="fa-solid fa-train-subway mr-1"></i>ルート検索</a></div>` : ''}
+                            ${venueInlineLinksHtml(e)}
                             ${renderRegulationHtml(e)}
                             <div class="mt-1.5">${renderMemoHtml(e)}</div>
                             <div class="flex items-center space-x-3 mt-1.5">
