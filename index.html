@@ -2196,6 +2196,27 @@
         }
 
         // ==== 複数会場（サーキット）対応 ====
+        // 会場欄が空の行は、特典・メモ欄から会場を拾う。
+        // 優先順位: 「出演…@会場」(そのグループの出演会場) > 「会場：…」(イベント全体の会場)
+        function effectiveLocation(e) {
+            if (!e) return '';
+            if (e.location) return e.location;
+            const text = stripRegulationHtml(e.regulation || '');
+            if (!text) return '';
+            const stages = [];
+            text.split('\n').forEach(line => {
+                if (!line.includes('出演')) return;
+                const m = line.match(/[@＠]\s*(.+)$/);
+                if (m && !/[@＠]/.test(m[1])) {
+                    const v = m[1].trim();
+                    if (v && !stages.includes(v)) stages.push(v);
+                }
+            });
+            if (stages.length) return stages.join(' / ');
+            const m2 = text.match(/会場\s*[:：]\s*(.+)/);
+            if (m2) return m2[1].trim();
+            return '';
+        }
         // 会場文字列を個別の会場に分ける。「A / B」形式のほか、
         // 末尾の「 · 地域」や注記（【…】・（…）・(...)）を取り除いてから分ける。
         function splitVenues(location) {
@@ -2206,7 +2227,7 @@
             s = s.replace(/[╱\/]+$/, '').trim();
             s = s.split(/\s+·\s+/)[0].trim();
             const parts = s.split(/\s*\/\s*/)
-                .map(p => p.replace(/【[^】]*】/g, '').replace(/（[^）]*）/g, '').replace(/\([^)]*\)/g, '').trim())
+                .map(p => p.replace(/含む他.*$/, '').replace(/他\d+会場.*$/, '').replace(/【[^】]*】/g, '').replace(/（[^）]*）/g, '').replace(/\([^)]*\)/g, '').trim())
                 .filter(Boolean);
             return parts.length ? parts : [s];
         }
@@ -2224,10 +2245,12 @@
         }
 
         function multiVenueBadgeHtml(e) {
-            if (!e || !e.location) return '';
-            const parts = splitVenues(e.location);
-            const total = venueTotalCount(e.location, parts.length);
-            const isCircuit = String(e.location).includes('サーキット');
+            if (!e) return '';
+            const loc = effectiveLocation(e);
+            if (!loc) return '';
+            const parts = splitVenues(loc);
+            const total = venueTotalCount(loc, parts.length);
+            const isCircuit = String(loc).includes('サーキット');
             if (total >= 2) {
                 return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-500"><i class="fa-solid fa-location-dot mr-1"></i>${total}会場${isCircuit ? 'サーキット' : ''}</span>`;
             }
@@ -2239,8 +2262,10 @@
 
         // 会場リンク（地図＋乗換）を会場ごとに並べる。1会場なら従来どおり1行。
         function venueLinksHtml(e, inCard) {
-            if (!e || !e.location) return '';
-            const parts = splitVenues(e.location);
+            if (!e) return '';
+            const loc = effectiveLocation(e);
+            if (!loc) return '';
+            const parts = splitVenues(loc);
             const stop = inCard ? ' onclick="event.stopPropagation()"' : '';
             const weight = inCard ? 'font-semibold' : 'font-bold';
             const hover = inCard ? ' hover:bg-pink-100 transition' : '';
@@ -2250,10 +2275,12 @@
 
         // 月表示の選択日カード用（インライン形式）。1会場なら従来どおりの表示。
         function venueInlineLinksHtml(e) {
-            if (!e || !e.location) return '';
-            const parts = splitVenues(e.location);
+            if (!e) return '';
+            const loc = effectiveLocation(e);
+            if (!loc) return '';
+            const parts = splitVenues(loc);
             if (parts.length <= 1) {
-                const p = parts[0] || e.location;
+                const p = parts[0] || loc;
                 return `<div class="flex items-center space-x-3 mb-1"><a href="${mapsUrl(p)}" target="_blank" class="text-[11px] text-pink-600 font-semibold flex items-center hover:underline"><i class="fa-solid fa-location-dot mr-1.5 text-pink-400"></i>${escapeHtml(p)}</a><a href="${transitUrl(p)}" target="_blank" class="text-[11px] text-purple-500 font-semibold flex items-center hover:underline"><i class="fa-solid fa-train-subway mr-1"></i>ルート検索</a></div>`;
             }
             return `<div class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">${parts.map(p => `<span class="inline-flex items-center space-x-2"><a href="${mapsUrl(p)}" target="_blank" class="text-[11px] text-pink-600 font-semibold flex items-center hover:underline"><i class="fa-solid fa-location-dot mr-1.5 text-pink-400"></i>${escapeHtml(p)}</a><a href="${transitUrl(p)}" target="_blank" title="ルート検索" class="text-[11px] text-purple-500 font-semibold flex items-center hover:underline"><i class="fa-solid fa-train-subway mr-1"></i>ルート</a></span>`).join('')}</div>`;
@@ -2263,6 +2290,7 @@
         // 会場名から座標を引く辞書。載っている会場だけ、今日・明日の予定に天気バッジを出す。
         // 座標は会場の最寄り駅・エリアの位置（天気予報の粒度ならこれで十分）。
         const VENUE_COORDS = [
+            ['SHIBUYA', 35.6595, 139.7005], ['LOVEZ', 35.6595, 139.7005], ['DUO MUSIC', 35.6595, 139.7005], ['道玄坂', 35.6590, 139.6975], 
             ['Spotify O-EAST', 35.6586, 139.6959], ['Spotify O-WEST', 35.6595, 139.6953],
             ['品川インターシティホール', 35.6260, 139.7400], ['ベルサール渋谷ガーデン', 35.6555, 139.7030],
             ['GARDEN新木場FACTORY', 35.6432, 139.8270], ['KANDA SQUARE HALL', 35.6908, 139.7706],
@@ -2338,12 +2366,13 @@
 
         // 今日・明日＆辞書にある会場の予定だけ、天気バッジの受け皿を出す（中身は hydrateWeather が後から入れる）
         function weatherBadgeHtml(e) {
-            if (!e || !e.location) return '';
+            if (!e || !effectiveLocation(e)) return '';
             const todayStr = dayjs().format('YYYY-MM-DD');
             const tomorrowStr = dayjs().add(1, 'day').format('YYYY-MM-DD');
             if (e.date !== todayStr && e.date !== tomorrowStr) return '';
-            if (!venueCoords(e.location)) return '';
-            return `<span class="wx-badge items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-600" data-venue="${escapeHtml(e.location)}" data-date="${e.date}" data-time="${e.time || ''}" style="display:none"></span>`;
+            const loc = effectiveLocation(e);
+            if (!venueCoords(loc)) return '';
+            return `<span class="wx-badge items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-600" data-venue="${escapeHtml(loc)}" data-date="${e.date}" data-time="${e.time || ''}" style="display:none"></span>`;
         }
 
         function hydrateWeather() {
@@ -2419,7 +2448,7 @@
                             ${multiVenueBadgeHtml(e)}
                         </div>
                         <p class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(e.title)}</p>
-                        <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${e.time && e.time !== '00:00' ? ' ' + e.time : ''}${e.location ? ' ・ ' + escapeHtml(e.location) : ''}</p>
+                        <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${e.time && e.time !== '00:00' ? ' ' + e.time : ''}${effectiveLocation(e) ? ' ・ ' + escapeHtml(effectiveLocation(e)) : ''}</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-slate-300 text-xs flex-shrink-0"></i>
                 </div>
@@ -2527,7 +2556,7 @@
                         ${p.discovery ? `<p class="text-[10px] font-bold text-purple-500 mb-1.5"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>発見枠：推しと共演したグループが出演</p>` : ''}
                         <div class="flex flex-wrap items-center gap-1.5 mb-1">${chips}${specialBadgeHtml(rep)}${weatherBadgeHtml(rep)}${multiVenueBadgeHtml(rep)}</div>
                         <p class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(rep.title)}</p>
-                        <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${rep.time && rep.time !== '00:00' ? ' ' + rep.time : ''}${rep.location ? ' ・ ' + escapeHtml(rep.location) : ''}</p>
+                        <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${rep.time && rep.time !== '00:00' ? ' ' + rep.time : ''}${effectiveLocation(rep) ? ' ・ ' + escapeHtml(effectiveLocation(rep)) : ''}</p>
                         <div class="flex space-x-2 mt-2.5">
                             <button onclick="jumpToEvent('${rep.id}')" class="flex-1 bg-purple-500 text-white text-[11px] font-bold px-3 py-2 rounded-2xl shadow-sm shadow-purple-500/30">この予定を見る</button>
                             <button onclick="rollRoulette()" class="flex-1 bg-purple-50 text-purple-600 text-[11px] font-bold px-3 py-2 rounded-2xl">もう一回引く</button>
@@ -2646,7 +2675,8 @@
             const venueCount = {};
             targets.forEach(e => {
                 if (e.group) groupCount[e.group] = (groupCount[e.group] || 0) + 1;
-                if (e.location) venueCount[e.location] = (venueCount[e.location] || 0) + 1;
+                const vLoc = effectiveLocation(e);
+                if (vLoc) venueCount[vLoc] = (venueCount[vLoc] || 0) + 1;
             });
 
             // 参戦記録（チェキ枚数・使った金額）の合計
@@ -3027,7 +3057,7 @@
 
             const matches = events
                 .filter(e => {
-                    const haystack = `${e.title} ${e.group || ''} ${e.location || ''}`.toLowerCase();
+                    const haystack = `${e.title} ${e.group || ''} ${effectiveLocation(e)}`.toLowerCase();
                     return haystack.includes(query);
                 })
                 .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time))
@@ -3051,7 +3081,7 @@
                                 <span class="text-[10px] font-semibold text-slate-400 flex-shrink-0">${dateFormatted} ${e.time}</span>
                             </div>
                             <p class="text-xs font-bold text-slate-800 truncate">${escapeHtml(e.title)}</p>
-                            ${e.location ? `<p class="text-[10px] text-slate-400 truncate"><i class="fa-solid fa-location-dot mr-1"></i>${escapeHtml(e.location)}</p>` : ''}
+                            ${effectiveLocation(e) ? `<p class="text-[10px] text-slate-400 truncate"><i class="fa-solid fa-location-dot mr-1"></i>${escapeHtml(effectiveLocation(e))}</p>` : ''}
                         </div>
                         <button onclick="toggleFavorite('${e.id}'); renderSearchResults();" class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ml-2 transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart"></i></button>
                     </div>
