@@ -1835,6 +1835,26 @@
             alert('ファイルをダウンロードしました。Googleカレンダーの「設定」→「インポートとエクスポート」からこのファイルを選ぶと一括で登録できるよ。');
         }
 
+        // ==== グループ別ICS購読 ====
+        // ★GASで ics_feed.gs をウェブアプリとしてデプロイしたURLをここに貼る（空の間はボタンが案内を出す）
+        const ICS_FEED_BASE_URL = 'https://script.google.com/macros/s/AKfycbyzrSLKCL4Ru0fSo4jUUBu3SVfHZHVJRsWcaGVu4jFUBn6aEAVhd2VK5h5cu_mrhB90EA/exec';
+
+        function subscribeGroupCalendar(index) {
+            const groupName = index >= 0 && groups[index] ? groups[index].name : '';
+            if (!ICS_FEED_BASE_URL) {
+                alert('カレンダー購読はまだ準備中です。\n（管理者: GASでics_feed.gsをデプロイして、そのURLをICS_FEED_BASE_URLに設定してください）');
+                return;
+            }
+            const url = groupName ? (ICS_FEED_BASE_URL + '?group=' + encodeURIComponent(groupName)) : ICS_FEED_BASE_URL;
+            const label = groupName ? `「${groupName}」` : '全グループ';
+            const done = () => alert(`${label}の購読URLをコピーしました。\n\nGoogleカレンダーの「設定」→「他のカレンダーを追加」→「URLで追加」に貼り付けると、新規ライブが自動でカレンダーに並ぶようになります。\n※Google側の取得間隔で、反映まで数時間〜1日かかることがあります。`);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(done).catch(() => prompt('このURLをコピーして、Googleカレンダーの「URLで追加」に貼ってください', url));
+            } else {
+                prompt('このURLをコピーして、Googleカレンダーの「URLで追加」に貼ってください', url);
+            }
+        }
+
         function renderGroupDropdowns() {
             renderGroupChips();
         }
@@ -1986,7 +2006,18 @@
 
         function renderGroupManagementList() {
             const container = document.getElementById('group-management-list');
-            let html = '';
+            let html = `
+                <button onclick="subscribeGroupCalendar(-1)" class="w-full flex items-center justify-between p-3.5 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100 rounded-2xl shadow-sm">
+                    <span class="flex items-center space-x-3 min-w-0">
+                        <span class="w-4 h-4 rounded-full shadow-sm flex-shrink-0" style="background: linear-gradient(135deg,#ec4899,#a855f7)"></span>
+                        <span class="text-left min-w-0">
+                            <span class="block font-bold text-xs text-slate-800">全グループをGoogleカレンダーで購読</span>
+                            <span class="block text-[10px] text-slate-400">新規ライブがカレンダーに自動で並びます</span>
+                        </span>
+                    </span>
+                    <i class="fa-solid fa-calendar-plus text-pink-500 text-sm mr-1 flex-shrink-0"></i>
+                </button>
+            `;
             groups.forEach((g, index) => {
                 const linkCount = OFFICIAL_GROUP_LINKS[g.name]
                     ? Object.values(OFFICIAL_GROUP_LINKS[g.name]).filter(v => v && v.trim()).length
@@ -2003,6 +2034,7 @@
                             </div>
                         </button>
                         <div class="flex items-center space-x-1 flex-shrink-0">
+                            <button onclick="subscribeGroupCalendar(${index})" title="Googleカレンダーでこのグループを購読" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid fa-calendar-plus text-xs"></i></button>
                             <button onclick="toggleGroupNotify(${index})" title="${notifyOn ? '通知オフにする' : '通知オンにする'}" class="w-8 h-8 rounded-xl flex items-center justify-center transition ${notifyOn ? 'text-pink-500 hover:bg-pink-100' : 'text-slate-300 hover:text-pink-400 hover:bg-pink-50'}"><i class="fa-solid ${notifyOn ? 'fa-bell' : 'fa-bell-slash'} text-xs"></i></button>
                             <button onclick="toggleGroupVisible(${index})" title="${isHidden ? '表示する' : '非表示にする'}" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'} text-xs"></i></button>
                             <button onclick="openGroupEditModal(${index})" title="表示設定" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid fa-palette text-xs"></i></button>
