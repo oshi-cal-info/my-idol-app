@@ -2196,6 +2196,20 @@
         }
 
         // ==== 複数会場（サーキット）対応 ====
+            // 辞書マッチ用：会場欄に実在する会場名＋天気辞書の会場名（長い順）
+            let venueDictCache = null;
+            function venueDict() {
+                if (venueDictCache) return venueDictCache;
+                const set = new Set();
+                (typeof events !== 'undefined' ? events : []).forEach(ev => {
+                    const loc = String(ev.location || '').trim();
+                    if (!loc || loc === '詳細受付準備中') return;
+                    splitVenues(loc).forEach(p => { if (p.length >= 4 && !p.includes('開場') && !p.includes('開演')) set.add(p); });
+                });
+                VENUE_COORDS.forEach(en => { if (en[0].length >= 5 && en[0] !== 'SHIBUYA') set.add(en[0]); });
+                venueDictCache = [...set].sort((a, b) => b.length - a.length);
+                return venueDictCache;
+            }
         // 会場欄が空の行は、特典・メモ欄から会場を拾う。
         // 優先順位: 「出演…@会場」(そのグループの出演会場) > 「会場：…」(イベント全体の会場)
         function effectiveLocation(e) {
@@ -2217,11 +2231,62 @@
             if (stages.length) return stages.join(' / ');
             const m2 = text.match(/会場\s*[:：]\s*(.+)/);
             if (m2) return cleanV(m2[1]);
-            for (const line of text.split('\n')) {
-                if (!line.includes('🏟')) continue;
-                const v = cleanV(line.split('🏟')[1] || '');
-                if (v) return v;
+            const m3 = text.match(/会場\s+(.+)/);
+            if (m3) {
+                const v = cleanV(m3[1]);
+                const c0 = v.charAt(0); const okStart = /[A-Za-z0-9]/.test(c0) || (c0 >= 'ぁ' && c0 <= 'ヶ') || (c0 >= '一' && c0 <= '龯'); if (v && okStart && v.length <= 60 && !/^\d/.test(v) && !/^[はがをにへのとやです未後調]/.test(v) && !v.includes('円') && !v.includes('¥') && !v.includes('￥') && !/発売|解禁|に関して|チケット|開場|開演/.test(v)) return v;
             }
+            for (const line of text.split('\n')) {
+                const t = line.trim();
+                const am = t.match(/^[@＠]\s*(.+)$/);
+                if (am) {
+                    const v = cleanV(am[1]);
+                    if (v && v.length <= 60 && !v.includes('円') && !v.includes('http')) return v;
+                }
+            }
+            const VENUE_MARKERS = ['📍', '🎪', '🏟', '🏢', '🏫'];
+            for (const line of text.split('\n')) {
+                for (const mk of VENUE_MARKERS) {
+                    const idx = line.indexOf(mk);
+                    if (idx < 0) continue;
+                    let v = cleanV(line.slice(idx + mk.length));
+                    if (v && v.length >= 2 && v.length <= 60 && !v.includes('円') && !v.includes('http') && !/チケット|開場|開演|出演|物販|特典|発売/.test(v)) return v;
+                }
+            }
+            for (const line of text.split('\n')) {
+                if (!['🗓', '⏰', '🌅'].some(em => line.includes(em))) continue;
+                const at = line.search(/[@＠]/);
+                if (at < 0) continue;
+                if (/物販|特典会|受付/.test(line.slice(0, at))) continue;
+                let raw = line.slice(at + 1).trim();
+                let end = raw.length;
+                for (const st of ['🗓', '⏰', '🌅', '🎫', '【', '※', 'http']) { const ix = raw.indexOf(st); if (ix >= 0 && ix < end) end = ix; }
+                const v = cleanV(raw.slice(0, end));
+                if (v && v.length >= 3 && v.length <= 60 && !v.includes('円') && !v.includes('チケット') && !/出演|物販|特典/.test(v)) return v;
+            }
+            const PREFECTURES = ['北海道', '青森', '岩手', '宮城', '秋田', '山形', '福島', '茨城', '栃木', '群馬', '埼玉', '千葉', '東京', '神奈川', '新潟', '富山', '石川', '福井', '山梨', '長野', '岐阜', '静岡', '愛知', '三重', '滋賀', '京都', '大阪', '兵庫', '奈良', '和歌山', '鳥取', '島根', '岡山', '広島', '山口', '徳島', '香川', '愛媛', '高知', '福岡', '佐賀', '長崎', '熊本', '大分', '宮崎', '鹿児島', '沖縄', '某所'];
+            const afterBracket = (s) => {
+                const ix = Math.max(s.lastIndexOf('』'), s.lastIndexOf('」'));
+                if (ix < 0) return '';
+                let v = s.slice(ix + 1).trim().split('※')[0].split('(')[0].split('（')[0].trim().replace(/にて(開催)?$/, '').trim();
+                if (v.includes('@') || v.includes('＠')) v = v.split(/[@＠]/).pop().trim();
+                if (!v || v.length < 2 || v.length > 40) return '';
+                if (/^(supported|http)/i.test(v)) return '';
+                if (/開催|決定|発表|延期|中止|チケット|特典|発売|円|。|START|OPEN|開場|開演|出演|放送/.test(v)) return '';
+                if (/^[はがをにへのと]/.test(v) || /\d+年\d+月/.test(v)) return '';
+                if (/\d{1,2}:\d{2}/.test(v)) return '';
+                if (PREFECTURES.includes(v)) return '';
+                if (/^\d/.test(v)) return '';
+                return v;
+            };
+            for (const line of text.split('\n')) { const v = afterBracket(line); if (v) return cleanV(v); }
+            const fromTitle = afterBracket(String(e.title || ''));
+            if (fromTitle) return cleanV(fromTitle);
+            const dict = venueDict();
+            const fLow = text.toLowerCase();
+            for (const v of dict) { if (fLow.includes(v.toLowerCase())) return v; }
+            const tLow = String(e.title || '').toLowerCase();
+            for (const v of dict) { if (tLow.includes(v.toLowerCase())) return v; }
             return '';
         }
         // 会場文字列を個別の会場に分ける。「A / B」形式のほか、
@@ -2234,7 +2299,7 @@
             s = s.replace(/[╱\/]+$/, '').trim();
             s = s.split(/\s+·\s+/)[0].trim();
             const parts = s.split(/\s*\/\s*/)
-                .map(p => p.replace(/含む他.*$/, '').replace(/他\d+会場.*$/, '').replace(/【[^】]*】/g, '').replace(/（[^）]*）/g, '').replace(/\([^)]*\)/g, '').trim())
+                .map(p => p.replace(/含む他.*$/, '').replace(/※.*$/, '').replace(/他.*$/, '').replace(/【[^】]*】/g, '').replace(/（[^）]*）/g, '').replace(/\([^)]*\)/g, '').trim())
                 .filter(Boolean);
             return parts.length ? parts : [s];
         }
