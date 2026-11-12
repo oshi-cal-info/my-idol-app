@@ -2145,6 +2145,70 @@
             return [...map.values()];
         }
 
+        // ==== カウントダウン（次の推しライブまで あと○日） ====
+        // 対象は「行く予定（お気に入り）」の中で一番近い未来の予定。
+        // 行く予定が無い場合は、表示中グループの直近のライブで代替する。
+        function nextCountdownTarget() {
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            const future = events
+                .filter(e => e.date >= todayStr && matchesActiveFilters(e.group))
+                .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+            if (future.length === 0) return null;
+            const fav = future.find(e => favorites.has(e.id));
+            const target = fav || future[0];
+            return {
+                event: target,
+                isFav: !!fav,
+                daysLeft: dayjs(target.date).diff(dayjs().startOf('day'), 'day')
+            };
+        }
+
+        function countdownCardHtml() {
+            const t = nextCountdownTarget();
+            if (!t) return '';
+            const e = t.event;
+            const go = groups.find(g => g.name === e.group);
+            const c = go ? go.color : '#ec4899';
+            const dateLabel = dayjs(e.date).isValid() ? dayjs(e.date).format('M月D日(dd)') : e.date;
+            const big = t.daysLeft === 0
+                ? `<span class="text-[26px] font-black text-pink-500 tracking-tight">今日！</span>`
+                : `<span class="inline-flex items-baseline text-pink-500"><span class="text-[11px] font-black mr-0.5">あと</span><span class="text-4xl font-black tracking-tight">${t.daysLeft}</span><span class="text-xs font-black ml-0.5">日</span></span>`;
+            return `
+                <div onclick="jumpToEvent('${e.id}')" class="cursor-pointer bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm flex items-center space-x-3">
+                    <div class="flex-shrink-0 w-[76px] text-center">
+                        ${big}
+                        <p class="text-[9px] font-bold text-slate-400 mt-0.5">${t.isFav ? '次の推しライブまで' : '次のライブまで'}</p>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                            ${e.group ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group}</span>` : ''}
+                            ${specialBadgeHtml(e)}
+                        </div>
+                        <p class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(e.title)}</p>
+                        <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${e.time && e.time !== '00:00' ? ' ' + e.time : ''}${e.location ? ' ・ ' + escapeHtml(e.location) : ''}</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-slate-300 text-xs flex-shrink-0"></i>
+                </div>
+            `;
+        }
+
+        // カウントダウンやプッシュ通知から、対象の予定まで移動して詳細を開く
+        function jumpToEvent(eventId) {
+            const targetEvent = events.find(e => e.id === eventId);
+            if (!targetEvent) return;
+            const sameLive = events
+                .filter(e => targetEvent.group ? favGroupKey(e) === favGroupKey(targetEvent) : e.id === targetEvent.id)
+                .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+            expandedEvents.add('live_' + sameLive.map(e => e.id).join('|'));
+            switchView('list');
+            render();
+            setTimeout(() => {
+                const headers = Array.from(document.querySelectorAll('#view-list [data-date]'));
+                const target = headers.find(h => h.dataset.date === targetEvent.date);
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150);
+        }
+
         function todayLiveCardHtml() {
             const lives = getTodayLiveGroups();
             if (lives.length === 0) return '';
@@ -2623,7 +2687,7 @@
             }
 
             if (filtered.length === 0) {
-                container.innerHTML = todayLiveCardHtml() + `
+                container.innerHTML = countdownCardHtml() + todayLiveCardHtml() + `
                     <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
                         <i class="fa-regular fa-calendar-xmark text-4xl text-pink-300 mb-3"></i>
                         <p class="text-xs text-slate-400 font-medium">予定がありません</p>
@@ -2632,7 +2696,7 @@
                 return;
             }
 
-            container.innerHTML = todayLiveCardHtml() + buildEventCardsHtml(filtered);
+            container.innerHTML = countdownCardHtml() + todayLiveCardHtml() + buildEventCardsHtml(filtered);
         }
 
         // ==== 行く予定ビュー（お気に入りだけを表示） ====
