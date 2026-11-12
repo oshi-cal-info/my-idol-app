@@ -347,6 +347,17 @@
             <form onsubmit="saveMemo(event)" class="space-y-3">
                 <input type="hidden" id="memo-event-id" value="">
                 <textarea id="memo-text" rows="4" placeholder="例: Aちゃんと参戦／自分の整理番号は123番" class="w-full p-3 bg-amber-50/60 border border-amber-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"></textarea>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="block">
+                        <span class="text-[10px] font-bold text-slate-400">チェキ枚数</span>
+                        <input id="memo-cheki" type="number" inputmode="numeric" min="0" step="1" placeholder="0" class="w-full mt-1 p-3 bg-sky-50/60 border border-sky-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-300">
+                    </label>
+                    <label class="block">
+                        <span class="text-[10px] font-bold text-slate-400">使った金額（円）</span>
+                        <input id="memo-spend" type="number" inputmode="numeric" min="0" step="1" placeholder="0" class="w-full mt-1 p-3 bg-sky-50/60 border border-sky-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-300">
+                    </label>
+                </div>
+                <p class="text-[10px] text-slate-300 font-semibold">チェキと金額は参戦記録としてサマリーに集計されるよ</p>
                 <div class="flex space-x-2">
                     <button type="button" onclick="deleteMemo()" class="flex-1 py-3 bg-slate-50 text-slate-400 font-bold rounded-2xl text-xs border border-slate-100">削除</button>
                     <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-amber-400 to-pink-400 text-white font-bold rounded-2xl shadow-md text-xs">保存する</button>
@@ -509,6 +520,7 @@
                     if (data.groups) groups = data.groups;
                     if (data.favorites) favorites = new Set(data.favorites.map(migrateId));
                     if (data.personalMemos) personalMemos = migrateIdKeyedObject(data.personalMemos);
+                    if (data.attendLogs) attendLogs = migrateIdKeyedObject(data.attendLogs);
                     if (data.eventOverrides) eventOverrides = migrateIdKeyedObject(data.eventOverrides);
                     if (data.manualEvents) {
                         // クラウド上の「自分の予定」で、この端末のシート由来の予定はそのまま残す
@@ -518,6 +530,7 @@
                     saveUserData();
                     saveFavorites();
                     savePersonalMemos();
+                    saveAttendLogs();
                     saveEventOverrides();
                     render();
                 } else {
@@ -537,13 +550,14 @@
                     groups: groups,
                     favorites: [...favorites],
                     personalMemos: personalMemos,
+                    attendLogs: attendLogs,
                     eventOverrides: eventOverrides,
                     manualEvents: events.filter(e => !e.isSheet),
                     updatedAt: new Date().toISOString()
                 }, {
                     // 指定した項目は「丸ごと置き換え」にする（merge:trueだと消したメモや修正がクラウドに残って復活してしまうため）
                     // 通知用のfcmTokensなど、ここに無い項目はそのまま残る
-                    mergeFields: ['groups', 'favorites', 'personalMemos', 'eventOverrides', 'manualEvents', 'updatedAt']
+                    mergeFields: ['groups', 'favorites', 'personalMemos', 'attendLogs', 'eventOverrides', 'manualEvents', 'updatedAt']
                 }).catch(e => console.log('クラウド保存に失敗:', e));
             }, 800);
         }
@@ -756,6 +770,7 @@
         let activeFilters = new Set(); // 空 & !filtersExplicit = すべてのグループを表示
         let filtersExplicit = false; // true になると activeFilters の中身がそのまま「選択中のグループ」を表す（空なら0件表示）
         let personalMemos = {}; // { eventId: memoText } 自分だけのメモ（ローカル保存）
+        let attendLogs = {}; // { eventId: { cheki: 枚数, spend: 円 } } 参戦記録（チェキ枚数・使った金額）
         let eventHistory = {}; // { eventId: event } 一度取得した予定を残しておく履歴（ソースから消えても保持）
         let eventOverrides = {}; // { eventId: { title, date, time, location, regulation } } 自分だけの修正（この端末のみ・クラウド同期しない）
         let showPastEvents = false; // 過去の予定を表示するかどうか（デフォルトは非表示）
@@ -773,6 +788,8 @@
             if (savedFavorites) { try { favorites = new Set(JSON.parse(savedFavorites)); } catch(e) {} }
             const savedMemos = localStorage.getItem('oshi_cal_personal_memos');
             if (savedMemos) { try { personalMemos = JSON.parse(savedMemos); } catch(e) {} }
+            const savedLogs = localStorage.getItem('oshi_cal_attend_logs');
+            if (savedLogs) { try { attendLogs = JSON.parse(savedLogs); } catch(e) {} }
             const savedHistory = localStorage.getItem('oshi_cal_event_history');
             if (savedHistory) { try { eventHistory = JSON.parse(savedHistory); } catch(e) {} }
             const savedOverrides = localStorage.getItem('oshi_cal_event_overrides');
@@ -846,6 +863,11 @@
 
         function savePersonalMemos() {
             localStorage.setItem('oshi_cal_personal_memos', JSON.stringify(personalMemos));
+            saveCloudData();
+        }
+
+        function saveAttendLogs() {
+            localStorage.setItem('oshi_cal_attend_logs', JSON.stringify(attendLogs));
             saveCloudData();
         }
 
@@ -953,12 +975,14 @@
 
             favorites = new Set([...favorites].map(migrateId));
             personalMemos = migrateIdKeyedObject(personalMemos);
+            attendLogs = migrateIdKeyedObject(attendLogs);
             eventOverrides = migrateIdKeyedObject(eventOverrides);
 
             localStorage.setItem(LEGACY_ID_MAP_KEY, JSON.stringify(legacyIdMap));
             localStorage.setItem('oshi_cal_event_history', JSON.stringify(eventHistory));
             localStorage.setItem('oshi_cal_favorites', JSON.stringify([...favorites]));
             localStorage.setItem('oshi_cal_personal_memos', JSON.stringify(personalMemos));
+            localStorage.setItem('oshi_cal_attend_logs', JSON.stringify(attendLogs));
             localStorage.setItem('oshi_cal_event_overrides', JSON.stringify(eventOverrides));
             localStorage.setItem('oshi_cal_id_v2_migrated', '1');
         }
@@ -1325,21 +1349,31 @@
             return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
+        function attendLogText(log) {
+            if (!log) return '';
+            const parts = [];
+            if (log.cheki) parts.push(`チェキ ${log.cheki}枚`);
+            if (log.spend) parts.push(`¥${Number(log.spend).toLocaleString()}`);
+            return parts.join(' ・ ');
+        }
+
         function renderMemoHtml(e) {
             const memo = personalMemos[e.id];
-            if (memo) {
-                const lines = memo.split('\n').map(l => `<p>${escapeHtml(l)}</p>`).join('');
+            const log = attendLogs[e.id];
+            if (memo || log) {
+                const lines = memo ? memo.split('\n').map(l => `<p>${escapeHtml(l)}</p>`).join('') : '';
+                const logLine = log ? `<p class="text-sky-600"><i class="fa-solid fa-camera mr-1"></i>${attendLogText(log)}</p>` : '';
                 return `
                     <div onclick="event.stopPropagation(); openMemoModal('${e.id}')" class="flex items-start space-x-2 bg-amber-50 text-amber-700 text-[11px] font-semibold px-3 py-2.5 rounded-2xl cursor-pointer hover:bg-amber-100 transition">
                         <i class="fa-solid fa-note-sticky mt-0.5"></i>
-                        <div class="flex-1 space-y-0.5">${lines}</div>
+                        <div class="flex-1 space-y-0.5">${lines}${logLine}</div>
                         <i class="fa-solid fa-pen text-[9px] opacity-50 mt-0.5"></i>
                     </div>
                 `;
             }
             return `
                 <button onclick="event.stopPropagation(); openMemoModal('${e.id}')" class="w-full flex items-center justify-center space-x-1.5 text-[11px] font-semibold text-slate-400 border border-dashed border-slate-200 rounded-2xl py-2.5 hover:bg-slate-50 transition">
-                    <i class="fa-solid fa-plus"></i><span>自分用メモを追加</span>
+                    <i class="fa-solid fa-plus"></i><span>メモ・参戦記録を追加</span>
                 </button>
             `;
         }
@@ -1347,6 +1381,9 @@
         function openMemoModal(id) {
             document.getElementById('memo-event-id').value = id;
             document.getElementById('memo-text').value = personalMemos[id] || '';
+            const log = attendLogs[id];
+            document.getElementById('memo-cheki').value = log && log.cheki ? log.cheki : '';
+            document.getElementById('memo-spend').value = log && log.spend ? log.spend : '';
             document.getElementById('memo-modal').classList.remove('hidden');
         }
 
@@ -1360,6 +1397,14 @@
                 delete personalMemos[id];
             }
             savePersonalMemos();
+            const cheki = Math.max(0, parseInt(document.getElementById('memo-cheki').value, 10) || 0);
+            const spend = Math.max(0, parseInt(document.getElementById('memo-spend').value, 10) || 0);
+            if (cheki > 0 || spend > 0) {
+                attendLogs[id] = { cheki, spend };
+            } else {
+                delete attendLogs[id];
+            }
+            saveAttendLogs();
             closeModal('memo-modal');
             render();
             renderFavList();
@@ -1369,6 +1414,8 @@
             const id = document.getElementById('memo-event-id').value;
             delete personalMemos[id];
             savePersonalMemos();
+            delete attendLogs[id];
+            saveAttendLogs();
             closeModal('memo-modal');
             render();
             renderFavList();
@@ -2489,6 +2536,7 @@
                                 ${weatherBadgeHtml(e)}
                                 ${renderRegulationHtml(e)}
                                 ${memo ? `<div class="bg-amber-50 rounded-2xl px-3 py-2.5 space-y-1">${memo.split('\n').map(l => `<p class="text-[11px] font-semibold text-amber-700">${escapeHtml(l)}</p>`).join('')}</div>` : ''}
+                                ${attendLogs[e.id] ? `<div class="bg-sky-50 rounded-2xl px-3 py-2.5"><p class="text-[11px] font-semibold text-sky-600"><i class="fa-solid fa-camera mr-1"></i>${attendLogText(attendLogs[e.id])}</p></div>` : ''}
                                 <div class="flex space-x-2">
                                     <a href="${gcalUrl(e)}" target="_blank" class="flex-1 flex items-center justify-center space-x-1.5 bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-calendar-plus"></i><span>カレンダー</span></a>
                                     <button onclick="shareEventById('${e.id}')" class="w-11 flex items-center justify-center bg-slate-50 text-slate-500 rounded-2xl"><i class="fa-solid fa-share-nodes"></i></button>
@@ -2541,6 +2589,16 @@
                 if (e.location) venueCount[e.location] = (venueCount[e.location] || 0) + 1;
             });
 
+            // 参戦記録（チェキ枚数・使った金額）の合計
+            let totalCheki = 0, totalSpend = 0;
+            targets.forEach(e => {
+                const log = attendLogs[e.id];
+                if (log) {
+                    totalCheki += Number(log.cheki) || 0;
+                    totalSpend += Number(log.spend) || 0;
+                }
+            });
+
             const rank = obj => Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
             // 一番参戦が多かった月（年間サマリー用）
@@ -2560,6 +2618,8 @@
                 label: period === 'year' ? `${now.year()}年` : now.format('YYYY年M月'),
                 liveCount: liveKeys.size,
                 groupCount: Object.keys(groupCount).length,
+                totalCheki,
+                totalSpend,
                 topGroups: rank(groupCount),
                 topVenues: rank(venueCount),
                 busiestMonth
@@ -2646,6 +2706,19 @@
                     </div>
                 </div>
 
+                ${(s.totalCheki > 0 || s.totalSpend > 0) ? `
+                <div class="grid grid-cols-2 gap-2.5 mb-4">
+                    <div class="bg-white/90 rounded-2xl p-3.5">
+                        <p class="text-[10px] font-bold text-slate-400 mb-0.5">チェキ合計</p>
+                        <p class="text-3xl font-black text-slate-800 leading-none">${s.totalCheki}<span class="text-sm ml-1">枚</span></p>
+                    </div>
+                    <div class="bg-white/90 rounded-2xl p-3.5">
+                        <p class="text-[10px] font-bold text-slate-400 mb-0.5">使った金額</p>
+                        <p class="text-3xl font-black text-slate-800 leading-none">¥${s.totalSpend.toLocaleString()}</p>
+                    </div>
+                </div>
+                ` : ''}
+
                 ${s.busiestMonth ? `
                     <div class="bg-white/90 rounded-2xl p-3.5 mb-4">
                         <p class="text-[10px] font-bold text-slate-400 mb-0.5">一番通った月</p>
@@ -2667,6 +2740,7 @@
             const lines = [
                 `【推し活まとめ ${s.label}】`,
                 `参戦 ${s.liveCount}本 / ${s.groupCount}組`,
+                ...(s.totalCheki > 0 || s.totalSpend > 0 ? [`チェキ ${s.totalCheki}枚 / ¥${s.totalSpend.toLocaleString()}`] : []),
                 ...s.topGroups.slice(0, 3).map(([n, c], i) => `${i + 1}. ${n}（${c}）`),
                 '',
                 '#推し活 #OshiCal',
@@ -2700,7 +2774,9 @@
             const groupsH = topGroups.length ? 70 + topGroups.length * ROW_H : 0;
             const venuesH = topVenues.length ? 70 + topVenues.length * ROW_H : 0;
             const footerH = 160;
-            const HEIGHT = HEADER_H + STAT_H + SECTION_GAP + groupsH + (venuesH ? SECTION_GAP + venuesH : 0) + footerH + PAD;
+            const hasLogStats = s.totalCheki > 0 || s.totalSpend > 0;
+            const statsH = STAT_H + (hasLogStats ? STAT_H + 24 : 0);
+            const HEIGHT = HEADER_H + statsH + SECTION_GAP + groupsH + (venuesH ? SECTION_GAP + venuesH : 0) + footerH + PAD;
 
             canvas.width = WIDTH;
             canvas.height = HEIGHT;
@@ -2730,27 +2806,43 @@
 
             let y = HEADER_H;
 
-            // 統計カード（参戦本数 / 推しグループ）
+            // 統計カード（参戦本数 / 推しグループ、参戦記録があればチェキ / 金額の行も）
             const statW = (WIDTH - PAD * 2 - 24) / 2;
-            [
-                { label: '参戦本数', value: `${s.liveCount}`, unit: '本' },
-                { label: '推しグループ', value: `${s.groupCount}`, unit: '組' }
-            ].forEach((stat, i) => {
-                const x = PAD + i * (statW + 24);
-                ctx.fillStyle = 'rgba(255,255,255,0.95)';
-                drawRoundRect(ctx, x, y, statW, STAT_H, 28);
-                ctx.fill();
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = '700 26px sans-serif';
-                ctx.fillText(stat.label, x + 28, y + 50);
-                ctx.fillStyle = '#1e293b';
-                ctx.font = '900 72px sans-serif';
-                ctx.fillText(stat.value, x + 28, y + 130);
-                const vw = ctx.measureText(stat.value).width;
-                ctx.font = '700 30px sans-serif';
-                ctx.fillText(stat.unit, x + 28 + vw + 12, y + 130);
+            const statRows = [
+                [
+                    { label: '参戦本数', value: `${s.liveCount}`, unit: '本' },
+                    { label: '推しグループ', value: `${s.groupCount}`, unit: '組' }
+                ]
+            ];
+            if (hasLogStats) {
+                statRows.push([
+                    { label: 'チェキ合計', value: `${s.totalCheki}`, unit: '枚' },
+                    { label: '使った金額', value: `¥${s.totalSpend.toLocaleString()}`, unit: '' }
+                ]);
+            }
+            statRows.forEach((row, ri) => {
+                row.forEach((stat, i) => {
+                    const x = PAD + i * (statW + 24);
+                    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                    drawRoundRect(ctx, x, y, statW, STAT_H, 28);
+                    ctx.fill();
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '700 26px sans-serif';
+                    ctx.fillText(stat.label, x + 28, y + 50);
+                    ctx.fillStyle = '#1e293b';
+                    let vfs = 72;
+                    ctx.font = `900 ${vfs}px sans-serif`;
+                    while (ctx.measureText(stat.value).width > statW - 80 && vfs > 28) {
+                        vfs -= 6;
+                        ctx.font = `900 ${vfs}px sans-serif`;
+                    }
+                    ctx.fillText(stat.value, x + 28, y + 130);
+                    const vw = ctx.measureText(stat.value).width;
+                    ctx.font = '700 30px sans-serif';
+                    ctx.fillText(stat.unit, x + 28 + vw + 12, y + 130);
+                });
+                y += STAT_H + (ri < statRows.length - 1 ? 24 : SECTION_GAP);
             });
-            y += STAT_H + SECTION_GAP;
 
             const contentW = WIDTH - PAD * 2;
 
