@@ -1250,6 +1250,41 @@
             return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full ${d.isPresale ? 'bg-pink-500' : (urgent ? 'bg-red-500' : 'bg-amber-400')} text-white shadow-sm"><i class="fa-solid ${d.isPresale ? 'fa-star' : 'fa-clock'} mr-1 text-[9px]"></i>${label}</span>`;
         }
 
+        // 生誕・周年など「特別な日」の予定をタイトルから判定する（表示専用、データは変えない）
+        function specialEventInfo(e) {
+            const t = String((e && e.title) || '');
+            if (!t) return null;
+            if (/生誕|誕生日|バースデー|Birthday|🎂/i.test(t)) return { kind: 'birthday' };
+            const yearsMatch = t.match(/(\d+)\s*周年/) || t.match(/(\d+)\s*(?:st|nd|rd|th)?\s*Anniversary/i);
+            if (yearsMatch) return { kind: 'anniversary', years: parseInt(yearsMatch[1], 10) };
+            const kanjiMatch = t.match(/([一二三四五六七八九十]+)周年/);
+            if (kanjiMatch) {
+                const keta = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9 };
+                const s = kanjiMatch[1];
+                let years = null;
+                if (s === '十') years = 10;
+                else if (s.length === 1) years = keta[s] || null;
+                else if (s[0] === '十' && keta[s[1]]) years = 10 + keta[s[1]];
+                else if (s[1] === '十') years = (keta[s[0]] || 0) * 10 + (s[2] && keta[s[2]] ? keta[s[2]] : 0);
+                if (years) return { kind: 'anniversary', years };
+            }
+            if (/周年|Anniversary|アニバーサリー/i.test(t)) return { kind: 'anniversary' };
+            return null;
+        }
+
+        // カード上に出す「生誕・周年」バッジ（あと○日つき）
+        function specialBadgeHtml(e) {
+            const info = specialEventInfo(e);
+            if (!info) return '';
+            const daysLeft = dayjs(e.date).diff(dayjs().startOf('day'), 'day');
+            const when = daysLeft === 0 ? '・今日！' : (daysLeft > 0 && daysLeft <= 30 ? `・あと${daysLeft}日` : '');
+            if (info.kind === 'birthday') {
+                return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-sm"><i class="fa-solid fa-cake-candles mr-1 text-[9px]"></i>生誕${when}</span>`;
+            }
+            const label = info.years ? `${info.years}周年` : '周年';
+            return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-sm"><i class="fa-solid fa-trophy mr-1 text-[9px]"></i>${label}${when}</span>`;
+        }
+
         // スプレッドシート側に<p>や<br>などのHTMLタグが文字として入っていることがあるため、
         // 表示前に読みやすいテキスト（改行）へ変換する
         function stripRegulationHtml(str) {
@@ -1493,6 +1528,7 @@
                 const rep = list[0];
                 const dateFormatted = dayjs(rep.date).isValid() ? dayjs(rep.date).format('M/D(dd)') : rep.date;
                 const isMulti = list.length > 1;
+                const specialBadge = specialBadgeHtml(rep);
 
                 const groupRows = list.map(ev => {
                     const groupObj = groups.find(g => g.name === ev.group);
@@ -1518,6 +1554,7 @@
                 html += `
                     <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3.5">
                         <p class="text-[11px] font-bold text-slate-500 mb-0.5">${dateFormatted} ${rep.time}</p>
+                        ${specialBadge ? `<div class="mb-1.5">${specialBadge}</div>` : ''}
                         <p class="text-xs font-bold text-slate-800 mb-2 leading-snug">${rep.title}</p>
                         ${isMulti ? `<p class="text-[10px] font-bold text-purple-400 mb-1.5 flex items-center"><i class="fa-solid fa-people-group mr-1.5"></i>${list.length}グループが出演</p>` : ''}
                         <div class="space-y-1.5">${groupRows}</div>
@@ -2135,6 +2172,7 @@
                 container.innerHTML = lives.map(list => {
                     const rep = list[0];
                     const isMulti = list.length > 1;
+                    const specialBadge = specialBadgeHtml(rep);
 
                     const eventBlocks = list.map(e => {
                         const go = groups.find(g => g.name === e.group);
@@ -2166,6 +2204,7 @@
                     return `
                         <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3">
                             <p class="text-slate-800 font-bold text-sm leading-snug mb-2">${escapeHtml(rep.title)}</p>
+                            ${specialBadge ? `<div class="flex flex-wrap gap-1.5 mb-2">${specialBadge}</div>` : ''}
                             ${eventBlocks}
                         </div>
                     `;
@@ -2659,6 +2698,10 @@
                 const cardKey = 'live_' + list.map(e => e.id).join('|');
                 const isExpanded = expandedEvents.has(cardKey);
                 const anyFav = list.some(e => favorites.has(e.id));
+                const specialInfo = specialEventInfo(rep);
+                const specialFrameCls = specialInfo
+                    ? (specialInfo.kind === 'birthday' ? 'border-2 border-pink-300' : 'border-2 border-amber-300')
+                    : (isMulti ? 'border-2 border-purple-200' : 'border border-pink-100/60');
 
                 const repGroupObj = groups.find(g => g.name === rep.group);
                 const repColor = repGroupObj ? repGroupObj.color : (rep.group ? '#ec4899' : '#94a3b8');
@@ -2717,7 +2760,7 @@
                 }).join('');
 
                 html += `
-                    <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${isMulti ? 'border-2 border-purple-200' : 'border border-pink-100/60'}">
+                    <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${specialFrameCls}">
                         ${barHtml}
                         <div class="flex-1 p-4 cursor-pointer" onclick="toggleEventDetail('${cardKey}')">
                             <div class="flex items-center justify-between mb-2">
@@ -2730,6 +2773,7 @@
                             <h4 class="font-bold text-slate-800 text-sm leading-snug mb-2">${rep.title}</h4>
                             <div class="flex flex-wrap items-center gap-1.5">
                                 ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
+                                ${specialBadgeHtml(rep)}
                                 ${deadlineBadgeHtml(rep)}
                                 ${chipsHtml}
                             </div>
@@ -2757,6 +2801,7 @@
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = currentMonth.date(day).format('YYYY-MM-DD');
                 const hasEvent = events.some(e => e.date === dateStr && matchesActiveFilters(e.group) && (!monthShowFavoritesOnly || favorites.has(e.id)));
+                const hasSpecial = hasEvent && events.some(e => e.date === dateStr && matchesActiveFilters(e.group) && (!monthShowFavoritesOnly || favorites.has(e.id)) && specialEventInfo(e));
                 const isSelected = selectedDate === dateStr;
                 const isToday = dayjs().format('YYYY-MM-DD') === dateStr;
 
@@ -2772,7 +2817,7 @@
                 html += `
                     <div onclick="selectDate('${dateStr}')" class="${classes}">
                         <span>${day}</span>
-                        ${hasEvent ? `<span class="w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-white' : 'bg-pink-500'}"></span>` : ''}
+                        ${hasEvent ? `<span class="w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-white' : (hasSpecial ? 'bg-amber-400' : 'bg-pink-500')}"></span>` : ''}
                     </div>
                 `;
             }
