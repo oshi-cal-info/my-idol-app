@@ -2025,15 +2025,15 @@
                 const isHidden = g.visible === false;
                 const notifyOn = g.notify !== false;
                 html += `
-                    <div class="flex items-center justify-between p-3.5 bg-pink-50/40 border border-pink-100/80 rounded-2xl shadow-sm ${isHidden ? 'opacity-50' : ''}">
-                        <button onclick="openGroupLinksModal('${g.name}')" class="flex items-center space-x-3 text-left flex-1 min-w-0">
-                            <span class="w-4 h-4 rounded-full shadow-sm flex-shrink-0" style="background-color: ${g.color}"></span>
-                            <div class="min-w-0">
-                                <h4 class="font-bold text-xs text-slate-800 truncate">${g.name}${isHidden ? '<span class="ml-1.5 text-[9px] font-bold text-slate-400 border border-slate-200 rounded-full px-1.5 py-0.5 align-middle">非表示中</span>' : ''}</h4>
-                                ${linkCount > 0 ? `<span class="text-[10px] font-semibold text-purple-500"><i class="fa-solid fa-link mr-1"></i>公式リンク ${linkCount}件</span>` : '<span class="text-[10px] text-slate-400">公式リンク未登録</span>'}
+                    <div class="p-3.5 bg-pink-50/40 border border-pink-100/80 rounded-2xl shadow-sm ${isHidden ? 'opacity-50' : ''}">
+                        <button onclick="openGroupLinksModal('${g.name}')" class="flex items-start space-x-3 text-left w-full">
+                            <span class="w-4 h-4 rounded-full shadow-sm flex-shrink-0 mt-0.5" style="background-color: ${g.color}"></span>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-xs text-slate-800 leading-snug break-words">${g.name}${isHidden ? '<span class="ml-1.5 text-[9px] font-bold text-slate-400 border border-slate-200 rounded-full px-1.5 py-0.5 align-middle whitespace-nowrap">非表示中</span>' : ''}</h4>
+                                ${linkCount > 0 ? `<span class="block text-[10px] font-semibold text-purple-500 mt-0.5"><i class="fa-solid fa-link mr-1"></i>公式リンク ${linkCount}件</span>` : '<span class="block text-[10px] text-slate-400 mt-0.5">公式リンク未登録</span>'}
                             </div>
                         </button>
-                        <div class="flex items-center space-x-1 flex-shrink-0">
+                        <div class="flex items-center justify-end space-x-1 mt-1.5">
                             <button onclick="subscribeGroupCalendar(${index})" title="Googleカレンダーでこのグループを購読" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid fa-calendar-plus text-xs"></i></button>
                             <button onclick="toggleGroupNotify(${index})" title="${notifyOn ? '通知オフにする' : '通知オンにする'}" class="w-8 h-8 rounded-xl flex items-center justify-center transition ${notifyOn ? 'text-pink-500 hover:bg-pink-100' : 'text-slate-300 hover:text-pink-400 hover:bg-pink-50'}"><i class="fa-solid ${notifyOn ? 'fa-bell' : 'fa-bell-slash'} text-xs"></i></button>
                             <button onclick="toggleGroupVisible(${index})" title="${isHidden ? '表示する' : '非表示にする'}" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'} text-xs"></i></button>
