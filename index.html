@@ -2926,10 +2926,12 @@
                         <p class="text-xs text-slate-400 font-medium">予定がありません</p>
                     </div>
                 `;
+                hydrateWeather();
                 return;
             }
 
             container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + buildEventCardsHtml(filtered);
+            hydrateWeather();
         }
 
         // ==== 行く予定ビュー（お気に入りだけを表示） ====
@@ -2953,10 +2955,12 @@
                         <p class="text-[10px] text-slate-400 mt-1.5">リストの♡をタップすると、ここに追加されるよ</p>
                     </div>
                 `;
+                hydrateWeather();
                 return;
             }
 
             container.innerHTML = buildEventCardsHtml(filtered, true);
+            hydrateWeather();
         }
 
         // リスト用カードのHTMLを組み立てる共通処理（フィルタ済みの予定配列を受け取る）
@@ -3121,6 +3125,7 @@
             }
             grid.innerHTML = html;
             renderSelectedDayEvents();
+            hydrateWeather();
         }
 
         function goToToday() {
