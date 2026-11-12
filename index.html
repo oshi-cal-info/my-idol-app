@@ -2200,8 +2200,10 @@
         // 優先順位: 「出演…@会場」(そのグループの出演会場) > 「会場：…」(イベント全体の会場)
         function effectiveLocation(e) {
             if (!e) return '';
-            if (e.location) return e.location;
+            const ownLoc = String(e.location || '').trim();
+            if (ownLoc && ownLoc !== '詳細受付準備中') return e.location;
             const text = stripRegulationHtml(e.regulation || '');
+            const cleanV = (v) => { let s = String(v || '').replace('🏟', '').trim(); if (s.charCodeAt(0) === 0xFE0F) s = s.slice(1).trim(); return s; };
             if (!text) return '';
             const stages = [];
             text.split('\n').forEach(line => {
@@ -2214,7 +2216,12 @@
             });
             if (stages.length) return stages.join(' / ');
             const m2 = text.match(/会場\s*[:：]\s*(.+)/);
-            if (m2) return m2[1].trim();
+            if (m2) return cleanV(m2[1]);
+            for (const line of text.split('\n')) {
+                if (!line.includes('🏟')) continue;
+                const v = cleanV(line.split('🏟')[1] || '');
+                if (v) return v;
+            }
             return '';
         }
         // 会場文字列を個別の会場に分ける。「A / B」形式のほか、
@@ -3074,7 +3081,7 @@
                 const isFav = favorites.has(e.id);
                 const dateFormatted = dayjs(e.date).isValid() ? dayjs(e.date).format('YYYY/M/D(dd)') : e.date;
                 return `
-                    <div class="flex items-center justify-between bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3">
+                    <div class="flex items-center justify-between bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3 cursor-pointer" onclick="closeSearchModal(); jumpToEvent('${e.id}')">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center space-x-2 mb-1">
                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style="background-color:${c}18;color:${c};">${e.group || '個人の予定'}</span>
@@ -3083,7 +3090,7 @@
                             <p class="text-xs font-bold text-slate-800 truncate">${escapeHtml(e.title)}</p>
                             ${effectiveLocation(e) ? `<p class="text-[10px] text-slate-400 truncate"><i class="fa-solid fa-location-dot mr-1"></i>${escapeHtml(effectiveLocation(e))}</p>` : ''}
                         </div>
-                        <button onclick="toggleFavorite('${e.id}'); renderSearchResults();" class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ml-2 transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart"></i></button>
+                        <button onclick="event.stopPropagation(); toggleFavorite('${e.id}'); renderSearchResults();" class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ml-2 transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart"></i></button>
                     </div>
                 `;
             }).join('');
