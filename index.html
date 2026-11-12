@@ -1400,6 +1400,7 @@
             } else {
                 renderMonthView();
             }
+            hydrateWeather();
         }
 
         function toggleFavorite(id) {
@@ -1554,7 +1555,7 @@
                 html += `
                     <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3.5">
                         <p class="text-[11px] font-bold text-slate-500 mb-0.5">${dateFormatted} ${rep.time}</p>
-                        ${specialBadge ? `<div class="mb-1.5">${specialBadge}</div>` : ''}
+                        ${specialBadge || weatherBadgeHtml(rep) ? `<div class="mb-1.5 flex flex-wrap gap-1.5">${specialBadge}${weatherBadgeHtml(rep)}</div>` : ''}
                         <p class="text-xs font-bold text-slate-800 mb-2 leading-snug">${rep.title}</p>
                         ${isMulti ? `<p class="text-[10px] font-bold text-purple-400 mb-1.5 flex items-center"><i class="fa-solid fa-people-group mr-1.5"></i>${list.length}グループが出演</p>` : ''}
                         <div class="space-y-1.5">${groupRows}</div>
@@ -1987,6 +1988,7 @@
             } else {
                 renderMonthView();
             }
+            hydrateWeather();
         }
 
         function selectNoneFilters() {
@@ -2001,6 +2003,7 @@
             } else {
                 renderMonthView();
             }
+            hydrateWeather();
         }
 
         function isGroupVisible(name) {
@@ -2145,6 +2148,124 @@
             return [...map.values()];
         }
 
+        // ==== 天気（Open-Meteo・APIキー不要） ====
+        // 会場名から座標を引く辞書。載っている会場だけ、今日・明日の予定に天気バッジを出す。
+        // 座標は会場の最寄り駅・エリアの位置（天気予報の粒度ならこれで十分）。
+        const VENUE_COORDS = [
+            ['Spotify O-EAST', 35.6586, 139.6959], ['Spotify O-WEST', 35.6595, 139.6953],
+            ['品川インターシティホール', 35.6260, 139.7400], ['ベルサール渋谷ガーデン', 35.6555, 139.7030],
+            ['GARDEN新木場FACTORY', 35.6432, 139.8270], ['KANDA SQUARE HALL', 35.6908, 139.7706],
+            ['吉祥寺CLUB SEATA', 35.7048, 139.5794], ['Zepp Shinjuku', 35.6969, 139.7019],
+            ['KT Zepp Yokohama', 35.4538, 139.6393], ['京セラドーム大阪', 34.6693, 135.4760],
+            ['イオンモール常滑', 34.8800, 136.8300], ['新栄シャングリラ', 35.1709, 136.9146],
+            ['品川ステラボール', 35.6266, 139.7443], ['ステラボール', 35.6266, 139.7443],
+            ['赤羽ReNY', 35.7783, 139.7214], ['新宿ReNY', 35.6925, 139.6987],
+            ['Zirco Tokyo', 35.6945, 139.7010], ['大塚Hearts', 35.7309, 139.7277],
+            ['AOHARIUM', 35.7022, 139.7535], ['西永福JAM', 35.6763, 139.6306],
+            ['なんばHatch', 34.6633, 135.4988], ['ヨドバシ梅田', 34.7040, 135.4960],
+            ['Cyber-Box', 26.2160, 127.6690], ['voodooLounge', 33.5917, 130.3990],
+            ['シオサイト', 35.6598, 139.7632], ['SUNHALL', 34.6736, 135.4987],
+            ['FANJ', 34.6723, 135.4974], ['RADHALL', 35.1592, 136.9033],
+            ['Veats', 35.6595, 139.7005], ['豊洲PIT', 35.6467, 139.7889],
+            ['WWW X', 35.6598, 139.6973], ['WOMB', 35.6576, 139.6955],
+            ['WALLY', 35.6950, 139.7016], ['Viblue', 35.6467, 139.7101],
+            ['渋谷音楽堂', 35.6595, 139.7005], ['近未来会館', 35.6595, 139.7005],
+            ['品川', 35.6285, 139.7387], ['渋谷', 35.6595, 139.7005], ['新宿', 35.6938, 139.7034],
+            ['吉祥寺', 35.7023, 139.5798], ['横浜', 35.4437, 139.6380], ['心斎橋', 34.6745, 135.5008],
+            ['名古屋', 35.1709, 136.8815], ['大阪', 34.7024, 135.4959], ['福岡', 33.5902, 130.4017],
+            ['沖縄', 26.2130, 127.6785], ['那覇', 26.2130, 127.6785], ['佐賀', 33.2635, 130.3009],
+            ['島根', 35.4833, 133.0500], ['宮城', 38.2601, 140.8824], ['仙台', 38.2601, 140.8824],
+            ['千葉', 35.6000, 140.1167], ['茨城', 36.3500, 140.4500], ['愛知', 35.1709, 136.8815],
+            ['都内', 35.6812, 139.7671], ['東京', 35.6812, 139.7671]
+        ].sort((a, b) => b[0].length - a[0].length);
+
+        function venueCoords(location) {
+            if (!location) return null;
+            const v = String(location).toLowerCase();
+            for (const entry of VENUE_COORDS) {
+                if (v.includes(entry[0].toLowerCase())) return { lat: entry[1], lon: entry[2] };
+            }
+            return null;
+        }
+
+        function wxInfo(code) {
+            if (code === 0 || code === 1) return { icon: 'fa-solid fa-sun text-amber-500', label: '晴れ' };
+            if (code === 2) return { icon: 'fa-solid fa-cloud-sun text-amber-400', label: '晴れ時々曇り' };
+            if (code === 3) return { icon: 'fa-solid fa-cloud text-slate-400', label: '曇り' };
+            if (code === 45 || code === 48) return { icon: 'fa-solid fa-smog text-slate-400', label: '霧' };
+            if ([51, 53, 55, 56, 57].includes(code)) return { icon: 'fa-solid fa-cloud-rain text-sky-400', label: '霧雨' };
+            if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return { icon: 'fa-solid fa-cloud-rain text-sky-500', label: '雨' };
+            if ([71, 73, 75, 77, 85, 86].includes(code)) return { icon: 'fa-solid fa-snowflake text-sky-300', label: '雪' };
+            if ([95, 96, 99].includes(code)) return { icon: 'fa-solid fa-cloud-bolt text-purple-500', label: '雷雨' };
+            return { icon: 'fa-solid fa-cloud text-slate-400', label: '' };
+        }
+
+        const wxCache = new Map();
+        function fetchWeather(lat, lon, dateStr) {
+            const key = lat + ',' + lon + ',' + dateStr;
+            if (wxCache.has(key)) return wxCache.get(key);
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=temperature_2m&timezone=Asia%2FTokyo&start_date=${dateStr}&end_date=${dateStr}`;
+            const p = fetch(url)
+                .then(r => r.ok ? r.json() : null)
+                .then(d => {
+                    if (!d || !d.daily) return null;
+                    const codes = d.daily.weather_code || d.daily.weathercode;
+                    if (!codes) return null;
+                    return {
+                        code: codes[0],
+                        tmax: Math.round(d.daily.temperature_2m_max[0]),
+                        tmin: Math.round(d.daily.temperature_2m_min[0]),
+                        pop: d.daily.precipitation_probability_max ? d.daily.precipitation_probability_max[0] : null,
+                        hourly: d.hourly ? d.hourly.temperature_2m : null,
+                        times: d.hourly ? d.hourly.time : null
+                    };
+                })
+                .catch(() => null);
+            wxCache.set(key, p);
+            return p;
+        }
+
+        // 今日・明日＆辞書にある会場の予定だけ、天気バッジの受け皿を出す（中身は hydrateWeather が後から入れる）
+        function weatherBadgeHtml(e) {
+            if (!e || !e.location) return '';
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            const tomorrowStr = dayjs().add(1, 'day').format('YYYY-MM-DD');
+            if (e.date !== todayStr && e.date !== tomorrowStr) return '';
+            if (!venueCoords(e.location)) return '';
+            return `<span class="wx-badge items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-600" data-venue="${escapeHtml(e.location)}" data-date="${e.date}" data-time="${e.time || ''}" style="display:none"></span>`;
+        }
+
+        function hydrateWeather() {
+            const badges = document.querySelectorAll('.wx-badge:not([data-wx-done])');
+            if (badges.length === 0) return;
+            badges.forEach(b => b.setAttribute('data-wx-done', '1'));
+            const jobs = new Map();
+            badges.forEach(b => {
+                const coords = venueCoords(b.dataset.venue);
+                if (!coords) return;
+                const key = coords.lat + ',' + coords.lon + ',' + b.dataset.date;
+                if (!jobs.has(key)) jobs.set(key, { coords, date: b.dataset.date, els: [] });
+                jobs.get(key).els.push(b);
+            });
+            jobs.forEach(job => {
+                fetchWeather(job.coords.lat, job.coords.lon, job.date).then(w => {
+                    if (!w) return;
+                    const info = wxInfo(w.code);
+                    job.els.forEach(b => {
+                        let temp = null;
+                        const t = b.dataset.time;
+                        if (w.hourly && w.times && t && t !== '00:00') {
+                            const idx = w.times.indexOf(job.date + 'T' + t.slice(0, 2) + ':00');
+                            if (idx >= 0 && w.hourly[idx] !== null && w.hourly[idx] !== undefined) temp = Math.round(w.hourly[idx]);
+                        }
+                        const tempText = temp !== null ? `${temp}℃` : `${w.tmax}℃/${w.tmin}℃`;
+                        b.innerHTML = `<i class="${info.icon} mr-1"></i>${info.label} ${tempText}${w.pop !== null && w.pop !== undefined ? ` ・ 降水${w.pop}%` : ''}`;
+                        b.style.display = 'inline-flex';
+                    });
+                });
+            });
+        }
+
         // ==== カウントダウン（次の推しライブまで あと○日） ====
         // 対象は「行く予定（お気に入り）」の中で一番近い未来の予定。
         // 行く予定が無い場合は、表示中グループの直近のライブで代替する。
@@ -2183,6 +2304,7 @@
                         <div class="flex flex-wrap items-center gap-1.5 mb-1">
                             ${e.group ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group}</span>` : ''}
                             ${specialBadgeHtml(e)}
+                            ${weatherBadgeHtml(e)}
                         </div>
                         <p class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(e.title)}</p>
                         <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${e.time && e.time !== '00:00' ? ' ' + e.time : ''}${e.location ? ' ・ ' + escapeHtml(e.location) : ''}</p>
@@ -2291,7 +2413,7 @@
                 resultHtml = `
                     <div class="mt-3 pt-3 border-t border-purple-100">
                         ${p.discovery ? `<p class="text-[10px] font-bold text-purple-500 mb-1.5"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>発見枠：推しと共演したグループが出演</p>` : ''}
-                        <div class="flex flex-wrap items-center gap-1.5 mb-1">${chips}${specialBadgeHtml(rep)}</div>
+                        <div class="flex flex-wrap items-center gap-1.5 mb-1">${chips}${specialBadgeHtml(rep)}${weatherBadgeHtml(rep)}</div>
                         <p class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(rep.title)}</p>
                         <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${rep.time && rep.time !== '00:00' ? ' ' + rep.time : ''}${rep.location ? ' ・ ' + escapeHtml(rep.location) : ''}</p>
                         <div class="flex space-x-2 mt-2.5">
@@ -2364,6 +2486,7 @@
                                         <a href="${transitUrl(e.location)}" target="_blank" title="ルート検索" class="w-11 flex items-center justify-center bg-purple-50/70 text-purple-500 rounded-2xl"><i class="fa-solid fa-train-subway"></i></a>
                                     </div>
                                 ` : ''}
+                                ${weatherBadgeHtml(e)}
                                 ${renderRegulationHtml(e)}
                                 ${memo ? `<div class="bg-amber-50 rounded-2xl px-3 py-2.5 space-y-1">${memo.split('\n').map(l => `<p class="text-[11px] font-semibold text-amber-700">${escapeHtml(l)}</p>`).join('')}</div>` : ''}
                                 <div class="flex space-x-2">
@@ -2385,6 +2508,7 @@
             }
 
             document.getElementById('today-live-modal').classList.remove('hidden');
+            hydrateWeather();
         }
 
         function closeTodayLiveModal() {
@@ -2948,6 +3072,7 @@
                                 ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
                                 ${specialBadgeHtml(rep)}
                                 ${deadlineBadgeHtml(rep)}
+                                ${weatherBadgeHtml(rep)}
                                 ${chipsHtml}
                             </div>
                             ${isExpanded ? `<div class="mt-3 pt-3 border-t border-pink-50 space-y-2">${detailsHtml}</div>` : ''}
