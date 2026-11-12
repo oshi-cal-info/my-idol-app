@@ -876,16 +876,28 @@
             saveCloudData();
         }
 
+        // シートCSVのキャッシュ（次回起動時にまずキャッシュで即表示し、裏で最新を取り直す）
+        const SHEET_CSV_CACHE_KEY = 'oshi_cal_sheet_csv_cache';
+        let sheetDataReady = false; // キャッシュ or 初回取得でシート予定が入ったら true
+
         async function fetchSheetData() {
             if (!AUTO_SYNC_CSV_URL) return;
             try {
                 const response = await fetch(AUTO_SYNC_CSV_URL);
                 if (!response.ok) return;
                 const csvText = await response.text();
+                try { localStorage.setItem(SHEET_CSV_CACHE_KEY, csvText); } catch (e) { /* 容量超過時はキャッシュなしで続行 */ }
                 parseCSV(csvText);
             } catch (e) {
                 console.log("Auto sync failed:", e);
             }
+        }
+
+        // 起動直後用：前回取得したCSVが残っていれば、先にそれで表示する（体感待ち時間の短縮）
+        function loadCachedSheetData() {
+            let cached = null;
+            try { cached = localStorage.getItem(SHEET_CSV_CACHE_KEY); } catch (e) {}
+            if (cached) parseCSV(cached);
         }
 
         // ちゃんとしたCSV解析（ダブルクォートで囲まれた中のカンマ・改行はそのまま1つの値として扱う）
@@ -988,6 +1000,7 @@
         }
 
         function parseCSV(csvText) {
+            sheetDataReady = true;
             const rows = parseCSVRows(csvText);
             let sheetEvents = [];
             let newGroupsFound = false;
@@ -3174,12 +3187,18 @@
             }
 
             if (filtered.length === 0) {
-                container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + `
+                const emptyBox = sheetDataReady ? `
                     <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
                         <i class="fa-regular fa-calendar-xmark text-4xl text-pink-300 mb-3"></i>
                         <p class="text-xs text-slate-400 font-medium">予定がありません</p>
                     </div>
+                ` : `
+                    <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
+                        <i class="fa-solid fa-spinner fa-spin text-4xl text-pink-300 mb-3"></i>
+                        <p class="text-xs text-slate-400 font-medium">読み込み中…</p>
+                    </div>
                 `;
+                container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + emptyBox;
                 hydrateWeather();
                 return;
             }
@@ -3202,6 +3221,16 @@
             }
 
             if (filtered.length === 0) {
+                if (!sheetDataReady && favorites.size > 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
+                            <i class="fa-solid fa-spinner fa-spin text-4xl text-pink-300 mb-3"></i>
+                            <p class="text-xs text-slate-400 font-medium">読み込み中…</p>
+                        </div>
+                    `;
+                    hydrateWeather();
+                    return;
+                }
                 container.innerHTML = `
                     <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
                         <i class="fa-regular fa-heart text-4xl text-pink-300 mb-3"></i>
@@ -3824,6 +3853,7 @@
 
         window.onload = async () => {
             loadUserData();
+            loadCachedSheetData(); // キャッシュがあれば先に表示する（parseCSV内でrenderまで行われる）
             render();
             updateNotifyToggleUI();
             registerServiceWorker();
