@@ -1805,8 +1805,30 @@
             }
         }
 
+        // イベント名の表記ゆれを吸収する正規化（グループ化キー専用。表示には使わない）
+        // 【東京】等の接頭辞、「 in 会場名」「supported by …」「＠会場」等の接尾辞、
+        // 「」『』の有無や空白の違いをそろえ、同じライブを同じキーにする。
+        // DAY1/DAY2・1日目/2日目は別イベントとして区別するためキーに残す。
+        function normalizeEventTitle(title) {
+            let t = String(title || '');
+            const dayMatch = t.match(/DAY\s*([12])|([12])\s*日目/i);
+            const daySuffix = dayMatch ? '__day' + (dayMatch[1] || dayMatch[2]) : '';
+            t = t.replace(/\s+/g, ' ');
+            t = t.replace(/^(\s*[【\[][^】\]]*[】\]]\s*)+/, '');
+            t = t.replace(/supported\s*by[\s\S]*$/i, '');
+            t = t.split(/\s+in\s+/i)[0];
+            t = t.split(/[＠@]/)[0];
+            t = t.trim().replace(/^[「『]+/, '').replace(/[」』]+$/, '').trim();
+            return t + daySuffix;
+        }
+
         function favGroupKey(e) {
-            return `${e.date}__${e.title}`;
+            return `${e.date}__${normalizeEventTitle(e.title)}`;
+        }
+
+        // まとめたカードの見出し用：表記ゆれの中で一番短い（＝飾りの少ない）タイトル
+        function displayTitleFor(list) {
+            return list.reduce((a, b) => (String(b.title || '').length < String(a.title || '').length ? b : a)).title;
         }
 
         function coPerformingGroups(e) {
@@ -1911,7 +1933,7 @@
                     <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3.5">
                         <p class="text-[11px] font-bold text-slate-500 mb-0.5">${dateFormatted} ${rep.time}</p>
                         ${specialBadge || weatherBadgeHtml(rep) || multiVenueBadgeHtml(rep) ? `<div class="mb-1.5 flex flex-wrap gap-1.5">${specialBadge}${weatherBadgeHtml(rep)}${multiVenueBadgeHtml(rep)}</div>` : ''}
-                        <p class="text-xs font-bold text-slate-800 mb-2 leading-snug">${rep.title}</p>
+                        <p class="text-xs font-bold text-slate-800 mb-2 leading-snug">${displayTitleFor(list)}</p>
                         ${isMulti ? `<p class="text-[10px] font-bold text-purple-400 mb-1.5 flex items-center"><i class="fa-solid fa-people-group mr-1.5"></i>${list.length}グループが出演</p>` : ''}
                         <div class="space-y-1.5">${groupRows}</div>
                     </div>
@@ -2946,7 +2968,7 @@
                     <div class="mt-3 pt-3 border-t border-purple-100">
                         ${p.discovery ? `<p class="text-[10px] font-bold text-purple-500 mb-1.5"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>発見枠：推しと共演したグループが出演</p>` : ''}
                         <div class="flex flex-wrap items-center gap-1.5 mb-1">${chips}${specialBadgeHtml(rep)}${weatherBadgeHtml(rep)}${multiVenueBadgeHtml(rep)}</div>
-                        <p class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(rep.title)}</p>
+                        <p class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(displayTitleFor(p.list))}</p>
                         <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${rep.time && rep.time !== '00:00' ? ' ' + rep.time : ''}${effectiveLocation(rep) ? ' ・ ' + escapeHtml(effectiveLocation(rep)) : ''}</p>
                         <div class="flex space-x-2 mt-2.5">
                             <button onclick="jumpToEvent('${rep.id}')" class="flex-1 bg-purple-500 text-white text-[11px] font-bold px-3 py-2 rounded-2xl shadow-sm shadow-purple-500/30">この予定を見る</button>
@@ -3027,7 +3049,7 @@
 
                     return `
                         <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3">
-                            <p class="text-slate-800 font-bold text-sm leading-snug mb-2">${escapeHtml(rep.title)}</p>
+                            <p class="text-slate-800 font-bold text-sm leading-snug mb-2">${escapeHtml(displayTitleFor(list))}</p>
                             ${specialBadge || multiVenueBadgeHtml(rep) ? `<div class="flex flex-wrap gap-1.5 mb-2">${specialBadge}${multiVenueBadgeHtml(rep)}</div>` : ''}
                             ${eventBlocks}
                         </div>
@@ -3660,7 +3682,7 @@
                                     <span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"><i class="fa-solid fa-chevron-down text-[10px]"></i></span>
                                 </div>
                             </div>
-                            <h4 class="font-bold text-slate-800 text-sm leading-snug mb-2">${rep.title}</h4>
+                            <h4 class="font-bold text-slate-800 text-sm leading-snug mb-2">${displayTitleFor(list)}</h4>
                             <div class="flex flex-wrap items-center gap-1.5">
                                 ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
                                 ${specialBadgeHtml(rep)}
@@ -3837,7 +3859,7 @@
                                 <span class="text-xs font-bold text-slate-400">${rep.time}${isMulti && [...new Set(list.map(e => e.time))].length > 1 ? ' ほか' : ''}</span>
                                 ${!isMulti ? `<button onclick="toggleFavorite('${rep.id}')" class="w-6 h-6 flex items-center justify-center transition ${favorites.has(rep.id) ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-xs"></i></button>` : ''}
                             </div>
-                            <h5 class="font-bold text-xs text-slate-800 mb-1.5">${rep.title}</h5>
+                            <h5 class="font-bold text-xs text-slate-800 mb-1.5">${displayTitleFor(list)}</h5>
                             <div class="flex flex-wrap items-center gap-1.5 mb-1">
                                 ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
                                 ${chipsHtml}
