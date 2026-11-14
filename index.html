@@ -175,7 +175,11 @@
                 <p class="text-[9px] text-slate-400 mt-1.5 leading-relaxed">ログインすると、お気に入り・メモ・グループ設定を他の端末とも共有できるようになります。</p>
             </div>
 
-            <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="group-management-list"></div>
+            <div class="relative mb-3">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
+                <input id="group-search" type="text" placeholder="グループ名で検索" oninput="renderGroupManagementList()" class="w-full pl-9 pr-3 py-2.5 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+            </div>
+            <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="group-management-list"></div>
             <p class="mt-3 text-[10px] text-slate-400 leading-relaxed px-1">
                 グループはライブスケジュールから自動で追加されます。ここでは表示色や表示オン/オフを、自分の端末用に設定できます。
             </p>
@@ -288,7 +292,11 @@
                 <button onclick="clearFilter()" class="flex-1 py-2 bg-pink-50 text-pink-600 font-bold rounded-xl border border-pink-100 text-[11px]">すべて選択（絞り込み解除）</button>
                 <button onclick="selectNoneFilters()" class="flex-1 py-2 bg-slate-50 text-slate-500 font-bold rounded-xl border border-slate-100 text-[11px]">すべて解除</button>
             </div>
-            <div id="filter-group-list" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
+            <div class="relative mb-3">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
+                <input id="filter-search" type="text" placeholder="グループ名で検索" oninput="renderFilterGroupList()" class="w-full pl-9 pr-3 py-2.5 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+            </div>
+            <div id="filter-group-list" class="flex-1 overflow-y-auto space-y-1.5 pr-1"></div>
         </div>
     </div>
 
@@ -1998,21 +2006,25 @@
         function renderFilterGroupList() {
             const container = document.getElementById('filter-group-list');
             if (!container) return;
+            const query = (document.getElementById('filter-search')?.value || '').trim().toLowerCase();
             const visibleGroups = groups.filter(g => g.visible !== false);
-            if (visibleGroups.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">表示中のグループがありません</p>`;
+            const matchedGroups = query ? visibleGroups.filter(g => g.name.toLowerCase().includes(query)) : visibleGroups;
+            if (matchedGroups.length === 0) {
+                container.innerHTML = query
+                    ? `<p class="text-xs text-slate-400 text-center py-6">「${escapeHtml(query)}」に一致するグループがありません</p>`
+                    : `<p class="text-xs text-slate-400 text-center py-6">表示中のグループがありません</p>`;
                 return;
             }
             let html = '';
-            visibleGroups.forEach(g => {
+            matchedGroups.forEach(g => {
                 const checked = !filtersExplicit || activeFilters.has(g.name);
                 html += `
-                    <label class="flex items-center justify-between p-3 bg-pink-50/30 border border-pink-100/70 rounded-2xl">
+                    <label class="flex items-center justify-between px-3 py-2 bg-pink-50/30 border border-pink-100/70 rounded-2xl">
                         <span class="flex items-center space-x-2">
                             <span class="w-3 h-3 rounded-full" style="background-color:${g.color}"></span>
                             <span class="text-xs font-bold text-slate-700">${g.name}</span>
                         </span>
-                        <input type="checkbox" onchange="toggleFilterGroup('${g.name}')" ${checked ? 'checked' : ''} class="w-4 h-4 accent-pink-500">
+                        <input type="checkbox" onchange="toggleFilterGroup('${g.name.replace(/'/g, "\\'")}')" ${checked ? 'checked' : ''} class="w-4 h-4 accent-pink-500">
                     </label>
                 `;
             });
@@ -2103,8 +2115,9 @@
 
         function renderGroupManagementList() {
             const container = document.getElementById('group-management-list');
-            let html = `
-                <button onclick="subscribeGroupCalendar(-1)" class="w-full flex items-center justify-between p-3.5 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100 rounded-2xl shadow-sm">
+            const mgmtQuery = (document.getElementById('group-search')?.value || '').trim().toLowerCase();
+            let html = mgmtQuery ? '' : `
+                <button onclick="subscribeGroupCalendar(-1)" class="w-full flex items-center justify-between p-2.5 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100 rounded-2xl shadow-sm">
                     <span class="flex items-center space-x-3 min-w-0">
                         <span class="w-4 h-4 rounded-full shadow-sm flex-shrink-0" style="background: linear-gradient(135deg,#ec4899,#a855f7)"></span>
                         <span class="text-left min-w-0">
@@ -2115,31 +2128,37 @@
                     <i class="fa-solid fa-calendar-plus text-pink-500 text-sm mr-1 flex-shrink-0"></i>
                 </button>
             `;
+            let mgmtShown = 0;
             groups.forEach((g, index) => {
+                if (mgmtQuery && !g.name.toLowerCase().includes(mgmtQuery)) return;
+                mgmtShown++;
                 const linkCount = OFFICIAL_GROUP_LINKS[g.name]
                     ? Object.values(OFFICIAL_GROUP_LINKS[g.name]).filter(v => v && v.trim()).length
                     : 0;
                 const isHidden = g.visible === false;
                 const notifyOn = g.notify !== false;
                 html += `
-                    <div class="p-3.5 bg-pink-50/40 border border-pink-100/80 rounded-2xl shadow-sm ${isHidden ? 'opacity-50' : ''}">
-                        <button onclick="openGroupLinksModal('${g.name}')" class="flex items-start space-x-3 text-left w-full">
-                            <span class="w-4 h-4 rounded-full shadow-sm flex-shrink-0 mt-0.5" style="background-color: ${g.color}"></span>
+                    <div class="p-2.5 bg-pink-50/40 border border-pink-100/80 rounded-2xl shadow-sm ${isHidden ? 'opacity-50' : ''}">
+                        <button onclick="openGroupLinksModal('${g.name.replace(/'/g, "\\'")}')" class="flex items-start space-x-3 text-left w-full">
+                            <span class="w-3.5 h-3.5 rounded-full shadow-sm flex-shrink-0 mt-0.5" style="background-color: ${g.color}"></span>
                             <div class="flex-1 min-w-0">
                                 <h4 class="font-bold text-xs text-slate-800 leading-snug break-words">${g.name}${isHidden ? '<span class="ml-1.5 text-[9px] font-bold text-slate-400 border border-slate-200 rounded-full px-1.5 py-0.5 align-middle whitespace-nowrap">非表示中</span>' : ''}</h4>
                                 ${linkCount > 0 ? `<span class="block text-[10px] font-semibold text-purple-500 mt-0.5"><i class="fa-solid fa-link mr-1"></i>公式リンク ${linkCount}件</span>` : '<span class="block text-[10px] text-slate-400 mt-0.5">公式リンク未登録</span>'}
                             </div>
                         </button>
-                        <div class="flex items-center justify-end space-x-1 mt-1.5">
-                            <button onclick="subscribeGroupCalendar(${index})" title="Googleカレンダーでこのグループを購読" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid fa-calendar-plus text-xs"></i></button>
-                            <button onclick="toggleGroupNotify(${index})" title="${notifyOn ? '通知オフにする' : '通知オンにする'}" class="w-8 h-8 rounded-xl flex items-center justify-center transition ${notifyOn ? 'text-pink-500 hover:bg-pink-100' : 'text-slate-300 hover:text-pink-400 hover:bg-pink-50'}"><i class="fa-solid ${notifyOn ? 'fa-bell' : 'fa-bell-slash'} text-xs"></i></button>
-                            <button onclick="toggleGroupVisible(${index})" title="${isHidden ? '表示する' : '非表示にする'}" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'} text-xs"></i></button>
-                            <button onclick="openGroupEditModal(${index})" title="表示設定" class="w-8 h-8 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid fa-palette text-xs"></i></button>
-                            <button onclick="deleteGroupFromManagement(${index})" title="このグループを削除" class="w-8 h-8 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                        <div class="flex items-center justify-end space-x-1 mt-1">
+                            <button onclick="subscribeGroupCalendar(${index})" title="Googleカレンダーでこのグループを購読" class="w-7 h-7 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid fa-calendar-plus text-xs"></i></button>
+                            <button onclick="toggleGroupNotify(${index})" title="${notifyOn ? '通知オフにする' : '通知オンにする'}" class="w-7 h-7 rounded-xl flex items-center justify-center transition ${notifyOn ? 'text-pink-500 hover:bg-pink-100' : 'text-slate-300 hover:text-pink-400 hover:bg-pink-50'}"><i class="fa-solid ${notifyOn ? 'fa-bell' : 'fa-bell-slash'} text-xs"></i></button>
+                            <button onclick="toggleGroupVisible(${index})" title="${isHidden ? '表示する' : '非表示にする'}" class="w-7 h-7 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'} text-xs"></i></button>
+                            <button onclick="openGroupEditModal(${index})" title="表示設定" class="w-7 h-7 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-100 flex items-center justify-center transition"><i class="fa-solid fa-palette text-xs"></i></button>
+                            <button onclick="deleteGroupFromManagement(${index})" title="このグループを削除" class="w-7 h-7 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition"><i class="fa-solid fa-trash text-xs"></i></button>
                         </div>
                     </div>
                 `;
             });
+            if (mgmtQuery && mgmtShown === 0) {
+                html = `<p class="text-xs text-slate-400 text-center py-6">「${escapeHtml(mgmtQuery)}」に一致するグループがありません</p>`;
+            }
             container.innerHTML = html;
         }
 
@@ -3300,7 +3319,7 @@
                     ? list.map(e => {
                         const go = groups.find(g => g.name === e.group);
                         const c = go ? go.color : '#ec4899';
-                        return `<span onclick="event.stopPropagation(); openGroupLinksModal('${e.group}')" class="text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer" style="background-color: ${c}18; color: ${c};">${e.group}</span>`;
+                        return `<span onclick="event.stopPropagation(); openGroupLinksModal('${e.group.replace(/'/g, "\\'")}')" class="text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer" style="background-color: ${c}18; color: ${c};">${e.group}</span>`;
                       }).join('')
                     : `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-user text-[9px] mr-1"></i>個人の予定</span>`;
 
@@ -3487,7 +3506,7 @@
                     ? list.map(e => {
                         const go = groups.find(g => g.name === e.group);
                         const c = go ? go.color : '#ec4899';
-                        return `<span onclick="openGroupLinksModal('${e.group}')" class="text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer" style="background-color: ${c}15; color: ${c};">${e.group}</span>`;
+                        return `<span onclick="openGroupLinksModal('${e.group.replace(/'/g, "\\'")}')" class="text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer" style="background-color: ${c}15; color: ${c};">${e.group}</span>`;
                       }).join('')
                     : `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-user text-[9px] mr-1"></i>個人の予定</span>`;
 
