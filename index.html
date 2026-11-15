@@ -1815,6 +1815,7 @@
             let t = String(title || '');
             const dayMatch = t.match(/DAY\s*([12])|([12])\s*日目/i);
             const daySuffix = dayMatch ? '__day' + (dayMatch[1] || dayMatch[2]) : '';
+            if (dayMatch) t = t.replace(/DAY\s*[12]|[12]\s*日目/gi, ' ');
             t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{203C}]/gu, '');
             t = t.replace(/\s+/g, ' ');
             t = t.replace(/^(\s*[【\[][^】\]]*[】\]]\s*)+/, '');
@@ -1828,6 +1829,7 @@
             t = t.replace(/＠/g, '@');
             t = t.replace(/\s+/g, ' ').trim();
             t = t.replace(/^@\s+/, '@');
+            t = t.replace(/^[-〜~・.。\s]+/, '').replace(/[-〜~・.。\s]+$/, '');
             return t + daySuffix;
         }
 
@@ -1842,26 +1844,62 @@
         // 「TIF学園 学園祭2026 秋」と「TIF学園祭 秋 2026」のように、語順や
         // 区切り方が違っても、使う文字が同じなら同じイベントとして扱う。
         // 短いタイトルは偶然の一致が起きやすいので、そのまま使う。
-        function eventMatchKey(normalized) {
-            const m = normalized.match(/__day[12]$/);
+        function eventMatchKey(body) {
+            const b = String(body || '').replace(/\s+/g, '').toLowerCase();
+            if (b.length < 8) return body;
+            return [...new Set(b)].sort().join('');
+        }
+
+        function favGroupParts(e) {
+            const n = normalizeEventTitle(e.title);
+            if (!n) return { solo: `${e.date}__${e.title}` };
+            if (isPlaceholderTitle(n)) return { solo: `${e.date}__solo__${e.id}` };
+            const m = n.match(/__day[12]$/);
             const day = m ? m[0] : '';
-            const body = (m ? normalized.slice(0, -day.length) : normalized).replace(/\s+/g, '');
-            if (body.length < 8) return normalized;
-            return [...new Set(body)].sort().join('') + day;
+            const body = m ? n.slice(0, -day.length) : n;
+            return { stem: `${e.date}__${eventMatchKey(body)}`, day };
+        }
+
+        // day表記のあるなしは同じ日の同じイベントとして扱う（day1とday2が
+        // 同じ日に両方ある場合だけは別イベントのまま）。全体を見ないと
+        // 決められないので、eventsが差し替わるたびにキーを引き直す。
+        let groupKeyCacheSrc = null;
+        let groupKeyCache = new Map();
+        function rebuildGroupKeys() {
+            const map = new Map();
+            const clusters = new Map();
+            events.forEach(ev => {
+                const p = favGroupParts(ev);
+                if (p.solo) { map.set(ev.id, p.solo); return; }
+                if (!clusters.has(p.stem)) clusters.set(p.stem, { days: new Set(), items: [] });
+                const c = clusters.get(p.stem);
+                if (p.day) c.days.add(p.day);
+                c.items.push({ id: ev.id, day: p.day });
+            });
+            clusters.forEach((c, stem) => {
+                c.items.forEach(it => map.set(it.id, c.days.size <= 1 ? stem : stem + (it.day || '__nodate__')));
+            });
+            groupKeyCache = map;
+            groupKeyCacheSrc = events;
         }
 
         function favGroupKey(e) {
-            const n = normalizeEventTitle(e.title);
-            if (!n) return `${e.date}__${e.title}`;
-            if (isPlaceholderTitle(n)) return `${e.date}__solo__${e.id}`;
-            return `${e.date}__${eventMatchKey(n)}`;
+            if (groupKeyCacheSrc !== events) rebuildGroupKeys();
+            const cached = groupKeyCache.get(e.id);
+            if (cached) return cached;
+            const p = favGroupParts(e);
+            return p.solo || (p.stem + (p.day || ''));
         }
 
-        // まとめたカードの見出し用：正規化後の形が一番長い（＝情報量が多い）ものを
-        // 代表にし、同点なら原文が一番短いものにする（断片タイトルが勝つのを防ぐ）
+        // まとめたカードの見出し用：day表記のある書き方を優先し、その中で
+        // 正規化後の形が一番長い（＝情報量が多い）ものを代表にする。
+        // 同点なら原文が一番短いもの（断片タイトルが勝つのを防ぐ）
         function displayTitleFor(list) {
             let best = list[0];
             list.forEach(e => {
+                const de = /__day[12]$/.test(normalizeEventTitle(e.title));
+                const db = /__day[12]$/.test(normalizeEventTitle(best.title));
+                if (de !== db) { if (de) best = e; return; }
                 const ne = normalizeEventTitle(e.title).length;
                 const nb = normalizeEventTitle(best.title).length;
                 if (ne > nb || (ne === nb && String(e.title || '').length < String(best.title || '').length)) best = e;
