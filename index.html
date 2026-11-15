@@ -1806,7 +1806,8 @@
         }
 
         // イベント名の表記ゆれを吸収する正規化（グループ化キー専用。表示には使わない）
-        // 【東京】等の接頭辞、「 in 会場名」「supported by …」「＠会場」等の接尾辞、
+        // 【東京】等の接頭辞、「○○ presents」の主催者表記、「 in 会場名」
+        // 「supported by …」「＠会場」等の接尾辞、
         // 「」『』の有無や空白の違いをそろえ、同じライブを同じキーにする。
         // DAY1/DAY2・1日目/2日目は別イベントとして区別するためキーに残す。
         function normalizeEventTitle(title) {
@@ -1815,6 +1816,7 @@
             const daySuffix = dayMatch ? '__day' + (dayMatch[1] || dayMatch[2]) : '';
             t = t.replace(/\s+/g, ' ');
             t = t.replace(/^(\s*[【\[][^】\]]*[】\]]\s*)+/, '');
+            t = t.replace(/^.*?\bpresents\s+/i, '');
             t = t.replace(/supported\s*by[\s\S]*$/i, '');
             t = t.split(/\s+in\s+/i)[0];
             t = t.split(/[＠@]/)[0];
