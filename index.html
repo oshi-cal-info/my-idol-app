@@ -1838,11 +1838,23 @@
             return t.length <= 9 && /予定$/.test(t);
         }
 
+        // 語順の揺れを吸収する照合キー：タイトルを「使う文字の集合」に変換する。
+        // 「TIF学園 学園祭2026 秋」と「TIF学園祭 秋 2026」のように、語順や
+        // 区切り方が違っても、使う文字が同じなら同じイベントとして扱う。
+        // 短いタイトルは偶然の一致が起きやすいので、そのまま使う。
+        function eventMatchKey(normalized) {
+            const m = normalized.match(/__day[12]$/);
+            const day = m ? m[0] : '';
+            const body = (m ? normalized.slice(0, -day.length) : normalized).replace(/\s+/g, '');
+            if (body.length < 8) return normalized;
+            return [...new Set(body)].sort().join('') + day;
+        }
+
         function favGroupKey(e) {
             const n = normalizeEventTitle(e.title);
             if (!n) return `${e.date}__${e.title}`;
             if (isPlaceholderTitle(n)) return `${e.date}__solo__${e.id}`;
-            return `${e.date}__${n}`;
+            return `${e.date}__${eventMatchKey(n)}`;
         }
 
         // まとめたカードの見出し用：正規化後の形が一番長い（＝情報量が多い）ものを
