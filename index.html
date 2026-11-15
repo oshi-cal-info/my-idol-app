@@ -1806,31 +1806,55 @@
         }
 
         // イベント名の表記ゆれを吸収する正規化（グループ化キー専用。表示には使わない）
-        // 【東京】等の接頭辞、「○○ presents」の主催者表記、「 in 会場名」
-        // 「supported by …」「＠会場」等の接尾辞、
-        // 「」『』の有無や空白の違いをそろえ、同じライブを同じキーにする。
+        // 絵文字、【東京】等の接頭辞、「○○ presents」の主催者表記、「 in 会場名」
+        // 「 at 会場」「supported by …」「＠会場」等の接尾辞、「」『』の有無や
+        // 空白の違いをそろえ、同じライブを同じキーにする。
+        // 先頭の＠は「@JAM」のようなイベント名の一部なので会場区切りとして扱わない。
         // DAY1/DAY2・1日目/2日目は別イベントとして区別するためキーに残す。
         function normalizeEventTitle(title) {
             let t = String(title || '');
             const dayMatch = t.match(/DAY\s*([12])|([12])\s*日目/i);
             const daySuffix = dayMatch ? '__day' + (dayMatch[1] || dayMatch[2]) : '';
+            t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{203C}]/gu, '');
             t = t.replace(/\s+/g, ' ');
             t = t.replace(/^(\s*[【\[][^】\]]*[】\]]\s*)+/, '');
             t = t.replace(/^.*?\bpresents\s+/i, '');
             t = t.replace(/supported\s*by[\s\S]*$/i, '');
             t = t.split(/\s+in\s+/i)[0];
-            t = t.split(/[＠@]/)[0];
-            t = t.trim().replace(/^[「『]+/, '').replace(/[」』]+$/, '').trim();
+            t = t.split(/\s+at\s+/i)[0];
+            t = t.replace(/[「」『』]/g, '');
+            const atIdx = t.search(/[＠@]/);
+            if (atIdx > 0) t = t.slice(0, atIdx);
+            t = t.replace(/＠/g, '@');
+            t = t.replace(/\s+/g, ' ').trim();
+            t = t.replace(/^@\s+/, '@');
             return t + daySuffix;
         }
 
-        function favGroupKey(e) {
-            return `${e.date}__${normalizeEventTitle(e.title)}`;
+        // 「イベント予定」「ライブ予定」のような仮タイトルは、グループごとに別々の
+        // 予定なので合体させない（同じ日に複数グループ分あっても1枚にしない）
+        function isPlaceholderTitle(normalized) {
+            const t = normalized.replace(/[（(][^）)]*[）)]/g, '').replace(/\s+/g, '');
+            return t.length <= 9 && /予定$/.test(t);
         }
 
-        // まとめたカードの見出し用：表記ゆれの中で一番短い（＝飾りの少ない）タイトル
+        function favGroupKey(e) {
+            const n = normalizeEventTitle(e.title);
+            if (!n) return `${e.date}__${e.title}`;
+            if (isPlaceholderTitle(n)) return `${e.date}__solo__${e.id}`;
+            return `${e.date}__${n}`;
+        }
+
+        // まとめたカードの見出し用：正規化後の形が一番長い（＝情報量が多い）ものを
+        // 代表にし、同点なら原文が一番短いものにする（断片タイトルが勝つのを防ぐ）
         function displayTitleFor(list) {
-            return list.reduce((a, b) => (String(b.title || '').length < String(a.title || '').length ? b : a)).title;
+            let best = list[0];
+            list.forEach(e => {
+                const ne = normalizeEventTitle(e.title).length;
+                const nb = normalizeEventTitle(best.title).length;
+                if (ne > nb || (ne === nb && String(e.title || '').length < String(best.title || '').length)) best = e;
+            });
+            return best.title;
         }
 
         function coPerformingGroups(e) {
