@@ -2254,7 +2254,7 @@
             }
         };
 
-        // グループのSpotifyアーティスト画像（160px優先、無い場合は300/320px）— 推しグループ管理チップのアバター用
+        // グループの公式画像（Spotifyアーティスト画像優先、無い場合はYouTube/Lit.Link/Xの公式アイコン）— 推しグループ管理チップのアバター用
         const GROUP_IMAGES = {
             "#よーよーよー": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178b8735b4bc69d0a7049250e9d",
             "AQA": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02599e40026eec258577918151",
@@ -2395,7 +2395,30 @@
             "Axelight": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02f4b07db515f71577e72b4d49",
             "フューチャーサイダー": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178664d6a421e3ce91e8b380014",
             "アキシブproject": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02f9bbd66ac907da156668cfcd",
-            "MixVeil": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17848e0a6b9d01b9b149c573a96"
+            "MixVeil": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17848e0a6b9d01b9b149c573a96",
+            "KAIJU ON THE STAGE": "https://yt3.googleusercontent.com/9oe5xnkNUUQtkiLugW6YWvjHh11FK27SYmhsZntKW-EAKJVweOo-O4T9tX7E9Rcaccm4Jy5CCg=s176-c-k-c0x00ffffff-no-rj",
+            "Melty BeaR": "https://yt3.googleusercontent.com/Zz4GXLjFuJmVvGu63hWZlDm_mcMEgpKNZUg8DCJYa4A9ch6fRtLhEptaCYQeRzhUXmsu8TFvs-M=s176-c-k-c0x00ffffff-no-rj",
+            "PATI PATI CANDY": "https://yt3.googleusercontent.com/mx59WwxwxfPUvrZ9tJk2Hh8vBf9_0yZNC05dfxgPDmEWiQ3LuLQA9nBv-nWY78CKhE9bzpRhdQ=s176-c-k-c0x00ffffff-no-rj",
+            "SUNNY PARADE": "https://yt3.googleusercontent.com/xETxW6nkjkLQcTHuwhq4D5i44smEck8yK7ETxvF54zNQpQ7VblTWyh3SugXsiMolDttpNShf=s176-c-k-c0x00ffffff-no-rj",
+            "AKANECLUB": "https://yt3.googleusercontent.com/otp5hmUEdHL4GeDGZ-SbI_KnvEV1MJamqP1tlGBiDjUsO1ySvtw1LQKiwtxY33EMbvcFgGgmFg=s176-c-k-c0x00ffffff-no-rj",
+            "FULIT BOX": "https://yt3.googleusercontent.com/lwtYZ_DKfcwLu4yjo6-Kdfno5FdtfSVHZZuRm60D0ko9SAIT-ww-6SkTXADucdneZmy76Fn58lA=s176-c-k-c0x00ffffff-no-rj",
+            "Merry BAD TUNE": "https://yt3.googleusercontent.com/MWmeWLCrqCw7F9n1tyBTeHNOd-HIXLegVavNOgLEHIaCk5ALQfhZkuYwMyGvzV97UoZeceJZqQ=s176-c-k-c0x00ffffff-no-rj",
+            "STARNOTE": "https://yt3.googleusercontent.com/FB_CpNPL4OROIhMFgnah7fK15P9ys8vTkMDYUhvgqcyIIz9DPhNyi3oXpmXPG5V4iuZgltrcKw=s176-c-k-c0x00ffffff-no-rj",
+            "かすみ草とステラ": "https://yt3.googleusercontent.com/4BMYTJ8F58TBXP0HbUnNHCGFszHxojxj5ZJRavG-houHua22RqaH0jjEuYzz3_vAiWLXLBD865GiCTsh=s176-c-k-c0x00ffffff-no-rj",
+            "ハルニシオン": "https://yt3.googleusercontent.com/-M6Oin_1CbiLd1qBLZxUjBC_Bw5x-RLUDlVU_6wLdRXKPIPs8GiGQpQ6zOhg1lOgsbwGIbwiwp5MziqpvQ=s176-c-k-c0x00ffffff-no-rj",
+            "Aivery": "https://yt3.googleusercontent.com/9TPtAzxpkUs5Hkpp_xfXKzThJFbL5e2pxgFHGuT51A6v3egbme_mJ_AlQdr-ADcvEUnud-22PQ=s176-c-k-c0x00ffffff-no-rj",
+            "UtaGe!": "https://yt3.googleusercontent.com/sOoZDy-LQmcn4q9YS9lMEocqlqCy5SQ5cEsGieyMtvnBkWpFCth1qcxgQp5hu2KtWn9IHScU=s176-c-k-c0x00ffffff-no-rj",
+            "こみっきゅおん！": "https://yt3.googleusercontent.com/BeQMnS7Xo3diKxlGrGKnBLl3B07N731HRtOqvPbegMZGtVZpETsaDeRf8c4aaOLO97dOnYYb8A=s176-c-k-c0x00ffffff-no-rj",
+            "ラフ×ラフ": "https://yt3.googleusercontent.com/cg8WOMufvCI54wUXZ28gb2ya1Rkmxb1B4_VPZH8HrIL5HHkcBc5SGlV0elJQi8LrHbN9jBmd=s176-c-k-c0x00ffffff-no-rj",
+            "花いろは": "https://yt3.googleusercontent.com/UOn-71V_Xd5E7mwxKeAMNqG9-wC913nkaaQ0SEJzCwqLdLtkNjKdEwebjD4un7xL_yCCUbIBhg=s176-c-k-c0x00ffffff-no-rj",
+            "Onephony": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178f3546d9b8c1727b3e20cea72",
+            "AOAO": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e022e470e7985c246be29a62fd8",
+            "タイトル未定": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02403af4ad5237324ae054e87d",
+            "Blueberry Girls": "https://pbs.twimg.com/profile_images/1924812221118578688/n6WfSLM1_200x200.jpg",
+            "笑う門には福来たる": "https://pbs.twimg.com/profile_images/1918842882150244352/g1rv_z2e_200x200.jpg",
+            "ヒロインズ研究生": "https://pbs.twimg.com/profile_images/1805211545561092097/Lp3bIweb_200x200.jpg",
+            "COLOR of COLOR": "https://pbs.twimg.com/profile_images/1974431322384039937/W3STwrlU_200x200.jpg",
+            "愛乙女★DOLL": "https://pbs.twimg.com/profile_images/2039212053064491008/xU6anwP5_200x200.jpg"
         };
         const LINK_META = {
             x: { label: "X (Twitter)", icon: "fa-brands fa-x-twitter", color: "#000000" },
