@@ -458,7 +458,9 @@
     </div>
 
     <script>
-        const AUTO_SYNC_CSV_URL = "https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/export?format=csv";
+        const AUTO_SYNC_CSV_URL = "https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/export?format=csv&gid=1841666453";
+        // 全件版（本体シート）。通常読み込みは「未来分」タブの軽量CSVを使い、過去分が必要な場面でのみこちらを取り直す
+        const FULL_SYNC_CSV_URL = "https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/export?format=csv";
         const SITE_URL = 'https://oshi-cal-info.github.io/my-idol-app/'; // このサイトのURL（シェア文・画像に入れる）
 
         // ==== Firebase（ログイン・クラウド同期） ====
@@ -2391,6 +2393,35 @@
         }
 
         // 起動直後用：前回取得したCSVが残っていれば、先にそれで表示する（体感待ち時間の短縮）
+        // 全件データ（過去分を含む本体シート）の遅延読み込み。まとめ表示・過去への移動・参戦リストで必要になった時だけ取る
+        let fullDataLoaded = false;
+        let fullDataPromise = null;
+        let suppressNewEventCheck = false;
+        async function ensureFullData() {
+            if (fullDataLoaded) return;
+            if (fullDataPromise) return fullDataPromise;
+            fullDataPromise = (async () => {
+                try {
+                    const response = await fetch(FULL_SYNC_CSV_URL);
+                    if (!response.ok) return;
+                    const csvText = await response.text();
+                    const savedMonth = currentMonth;
+                    const savedDate = selectedDate;
+                    suppressNewEventCheck = true;
+                    try { parseCSV(csvText); } finally { suppressNewEventCheck = false; }
+                    currentMonth = savedMonth;
+                    selectedDate = savedDate;
+                    fullDataLoaded = true;
+                    render();
+                } catch (e) {
+                    console.log('Full data load failed:', e);
+                } finally {
+                    fullDataPromise = null;
+                }
+            })();
+            return fullDataPromise;
+        }
+
         function loadCachedSheetData() {
             let cached = null;
             try { cached = localStorage.getItem(SHEET_CSV_CACHE_KEY); } catch (e) {}
@@ -2561,7 +2592,7 @@
             );
             events = applyEventOverrides([...manualEvents, ...sheetEvents, ...historicalOnly]);
 
-            checkForNewSheetEvents(sheetEvents);
+            if (!suppressNewEventCheck) checkForNewSheetEvents(sheetEvents);
             
             if (sheetEvents.length > 0) {
                 // スプレッドシートの行順（=日付順とは限らない）に依存せず、
@@ -4499,6 +4530,11 @@
             if (modal.classList.contains('hidden')) {
                 renderSummary();
                 modal.classList.remove('hidden');
+                if (!fullDataLoaded) {
+                    ensureFullData().then(() => {
+                        if (!modal.classList.contains('hidden')) renderSummary();
+                    });
+                }
             } else {
                 modal.classList.add('hidden');
             }
@@ -4507,6 +4543,12 @@
         function setSummaryPeriod(p) {
             summaryPeriod = p;
             renderSummary();
+            if (!fullDataLoaded) {
+                ensureFullData().then(() => {
+                    const modal = document.getElementById('summary-modal');
+                    if (modal && !modal.classList.contains('hidden')) renderSummary();
+                });
+            }
         }
 
         function renderSummary() {
@@ -5267,6 +5309,7 @@
             weekDiv.classList.toggle('hidden', view !== 'week');
 
             render();
+            if (view === 'going' && !fullDataLoaded) ensureFullData();
         }
 
         function setMonthShowFavoritesOnly(value) {
@@ -5295,6 +5338,7 @@
         function changeMonth(direction) {
             currentMonth = currentMonth.add(direction, 'month');
             renderMonthView();
+            if (!fullDataLoaded && currentMonth.isBefore(dayjs().startOf('month'))) ensureFullData();
         }
 
         function toggleMenu() {
