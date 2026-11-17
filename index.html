@@ -20,6 +20,8 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="theme-color" content="#ec4899">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isToday.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/locale/ja.js"></script>
@@ -38,6 +40,8 @@
         .event-card { content-visibility: auto; contain-intrinsic-size: auto 130px; }
         @keyframes detailPop { from { transform: scale(.96) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
         .detail-pop { animation: detailPop .18s ease-out; }
+        .vpin { width: 30px; height: 30px; border-radius: 9999px; background: #ec4899; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); cursor: pointer; }
+        .vpin-sel { background: #a855f7; transform: scale(1.25); }
     </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -172,6 +176,9 @@
 
     <!-- フローティング追加ボタン -->
     <div class="fixed bottom-6 right-6 z-20 flex flex-col items-center space-y-3">
+        <button onclick="openVenueMap()" title="会場マップ" class="w-11 h-11 rounded-full bg-white text-pink-500 shadow-md shadow-pink-200/60 flex items-center justify-center hover:bg-pink-50 transition">
+            <i class="fa-solid fa-map-location-dot text-sm"></i>
+        </button>
         <button onclick="openSearchModal()" title="予定を検索" class="w-11 h-11 rounded-full bg-white text-purple-500 shadow-md shadow-pink-200/60 flex items-center justify-center hover:bg-purple-50 transition">
             <i class="fa-solid fa-magnifying-glass text-sm"></i>
         </button>
@@ -404,6 +411,19 @@
             <button onclick="closeEventDetail()" class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-slate-100/90 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition shadow-sm"><i class="fa-solid fa-xmark"></i></button>
             <div id="event-detail-body"></div>
         </div>
+    </div>
+
+    <!-- 会場マップモーダル -->
+    <div id="venue-map-modal" class="fixed inset-0 bg-white z-50 hidden flex-col">
+        <div class="flex items-center space-x-2 p-3 border-b border-pink-100/70">
+            <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
+                <input id="venue-map-search" type="text" placeholder="会場名で検索" oninput="renderVenueMapList()" class="w-full pl-9 pr-3 py-2.5 bg-pink-50/50 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+            </div>
+            <button onclick="closeVenueMap()" class="w-9 h-9 rounded-full bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="venue-map" class="w-full h-[42%] flex-shrink-0 bg-slate-100"></div>
+        <div id="venue-map-panel" class="flex-1 overflow-y-auto p-3 bg-pink-50/30"></div>
     </div>
 
     <!-- 自分用メモモーダル -->
@@ -4688,6 +4708,172 @@
                 }).join('');
             }
             document.getElementById('venue-modal').classList.remove('hidden');
+        }
+
+        // ==== 会場マップ（座標は venueKey → [lat, lon]、上位会場のみ登録） ====
+        const VENUE_GEO = {
+            'apexia': [35.692941, 139.705215],
+            'apexia(アペクシア)ーイベントスペースー': [35.692941, 139.705215],
+            'comtecportbase': [35.108735, 136.880643],
+            'duomu': [35.658715, 139.695526],
+            'duomusicexchange': [35.658715, 139.695526],
+            'esakamuse': [34.758985, 135.495631],
+            'extheaterroppongi': [35.66121, 139.727267],
+            'garden新木場factory': [35.638599, 139.827756],
+            'gotandag6': [35.628377, 139.721783],
+            'gotandag7': [35.628377, 139.721783],
+            'harevutai': [35.731959, 139.715574],
+            'kanadeviahall': [35.703322, 139.754579],
+            'kandasquarehall': [35.693089, 139.763297],
+            'ktzeppyokohama': [35.459702, 139.625957],
+            'lovez': [35.663274, 139.696458],
+            'spotifyo-crest': [35.658647, 139.695517],
+            'spotifyo-east': [35.658647, 139.695517],
+            'spotifyo-nest': [35.658477, 139.695324],
+            'spotifyo-west': [35.658477, 139.695324],
+            'srirachahealthpark': [13.171131, 100.925557],
+            'twinboxakihabara': [35.700395, 139.770114],
+            'withharajuku': [35.670646, 139.703342],
+            'womb': [35.658426, 139.695049],
+            'womblive': [35.658426, 139.695049],
+            'wwwx': [35.66153, 139.698712],
+            'zeppdivercity': [35.624813, 139.77441],
+            'zeppdivercity(tokyo)': [35.624813, 139.77441],
+            'zeppfukuoka': [33.593393, 130.363198],
+            'zeppfukuoka🍜': [33.593393, 130.363198],
+            'zepphaneda': [35.547326, 139.756625],
+            'zeppsapporo': [43.049345, 141.353165],
+            'zeppshinjuku': [35.695623, 139.700741],
+            'zeppshinjuku(tokyo)': [35.695623, 139.700741],
+            'zircotokyo': [35.693747, 139.70389],
+            'なんばhatch': [34.66847, 135.495807],
+            'インターシティホール': [35.625162, 139.741665],
+            'ステラボール': [35.628303, 139.735833],
+            'ベルサール秋葉原': [35.700038, 139.770957],
+            'ベルサール虎ノ門': [35.669689, 139.745543],
+            'ライトキューブ宇都宮中ホール': [36.558916, 139.900466],
+            'ラクーアガーデンステージ': [35.707133, 139.752938],
+            '上野恩賜公園野外ステージ': [35.70982, 139.770773],
+            '代々木公園特設ステージ': [35.667343, 139.69676],
+            '代々木公園野外ステージ': [35.667343, 139.69676],
+            '小樽goldstone<br>時間:open12:15': [43.204844, 140.998988],
+            '神田スクエアホール': [35.693089, 139.763297],
+            '神田明神ホール': [35.701951, 139.767225],
+            '福岡drumlogos': [33.592978, 130.393946],
+            '立川ステージガーデン': [35.704857, 139.411885],
+            '豊洲pit': [35.649676, 139.788313]
+        };
+        let venueMap = null;
+        let venueMapMarkers = {};
+        let venueMapData = [];
+        let selectedMapVenue = null;
+
+        function buildVenueMapData() {
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            const map = new Map();
+            events.forEach(e => {
+                if (e.date < todayStr) return;
+                splitVenues(effectiveLocation(e)).forEach(v => {
+                    if (v) map.set(v, (map.get(v) || 0) + 1);
+                });
+            });
+            venueMapData = [...map.entries()]
+                .map(([name, count]) => ({ name, count, geo: VENUE_GEO[venueKey(name)] || null }))
+                .sort((a, b) => b.count - a.count);
+        }
+
+        function openVenueMap() {
+            buildVenueMapData();
+            selectedMapVenue = null;
+            document.getElementById('venue-map-search').value = '';
+            const modal = document.getElementById('venue-map-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            renderVenueMapPanel();
+            if (window.L) {
+                document.getElementById('venue-map').style.display = '';
+                if (!venueMap) {
+                    venueMap = L.map('venue-map').setView([35.676, 139.75], 11);
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 }).addTo(venueMap);
+                }
+                setTimeout(() => { venueMap.invalidateSize(); refreshVenueMapPins(); }, 80);
+            } else {
+                document.getElementById('venue-map').style.display = 'none';
+            }
+        }
+
+        function closeVenueMap() {
+            const modal = document.getElementById('venue-map-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function refreshVenueMapPins() {
+            if (!venueMap) return;
+            Object.values(venueMapMarkers).forEach(m => venueMap.removeLayer(m));
+            venueMapMarkers = {};
+            venueMapData.filter(v => v.geo).forEach(v => {
+                const icon = L.divIcon({ className: '', html: `<div class="vpin${selectedMapVenue === v.name ? ' vpin-sel' : ''}">${v.count}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+                const marker = L.marker(v.geo, { icon }).addTo(venueMap);
+                marker.on('click', () => selectMapVenue(v.name, false));
+                venueMapMarkers[v.name] = marker;
+            });
+        }
+
+        function selectMapVenue(name, pan) {
+            selectedMapVenue = name;
+            const v = venueMapData.find(x => x.name === name);
+            if (pan && v && v.geo && venueMap) venueMap.panTo(v.geo);
+            refreshVenueMapPins();
+            renderVenueMapPanel();
+            document.getElementById('venue-map-panel').scrollTop = 0;
+        }
+
+        function renderVenueMapPanel() {
+            if (selectedMapVenue) {
+                const name = selectedMapVenue;
+                const todayStr = dayjs().format('YYYY-MM-DD');
+                const list = events
+                    .filter(e => e.date >= todayStr && splitVenues(effectiveLocation(e)).includes(name))
+                    .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+                const panel = document.getElementById('venue-map-panel');
+                panel.innerHTML = `
+                    <button onclick="selectedMapVenue = null; refreshVenueMapPins(); renderVenueMapPanel()" class="text-[11px] font-bold text-pink-500 mb-2"><i class="fa-solid fa-chevron-left mr-1"></i>会場一覧に戻る</button>
+                    <h3 class="font-bold text-slate-800 text-sm mb-1">${escapeHtml(name)}</h3>
+                    <p class="text-[11px] text-slate-400 mb-2">今後の予定 ${list.length} 件</p>
+                    <div class="flex space-x-2 mb-3">
+                        <a href="${mapsUrl(name)}" target="_blank" class="flex-1 flex items-center justify-center space-x-1.5 bg-white text-pink-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl border border-pink-100 hover:bg-pink-50 transition"><i class="fa-solid fa-location-dot"></i><span>地図で見る</span></a>
+                        <a href="${transitUrl(name)}" target="_blank" class="flex-1 flex items-center justify-center space-x-1.5 bg-white text-purple-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl border border-pink-100 hover:bg-purple-50 transition"><i class="fa-solid fa-train-subway"></i><span>ルート検索</span></a>
+                    </div>
+                    <div class="space-y-2">
+                    ${list.slice(0, 60).map(e => {
+                        const go = groups.find(g => g.name === e.group);
+                        const c = go ? go.color : '#ec4899';
+                        const df = dayjs(e.date).isValid() ? dayjs(e.date).format('M/D(dd)') : e.date;
+                        return `<button onclick="jumpToEvent('${e.id}')" class="w-full text-left bg-white border border-pink-50 rounded-2xl p-3 hover:bg-pink-50/40 transition">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="text-[11px] font-bold text-slate-500">${df} ${e.time !== '00:00' ? e.time : ''}</span>
+                                ${e.group ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${escapeHtml(e.group)}</span>` : ''}
+                            </div>
+                            <p class="text-xs font-bold text-slate-800 leading-snug">${escapeHtml(displayTitleFor([e]))}</p>
+                        </button>`;
+                    }).join('')}
+                    </div>`;
+            } else {
+                renderVenueMapList();
+            }
+        }
+
+        function renderVenueMapList() {
+            if (selectedMapVenue) return;
+            const q = (document.getElementById('venue-map-search').value || '').trim().toLowerCase();
+            const panel = document.getElementById('venue-map-panel');
+            const list = venueMapData.filter(v => !q || v.name.toLowerCase().includes(q));
+            panel.innerHTML = `<p class="text-[11px] text-slate-400 px-1 pb-2">今後の予定がある会場 ${list.length} 件（ピンクのピンは地図に表示されます）</p>` + list.map(v => `
+                <button onclick="selectMapVenue('${v.name.replace(/'/g, "\\'")}', true)" class="w-full text-left bg-white border border-pink-50 rounded-2xl p-3 mb-2 hover:bg-pink-50/40 transition flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-location-dot ${v.geo ? 'text-pink-500' : 'text-slate-200'} mr-1.5"></i>${escapeHtml(v.name)}</span>
+                    <span class="text-[10px] font-bold text-slate-400 flex-shrink-0 ml-2">${v.count}件</span>
+                </button>`).join('');
         }
 
         // ==== イベント詳細モーダル（背面を暗くして、そのイベントだけを浮かび上がらせる表示） ====
