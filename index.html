@@ -4641,11 +4641,17 @@
             return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-600"><i class="fa-solid fa-microphone-lines mr-1 text-[9px]"></i>出演 ${st}</span>`;
         }
 
-        const TICKET_DOMAINS = ['tiget.net', 'ticketdive.com', 't-dv.com', 'livepocket.jp', 'eplus.jp', 'ticket.pia.jp', 'l-tike.com', 'passmarket', 'zaiko.io', 'peatix.com', 'confetti-web.com', 'ticket.rakuten.co.jp', 'livefans.jp'];
+        const TICKET_DOMAINS = ['tiget.net', 'ticketdive.com', 't-dv.com', 'livepocket.jp', 'eplus.jp', 'ticket.pia.jp', 'w.pia.jp', 't.pia.jp', 'pia.jp', 'l-tike.com', 'passmarket', 'zaiko.io', 'peatix.com', 'confetti-web.com', 'ticket.rakuten.co.jp', 'livefans.jp', 'ticketvillage.jp', 'buzz-ticket.com', 'user.my-th.jp'];
         function ticketUrl(e) {
             if (!e || !e.regulation) return '';
-            const urls = String(e.regulation).match(/https?:\/\/[^\s<>"'）\)]+/g) || [];
-            return urls.find(u => TICKET_DOMAINS.some(d => u.includes(d))) || '';
+            const memo = String(e.regulation);
+            const urls = memo.match(/https?:\/\/[^\s<>"'）\)]+/g) || [];
+            const hit = urls.find(u => TICKET_DOMAINS.some(d => u.includes(d)));
+            if (hit) return hit;
+            // https:// 無しで書かれたチケットURL（例: t-dv.com/xxxx、ticketvillage.jp/events/xxxx）も拾う
+            const alt = TICKET_DOMAINS.slice().sort((a, b) => b.length - a.length).map(d => d.replace(/\./g, '\\.')).join('|');
+            const m = memo.match(new RegExp('(?:^|[^\\w.\\-/])((?:' + alt + ')/[\\w\\-~.?=&%#+/]*)'));
+            return m ? 'https://' + m[1] : '';
         }
 
         function venueScheduleHtml(e) {
