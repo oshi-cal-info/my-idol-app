@@ -3973,7 +3973,13 @@
             `;
             let mgmtShown = 0;
             let chips = '';
-            groups.forEach((g, index) => {
+            const mgmtOrder = groups.map((g, index) => ({ g, index })).sort((a, b) => {
+                const ah = a.g.visible === false ? 1 : 0;
+                const bh = b.g.visible === false ? 1 : 0;
+                if (ah !== bh) return ah - bh;
+                return a.g.name.localeCompare(b.g.name, 'ja');
+            });
+            mgmtOrder.forEach(({ g, index }) => {
                 if (mgmtQuery && !g.name.toLowerCase().includes(mgmtQuery)) return;
                 mgmtShown++;
                 const isHidden = g.visible === false;
