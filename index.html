@@ -3115,12 +3115,21 @@
             `;
         }
 
+        // 今日の現場バナーの追従位置はヘッダーの実測の高さに合わせる（タブがヘッダーに入り高さが変わるため、固定値では合わない）
+        function fixTodayBannerOffset() {
+            const header = document.querySelector('header');
+            const banner = document.querySelector('.today-live-banner');
+            if (header && banner) {
+                banner.style.top = (header.offsetHeight + 8) + 'px';
+            }
+        }
+
         function todayLiveCardHtml() {
             const lives = getTodayLiveGroups();
             if (lives.length === 0) return '';
 
             return `
-                <div onclick="openTodayLiveModal()" class="sticky top-[92px] z-20 cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl px-4 py-3 shadow-md shadow-pink-500/40 flex items-center justify-between">
+                <div onclick="openTodayLiveModal()" class="today-live-banner sticky top-[92px] z-20 cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl px-4 py-3 shadow-md shadow-pink-500/40 flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                         <span class="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-star text-[10px]"></i></span>
                         <span class="text-white font-black text-xs">今日の現場</span>
@@ -3648,11 +3657,13 @@
                     </div>
                 `;
                 container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + emptyBox;
+                fixTodayBannerOffset();
                 hydrateWeather();
                 return;
             }
 
             container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + buildEventCardsHtml(filtered);
+            fixTodayBannerOffset();
             hydrateWeather();
         }
 
@@ -3720,7 +3731,7 @@
 
                 if (rep.date !== lastDate) {
                     html += `
-                        <div data-date="${rep.date}" class="scroll-mt-24 flex items-center space-x-2 pt-3 pb-1 px-1">
+                        <div data-date="${rep.date}" class="scroll-mt-[140px] flex items-center space-x-2 pt-3 pb-1 px-1">
                             <h3 class="font-bold text-slate-700 text-xs">${dateFormatted}</h3>
                             ${isToday ? '<span class="px-2 py-0.5 bg-pink-500 text-white text-[10px] font-bold rounded-full shadow-sm shadow-pink-500/30">今日</span>' : ''}
                         </div>
