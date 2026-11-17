@@ -34,6 +34,8 @@ ul.ev li{background:#fff;border:1px solid #f1f5f9;border-radius:12px;padding:10p
 ul.ev .d{font-weight:700;color:#db2777;font-size:13px}
 ul.ev .ti{font-size:14px}
 .memo{font-size:13px;line-height:1.8;color:#334155;white-space:pre-wrap}
+.share{display:flex;gap:8px;margin:14px 0 2px}
+.sh{flex:1;text-align:center;background:#fff;border:1px solid #f9a8d4;border-radius:999px;padding:8px 6px;font-size:12.5px;font-weight:600;text-decoration:none;color:#9d174d;cursor:pointer}
 .cta{display:block;text-align:center;background:#db2777;color:#fff;font-weight:700;border-radius:14px;padding:14px;margin:26px 0 10px;text-decoration:none}
 .foot{text-align:center;color:#94a3b8;font-size:12px;margin-top:28px}
 .foot a{color:#94a3b8}
@@ -46,6 +48,7 @@ ul.ev .ti{font-size:14px}
 <div class="when">11月18日(水) </div>
 <div class="venue">📍 下北沢シャングリラ, 日本、〒155-0031 東京都世田谷区北沢２丁目４−５ ｍｏｓｉａ B1 <a href="https://www.google.com/maps/search/?api=1&query=%E4%B8%8B%E5%8C%97%E6%B2%A2%E3%82%B7%E3%83%A3%E3%83%B3%E3%82%B0%E3%83%AA%E3%83%A9%2C%20%E6%97%A5%E6%9C%AC%E3%80%81%E3%80%92155-0031%20%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%96%E7%94%B0%E8%B0%B7%E5%8C%BA%E5%8C%97%E6%B2%A2%EF%BC%92%E4%B8%81%E7%9B%AE%EF%BC%94%E2%88%92%EF%BC%95%20%EF%BD%8D%EF%BD%8F%EF%BD%93%EF%BD%89%EF%BD%81%20B1" target="_blank" rel="noopener">地図で見る</a></div>
 
+<div class="share"><a class="sh" href="https://twitter.com/intent/tweet?text=%5BLive%5DRAY%20presents%20%E2%80%9CSPLIT/PAIR%E2%80%9D%EF%BC%8811%E6%9C%8818%E6%97%A5%28%E6%B0%B4%29%20%E4%B8%8B%E5%8C%97%E6%B2%A2%E3%82%B7%E3%83%A3%E3%83%B3%E3%82%B0%E3%83%AA%E3%83%A9%2C%20%E6%97%A5%E6%9C%AC%E3%80%81%E3%80%92155-0031%20%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%96%E7%94%B0%E8%B0%B7%E5%8C%BA%E5%8C%97%E6%B2%A2%EF%BC%92%E4%B8%81%E7%9B%AE%EF%BC%94%E2%88%92%EF%BC%95%20%EF%BD%8D%EF%BD%8F%EF%BD%93%EF%BD%89%EF%BD%81%20B1%EF%BC%89&url=https://oshi-cal-info.github.io/my-idol-app/events/2026-11-18-liveray-presents-split-pair.html" target="_blank" rel="noopener">Xでシェア</a><a class="sh" href="https://social-plugins.line.me/lineit/share?url=https://oshi-cal-info.github.io/my-idol-app/events/2026-11-18-liveray-presents-split-pair.html" target="_blank" rel="noopener">LINEで送る</a><button class="sh" type="button" onclick="copyUrl(this)">URLをコピー</button></div>
 <h2>出演グループ</h2>
 <ul class="perf">
 <li><span class="pg"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/situasion.html">SITUASION</a></span></li>
@@ -55,5 +58,6 @@ ul.ev .ti{font-size:14px}
 <a class="cta" href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Calでこのイベントをお気に入り登録する（変更・締切をプッシュ通知）</a>
 <div class="foot"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/">対応グループ一覧</a> ・ <a href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Cal トップ</a></div>
 </div>
+<script>function copyUrl(b){var t=b.textContent;function done(){b.textContent='コピーしました';setTimeout(function(){b.textContent=t;},1500);}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(location.href).then(done).catch(done);}else{var ta=document.createElement('textarea');ta.value=location.href;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}}</script>
 </body>
 </html>

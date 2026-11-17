@@ -34,6 +34,8 @@ ul.ev li{background:#fff;border:1px solid #f1f5f9;border-radius:12px;padding:10p
 ul.ev .d{font-weight:700;color:#db2777;font-size:13px}
 ul.ev .ti{font-size:14px}
 .memo{font-size:13px;line-height:1.8;color:#334155;white-space:pre-wrap}
+.share{display:flex;gap:8px;margin:14px 0 2px}
+.sh{flex:1;text-align:center;background:#fff;border:1px solid #f9a8d4;border-radius:999px;padding:8px 6px;font-size:12.5px;font-weight:600;text-decoration:none;color:#9d174d;cursor:pointer}
 .cta{display:block;text-align:center;background:#db2777;color:#fff;font-weight:700;border-radius:14px;padding:14px;margin:26px 0 10px;text-decoration:none}
 .foot{text-align:center;color:#94a3b8;font-size:12px;margin-top:28px}
 .foot a{color:#94a3b8}
@@ -46,6 +48,7 @@ ul.ev .ti{font-size:14px}
 <div class="when">12月12日(土) 9:45</div>
 <div class="venue">📍 白金高輪SELENE b2 <a href="https://www.google.com/maps/search/?api=1&query=%E7%99%BD%E9%87%91%E9%AB%98%E8%BC%AASELENE%20b2" target="_blank" rel="noopener">地図で見る</a></div>
 <a class="ticket" href="https://livepocket.jp/e/selest_1212" target="_blank" rel="noopener">🎫 チケット購入ページ</a>
+<div class="share"><a class="sh" href="https://twitter.com/intent/tweet?text=%E3%80%8CSELENE%20STADIUM%E3%80%8D%EF%BC%8812%E6%9C%8812%E6%97%A5%28%E5%9C%9F%29%20%E7%99%BD%E9%87%91%E9%AB%98%E8%BC%AASELENE%20b2%EF%BC%89&url=https://oshi-cal-info.github.io/my-idol-app/events/2026-12-12-selene-stadium-2.html" target="_blank" rel="noopener">Xでシェア</a><a class="sh" href="https://social-plugins.line.me/lineit/share?url=https://oshi-cal-info.github.io/my-idol-app/events/2026-12-12-selene-stadium-2.html" target="_blank" rel="noopener">LINEで送る</a><button class="sh" type="button" onclick="copyUrl(this)">URLをコピー</button></div>
 <h2>出演グループ</h2>
 <ul class="perf">
 <li><span class="pg"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/玉響storage.html">玉響storage</a></span></li>
@@ -53,6 +56,7 @@ ul.ev .ti{font-size:14px}
 </ul>
 <h2>詳細</h2><p class="memo">【ライブ情報】 「SELENE STADIUM」 日程 2026年12月12日 (土) 会場 白金高輪SELENEb2 開場/開演 9:45/10:00 公演チケット 販売期間 12月12日20:00-12月12日9:44 透色ドロップお目当て入場で特典会チケット1枚プレゼント🎁</p>
 <h2>同じ会場の今後のイベント</h2><ul class="ev"><li><span class="d">11/17(火)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-17-age-fes.html">AGE FES</a></span></li>
+<li><span class="d">11/22(日)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-22-ルージュブック-one-man-live-めくって-次のページ.html">ルージュブック  ONE MAN LIVE 〜めくって！次のページ！〜</a></span></li>
 <li><span class="d">11/27(金)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-27-小田アヤネ卒業公演ワンマンライブ-クマリデパートワンマンライブ-小田アヤネ卒業公演-不死鳥よ永遠に-白金高輪selene-b2-tokyo.html">小田アヤネ卒業公演ワンマンライブ「クマリデパートワンマンライブ　小田アヤネ卒業公演 -不死鳥よ永遠に-」📍白金高輪SELENE b2(TOKYO)</a></span></li>
 <li><span class="d">11/29(日)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-29-mini-tif-vol-122-1部.html">mini TIF vol.122 1部</a></span></li>
 <li><span class="d">12/20(日)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-12-20-utage-ドラマチックレコード-2026-last-2マンライブ.html">『UtaGe!×ドラマチックレコード 2026 LAST 2マンライブ』</a></span></li>
@@ -60,5 +64,6 @@ ul.ev .ti{font-size:14px}
 <a class="cta" href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Calでこのイベントをお気に入り登録する（変更・締切をプッシュ通知）</a>
 <div class="foot"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/">対応グループ一覧</a> ・ <a href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Cal トップ</a></div>
 </div>
+<script>function copyUrl(b){var t=b.textContent;function done(){b.textContent='コピーしました';setTimeout(function(){b.textContent=t;},1500);}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(location.href).then(done).catch(done);}else{var ta=document.createElement('textarea');ta.value=location.href;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}}</script>
 </body>
 </html>

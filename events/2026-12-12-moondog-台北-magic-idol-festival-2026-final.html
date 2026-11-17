@@ -34,6 +34,8 @@ ul.ev li{background:#fff;border:1px solid #f1f5f9;border-radius:12px;padding:10p
 ul.ev .d{font-weight:700;color:#db2777;font-size:13px}
 ul.ev .ti{font-size:14px}
 .memo{font-size:13px;line-height:1.8;color:#334155;white-space:pre-wrap}
+.share{display:flex;gap:8px;margin:14px 0 2px}
+.sh{flex:1;text-align:center;background:#fff;border:1px solid #f9a8d4;border-radius:999px;padding:8px 6px;font-size:12.5px;font-weight:600;text-decoration:none;color:#9d174d;cursor:pointer}
 .cta{display:block;text-align:center;background:#db2777;color:#fff;font-weight:700;border-radius:14px;padding:14px;margin:26px 0 10px;text-decoration:none}
 .foot{text-align:center;color:#94a3b8;font-size:12px;margin-top:28px}
 .foot a{color:#94a3b8}
@@ -46,17 +48,20 @@ ul.ev .ti{font-size:14px}
 <div class="when">12月12日(土) </div>
 <div class="venue">📍 MOONDOG <a href="https://www.google.com/maps/search/?api=1&query=MOONDOG" target="_blank" rel="noopener">地図で見る</a></div>
 
+<div class="share"><a class="sh" href="https://twitter.com/intent/tweet?text=%EF%BC%A0%20MOONDOG%28%E5%8F%B0%E5%8C%97%29%20%E3%80%8CMAGIC%20IDOL%20FESTIVAL%202026%20FINAL%E3%80%8D%EF%BC%8812%E6%9C%8812%E6%97%A5%28%E5%9C%9F%29%20MOONDOG%EF%BC%89&url=https://oshi-cal-info.github.io/my-idol-app/events/2026-12-12-moondog-台北-magic-idol-festival-2026-final.html" target="_blank" rel="noopener">Xでシェア</a><a class="sh" href="https://social-plugins.line.me/lineit/share?url=https://oshi-cal-info.github.io/my-idol-app/events/2026-12-12-moondog-台北-magic-idol-festival-2026-final.html" target="_blank" rel="noopener">LINEで送る</a><button class="sh" type="button" onclick="copyUrl(this)">URLをコピー</button></div>
 <h2>出演グループ</h2>
 <ul class="perf">
 <li><span class="pg">Mirror,Mirror</span></li>
 </ul>
 <h2>詳細</h2><p class="memo">12/12(土) ＠ MOONDOG(台北) 「MAGIC IDOL FESTIVAL 2026 FINAL」</p>
-<h2>同じ会場の今後のイベント</h2><ul class="ev"><li><span class="d">11/29(日)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-29-sweet-alley-oneman-live-in-taiwan.html">Sweet Alley ONEMAN LIVE in TAIWAN</a></span></li>
+<h2>同じ会場の今後のイベント</h2><ul class="ev"><li><span class="d">11/28(土)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-28-jamscollection-oneman-live-in-taiwan.html">JamsCollection ONEMAN LIVE in TAIWAN</a></span></li>
+<li><span class="d">11/29(日)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-29-sweet-alley-oneman-live-in-taiwan.html">Sweet Alley ONEMAN LIVE in TAIWAN</a></span></li>
 <li><span class="d">12/12(土)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-12-12-moondog-台北-mirror-mirror-5th-anniversary-tour-miracle-memento.html">@ MOONDOG(台北) 「Mirror,Mirror 5th ANNIVERSARY TOUR~Miracle Memento~」</a></span></li>
 <li><span class="d">12/13(日)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-12-13-moondog-台北-magic-idol-festival-2026-final-2.html">＠ MOONDOG(台北) 「MAGIC IDOL FESTIVAL 2026 FINAL」</a></span></li>
 </ul>
 <a class="cta" href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Calでこのイベントをお気に入り登録する（変更・締切をプッシュ通知）</a>
 <div class="foot"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/">対応グループ一覧</a> ・ <a href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Cal トップ</a></div>
 </div>
+<script>function copyUrl(b){var t=b.textContent;function done(){b.textContent='コピーしました';setTimeout(function(){b.textContent=t;},1500);}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(location.href).then(done).catch(done);}else{var ta=document.createElement('textarea');ta.value=location.href;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}}</script>
 </body>
 </html>

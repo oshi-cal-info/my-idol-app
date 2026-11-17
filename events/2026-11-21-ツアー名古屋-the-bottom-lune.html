@@ -34,6 +34,8 @@ ul.ev li{background:#fff;border:1px solid #f1f5f9;border-radius:12px;padding:10p
 ul.ev .d{font-weight:700;color:#db2777;font-size:13px}
 ul.ev .ti{font-size:14px}
 .memo{font-size:13px;line-height:1.8;color:#334155;white-space:pre-wrap}
+.share{display:flex;gap:8px;margin:14px 0 2px}
+.sh{flex:1;text-align:center;background:#fff;border:1px solid #f9a8d4;border-radius:999px;padding:8px 6px;font-size:12.5px;font-weight:600;text-decoration:none;color:#9d174d;cursor:pointer}
 .cta{display:block;text-align:center;background:#db2777;color:#fff;font-weight:700;border-radius:14px;padding:14px;margin:26px 0 10px;text-decoration:none}
 .foot{text-align:center;color:#94a3b8;font-size:12px;margin-top:28px}
 .foot a{color:#94a3b8}
@@ -46,14 +48,17 @@ ul.ev .ti{font-size:14px}
 <div class="when">11月21日(土) 17:00</div>
 <div class="venue">📍 THE BOTTOM LINE <a href="https://www.google.com/maps/search/?api=1&query=THE%20BOTTOM%20LINE" target="_blank" rel="noopener">地図で見る</a></div>
 <a class="ticket" href="https://ticketdive.com/event/LD_tour2026_DOLL" target="_blank" rel="noopener">🎫 チケット購入ページ</a>
+<div class="share"><a class="sh" href="https://twitter.com/intent/tweet?text=%F0%9F%94%A5%E3%83%84%E3%82%A2%E3%83%BC%E5%90%8D%E5%8F%A4%E5%B1%8B%40THE%20BOTTOM%20LUNE%EF%BC%8811%E6%9C%8821%E6%97%A5%28%E5%9C%9F%29%20THE%20BOTTOM%20LINE%EF%BC%89&url=https://oshi-cal-info.github.io/my-idol-app/events/2026-11-21-ツアー名古屋-the-bottom-lune.html" target="_blank" rel="noopener">Xでシェア</a><a class="sh" href="https://social-plugins.line.me/lineit/share?url=https://oshi-cal-info.github.io/my-idol-app/events/2026-11-21-ツアー名古屋-the-bottom-lune.html" target="_blank" rel="noopener">LINEで送る</a><button class="sh" type="button" onclick="copyUrl(this)">URLをコピー</button></div>
 <h2>出演グループ</h2>
 <ul class="perf">
 <li><span class="pg"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/愛乙女-doll.html">愛乙女★DOLL</a></span><span class="pt">開演 17:00</span></li>
 </ul>
 <h2>詳細</h2><p class="memo">【11/21】名古屋 📍THE BOTTOM LINE （〒464-0850 名古屋市千種区今池4-7-11） ⏰開場：16:30 開演：17:00 ※予定 🎫</p>
-
+<h2>同じ会場の今後のイベント</h2><ul class="ev"><li><span class="d">12/6(日)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-12-06-idol-party-2.html">IDOL♡PARTY</a></span></li>
+</ul>
 <a class="cta" href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Calでこのイベントをお気に入り登録する（変更・締切をプッシュ通知）</a>
 <div class="foot"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/">対応グループ一覧</a> ・ <a href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Cal トップ</a></div>
 </div>
+<script>function copyUrl(b){var t=b.textContent;function done(){b.textContent='コピーしました';setTimeout(function(){b.textContent=t;},1500);}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(location.href).then(done).catch(done);}else{var ta=document.createElement('textarea');ta.value=location.href;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}}</script>
 </body>
 </html>

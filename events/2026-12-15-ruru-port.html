@@ -34,6 +34,8 @@ ul.ev li{background:#fff;border:1px solid #f1f5f9;border-radius:12px;padding:10p
 ul.ev .d{font-weight:700;color:#db2777;font-size:13px}
 ul.ev .ti{font-size:14px}
 .memo{font-size:13px;line-height:1.8;color:#334155;white-space:pre-wrap}
+.share{display:flex;gap:8px;margin:14px 0 2px}
+.sh{flex:1;text-align:center;background:#fff;border:1px solid #f9a8d4;border-radius:999px;padding:8px 6px;font-size:12.5px;font-weight:600;text-decoration:none;color:#9d174d;cursor:pointer}
 .cta{display:block;text-align:center;background:#db2777;color:#fff;font-weight:700;border-radius:14px;padding:14px;margin:26px 0 10px;text-decoration:none}
 .foot{text-align:center;color:#94a3b8;font-size:12px;margin-top:28px}
 .foot a{color:#94a3b8}
@@ -46,15 +48,18 @@ ul.ev .ti{font-size:14px}
 <div class="when">12月15日(火) 18:45</div>
 <div class="venue">📍 Star Lounge <a href="https://www.google.com/maps/search/?api=1&query=Star%20Lounge" target="_blank" rel="noopener">地図で見る</a></div>
 <a class="ticket" href="https://t-dv.com/ruruneige_1215" target="_blank" rel="noopener">🎫 チケット購入ページ</a>
+<div class="share"><a class="sh" href="https://twitter.com/intent/tweet?text=RURU%20PORT%EF%BC%8812%E6%9C%8815%E6%97%A5%28%E7%81%AB%29%20Star%20Lounge%EF%BC%89&url=https://oshi-cal-info.github.io/my-idol-app/events/2026-12-15-ruru-port.html" target="_blank" rel="noopener">Xでシェア</a><a class="sh" href="https://social-plugins.line.me/lineit/share?url=https://oshi-cal-info.github.io/my-idol-app/events/2026-12-15-ruru-port.html" target="_blank" rel="noopener">LINEで送る</a><button class="sh" type="button" onclick="copyUrl(this)">URLをコピー</button></div>
 <h2>出演グループ</h2>
 <ul class="perf">
 <li><span class="pg"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/ルルネージュ.html">ルルネージュ</a></span><span class="pt">開演 18:45</span></li>
 <li><span class="pg"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/lilys-ash.html">LilyS/ash</a></span><span class="pt">開演 19:00 ／ 出演 19:00–19:25</span></li>
 </ul>
 <h2>詳細</h2><p class="memo">ルルネージュ主催公演 『RURU PORT』 この場所から、どこへでも、何にでも。 🗓 12月15日(火) 📍 渋谷スターラウンジ ⏰ OPEN 18:15 / START 18:45 🎤 出演 ルルネージュ / きゅ〜くる / LilyS/ash 🎫 チケット 優先 ¥3,000 / 通常 ¥500 ※当日券 各＋¥1,000 ※入場時別途1ドリンク代 ✦ チケット t-dv.com/ruruneige_1215 11/12(木) 19:00〜先着発売</p>
-
+<h2>同じ会場の今後のイベント</h2><ul class="ev"><li><span class="d">12/5(土)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-12-05-生誕-こみっきゅおん-定期公演-さぶすくりぷしょおん-四宮るな生誕祭2026.html">【生誕】こみっきゅおん！定期公演「さぶすくりぷしょおん！〜四宮るな生誕祭2026〜」</a></span></li>
+</ul>
 <a class="cta" href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Calでこのイベントをお気に入り登録する（変更・締切をプッシュ通知）</a>
 <div class="foot"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/">対応グループ一覧</a> ・ <a href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Cal トップ</a></div>
 </div>
+<script>function copyUrl(b){var t=b.textContent;function done(){b.textContent='コピーしました';setTimeout(function(){b.textContent=t;},1500);}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(location.href).then(done).catch(done);}else{var ta=document.createElement('textarea');ta.value=location.href;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}}</script>
 </body>
 </html>

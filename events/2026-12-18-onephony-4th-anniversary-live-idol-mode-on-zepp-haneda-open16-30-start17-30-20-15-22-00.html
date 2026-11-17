@@ -34,6 +34,8 @@ ul.ev li{background:#fff;border:1px solid #f1f5f9;border-radius:12px;padding:10p
 ul.ev .d{font-weight:700;color:#db2777;font-size:13px}
 ul.ev .ti{font-size:14px}
 .memo{font-size:13px;line-height:1.8;color:#334155;white-space:pre-wrap}
+.share{display:flex;gap:8px;margin:14px 0 2px}
+.sh{flex:1;text-align:center;background:#fff;border:1px solid #f9a8d4;border-radius:999px;padding:8px 6px;font-size:12.5px;font-weight:600;text-decoration:none;color:#9d174d;cursor:pointer}
 .cta{display:block;text-align:center;background:#db2777;color:#fff;font-weight:700;border-radius:14px;padding:14px;margin:26px 0 10px;text-decoration:none}
 .foot{text-align:center;color:#94a3b8;font-size:12px;margin-top:28px}
 .foot a{color:#94a3b8}
@@ -46,6 +48,7 @@ ul.ev .ti{font-size:14px}
 <div class="when">12月18日(金) 16:30</div>
 <div class="venue">📍 Zepp Haneda OPEN16:30 / START1 <a href="https://www.google.com/maps/search/?api=1&query=Zepp%20Haneda%20OPEN16%3A30%20/%20START1" target="_blank" rel="noopener">地図で見る</a></div>
 
+<div class="share"><a class="sh" href="https://twitter.com/intent/tweet?text=%E2%9F%A1%20%F0%9D%90%8E%F0%9D%90%A7%F0%9D%90%9E%F0%9D%90%A9%F0%9D%90%A1%F0%9D%90%A8%F0%9D%90%A7%F0%9D%90%B2%20%F0%9D%9F%92%F0%9D%90%AD%F0%9D%90%A1%20%F0%9D%90%80%F0%9D%90%A7%F0%9D%90%A7%F0%9D%90%A2%F0%9D%90%AF%F0%9D%90%9E%F0%9D%90%AB%F0%9D%90%AC%F0%9D%90%9A%F0%9D%90%AB%F0%9D%90%B2%20%F0%9D%90%8B%F0%9D%90%88%F0%9D%90%95%F0%9D%90%84%20%E2%9F%A1%20%E3%80%9C%20%F0%9D%90%88%F0%9D%90%83%F0%9D%90%8E%F0%9D%90%8B%20%F0%9D%90%8C%F0%9D%90%8E%F0%9D%90%83%F0%9D%90%84%20%E2%99%A1%20%F0%9D%90%8E%F0%9D%90%8D%20%E3%80%9C%EF%BC%A0Zepp%20Haneda%20OPEN16%3A30%20/%20START17%3A30%20%F0%9F%93%B820%3A15-22%3A00%EF%BC%8812%E6%9C%8818%E6%97%A5%28%E9%87%91%29%20Zepp%20Haneda%20OPEN16%3A30%20/%20START1%EF%BC%89&url=https://oshi-cal-info.github.io/my-idol-app/events/2026-12-18-onephony-4th-anniversary-live-idol-mode-on-zepp-haneda-open16-30-start17-30-20-15-22-00.html" target="_blank" rel="noopener">Xでシェア</a><a class="sh" href="https://social-plugins.line.me/lineit/share?url=https://oshi-cal-info.github.io/my-idol-app/events/2026-12-18-onephony-4th-anniversary-live-idol-mode-on-zepp-haneda-open16-30-start17-30-20-15-22-00.html" target="_blank" rel="noopener">LINEで送る</a><button class="sh" type="button" onclick="copyUrl(this)">URLをコピー</button></div>
 <h2>出演グループ</h2>
 <ul class="perf">
 <li><span class="pg"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/onephony.html">Onephony</a></span><span class="pt">開演 16:30</span></li>
@@ -55,5 +58,6 @@ ul.ev .ti{font-size:14px}
 <a class="cta" href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Calでこのイベントをお気に入り登録する（変更・締切をプッシュ通知）</a>
 <div class="foot"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/">対応グループ一覧</a> ・ <a href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Cal トップ</a></div>
 </div>
+<script>function copyUrl(b){var t=b.textContent;function done(){b.textContent='コピーしました';setTimeout(function(){b.textContent=t;},1500);}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(location.href).then(done).catch(done);}else{var ta=document.createElement('textarea');ta.value=location.href;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}}</script>
 </body>
 </html>

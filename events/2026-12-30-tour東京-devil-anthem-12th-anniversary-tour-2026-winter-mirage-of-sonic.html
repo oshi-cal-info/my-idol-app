@@ -38,6 +38,8 @@ ul.ev li{background:#fff;border:1px solid #f1f5f9;border-radius:12px;padding:10p
 ul.ev .d{font-weight:700;color:#db2777;font-size:13px}
 ul.ev .ti{font-size:14px}
 .memo{font-size:13px;line-height:1.8;color:#334155;white-space:pre-wrap}
+.share{display:flex;gap:8px;margin:14px 0 2px}
+.sh{flex:1;text-align:center;background:#fff;border:1px solid #f9a8d4;border-radius:999px;padding:8px 6px;font-size:12.5px;font-weight:600;text-decoration:none;color:#9d174d;cursor:pointer}
 .cta{display:block;text-align:center;background:#db2777;color:#fff;font-weight:700;border-radius:14px;padding:14px;margin:26px 0 10px;text-decoration:none}
 .foot{text-align:center;color:#94a3b8;font-size:12px;margin-top:28px}
 .foot a{color:#94a3b8}
@@ -51,6 +53,7 @@ ul.ev .ti{font-size:14px}
 <div class="when">12月30日(水) 12:15</div>
 <div class="venue">📍 小樽GOLD STONE&lt;br&gt;時間：OPEN12:15 / START13:0 <a href="https://www.google.com/maps/search/?api=1&query=%E5%B0%8F%E6%A8%BDGOLD%20STONE%3Cbr%3E%E6%99%82%E9%96%93%EF%BC%9AOPEN12%3A15%20/%20START13%3A0" target="_blank" rel="noopener">地図で見る</a></div>
 <a class="ticket" href="https://l-tike.com/devilanthem/" target="_blank" rel="noopener">🎫 チケット購入ページ</a>
+<div class="share"><a class="sh" href="https://twitter.com/intent/tweet?text=%E3%80%90TOUR%E6%9D%B1%E4%BA%AC%E3%80%91Devil%20ANTHEM.%2012th%20Anniversary%20TOUR%202026%0A%E3%80%8CWinter%20Mirage%20of%20Sonic%E3%80%8D%EF%BC%8812%E6%9C%8830%E6%97%A5%28%E6%B0%B4%29%20%E5%B0%8F%E6%A8%BDGOLD%20STONE%3Cbr%3E%E6%99%82%E9%96%93%EF%BC%9AOPEN12%3A15%20/%20START13%3A0%EF%BC%89&url=https://oshi-cal-info.github.io/my-idol-app/events/2026-12-30-tour東京-devil-anthem-12th-anniversary-tour-2026-winter-mirage-of-sonic.html" target="_blank" rel="noopener">Xでシェア</a><a class="sh" href="https://social-plugins.line.me/lineit/share?url=https://oshi-cal-info.github.io/my-idol-app/events/2026-12-30-tour東京-devil-anthem-12th-anniversary-tour-2026-winter-mirage-of-sonic.html" target="_blank" rel="noopener">LINEで送る</a><button class="sh" type="button" onclick="copyUrl(this)">URLをコピー</button></div>
 <h2>出演グループ</h2>
 <ul class="perf">
 <li><span class="pg"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/devil-anthem.html">Devil ANTHEM.</a></span><span class="pt">開演 12:15</span></li>
@@ -68,5 +71,6 @@ ul.ev .ti{font-size:14px}
 <a class="cta" href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Calでこのイベントをお気に入り登録する（変更・締切をプッシュ通知）</a>
 <div class="foot"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/">対応グループ一覧</a> ・ <a href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Cal トップ</a></div>
 </div>
+<script>function copyUrl(b){var t=b.textContent;function done(){b.textContent='コピーしました';setTimeout(function(){b.textContent=t;},1500);}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(location.href).then(done).catch(done);}else{var ta=document.createElement('textarea');ta.value=location.href;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}}</script>
 </body>
 </html>

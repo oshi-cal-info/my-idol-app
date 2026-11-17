@@ -34,6 +34,8 @@ ul.ev li{background:#fff;border:1px solid #f1f5f9;border-radius:12px;padding:10p
 ul.ev .d{font-weight:700;color:#db2777;font-size:13px}
 ul.ev .ti{font-size:14px}
 .memo{font-size:13px;line-height:1.8;color:#334155;white-space:pre-wrap}
+.share{display:flex;gap:8px;margin:14px 0 2px}
+.sh{flex:1;text-align:center;background:#fff;border:1px solid #f9a8d4;border-radius:999px;padding:8px 6px;font-size:12.5px;font-weight:600;text-decoration:none;color:#9d174d;cursor:pointer}
 .cta{display:block;text-align:center;background:#db2777;color:#fff;font-weight:700;border-radius:14px;padding:14px;margin:26px 0 10px;text-decoration:none}
 .foot{text-align:center;color:#94a3b8;font-size:12px;margin-top:28px}
 .foot a{color:#94a3b8}
@@ -46,20 +48,22 @@ ul.ev .ti{font-size:14px}
 <div class="when">11月19日(木) </div>
 <div class="venue">📍 ステラボール <a href="https://www.google.com/maps/search/?api=1&query=%E3%82%B9%E3%83%86%E3%83%A9%E3%83%9C%E3%83%BC%E3%83%AB" target="_blank" rel="noopener">地図で見る</a></div>
 
+<div class="share"><a class="sh" href="https://twitter.com/intent/tweet?text=MiON%21%EF%BC%8811%E6%9C%8819%E6%97%A5%28%E6%9C%A8%29%20%E3%82%B9%E3%83%86%E3%83%A9%E3%83%9C%E3%83%BC%E3%83%AB%EF%BC%89&url=https://oshi-cal-info.github.io/my-idol-app/events/2026-11-19-mion.html" target="_blank" rel="noopener">Xでシェア</a><a class="sh" href="https://social-plugins.line.me/lineit/share?url=https://oshi-cal-info.github.io/my-idol-app/events/2026-11-19-mion.html" target="_blank" rel="noopener">LINEで送る</a><button class="sh" type="button" onclick="copyUrl(this)">URLをコピー</button></div>
 <h2>出演グループ</h2>
 <ul class="perf">
 <li><span class="pg"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/ion.html">iON!</a></span></li>
 </ul>
 <h2>詳細</h2><p class="memo">11月19日は『MiON!』を開催します🩷 📍 ステラボール 🎫 ただいまよりFC先行抽選受付スタート！※iON! / iMiN!プラン限定（〜11/7 23:59） t-dv.com/MiON-261119 11月9日 21時〜 一般販売開始！ なんと今回も……！ スペシャルな楽曲交換をお届け✨ ここでしか見られない特別なステージをお見逃しなくっ！💕</p>
 <h2>同じ会場の今後のイベント</h2><ul class="ev"><li><span class="d">11/17(火)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-17-ちゅらまちゅり-ステラボール.html">『ちゅらまちゅり』@ ステラボール</a></span></li>
+<li><span class="d">11/17(火)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-17-ちゅらまちゅり.html">ちゅらまちゅり</a></span></li>
+<li><span class="d">11/17(火)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-17-ちゅらまちゅり-2.html">🗼ちゅらまちゅり</a></span></li>
 <li><span class="d">11/17(火)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-17-ちゅらまちゅり-3.html">🩷📣 ちゅらまちゅり</a></span></li>
 <li><span class="d">11/17(火)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-17-対バン-ちゅらまちゅり-2.html">【対バン】ちゅらまちゅり</a></span></li>
 <li><span class="d">11/17(火)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-17-対バン-ちゅらまちゅり.html">【対バン】「ちゅらまちゅり」</a></span></li>
-<li><span class="d">11/18(水)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-18-tokyo-girls-girls-extra-2.html">『TOKYO GIRLS GIRLS extra!!』</a></span></li>
-<li><span class="d">11/21(土)</span><span class="ti"><a href="https://oshi-cal-info.github.io/my-idol-app/events/2026-11-21-わーすたpresents-にゃんぽこらフェス-vol-3-5.html">わーすたpresents にゃんぽこらフェス！vol.3</a></span></li>
 </ul>
 <a class="cta" href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Calでこのイベントをお気に入り登録する（変更・締切をプッシュ通知）</a>
 <div class="foot"><a href="https://oshi-cal-info.github.io/my-idol-app/groups/">対応グループ一覧</a> ・ <a href="https://oshi-cal-info.github.io/my-idol-app/">Oshi-Cal トップ</a></div>
 </div>
+<script>function copyUrl(b){var t=b.textContent;function done(){b.textContent='コピーしました';setTimeout(function(){b.textContent=t;},1500);}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(location.href).then(done).catch(done);}else{var ta=document.createElement('textarea');ta.value=location.href;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}}</script>
 </body>
 </html>
