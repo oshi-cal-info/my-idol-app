@@ -399,8 +399,8 @@
     </div>
 
     <!-- イベント詳細モーダル -->
-    <div id="event-detail-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[65] hidden flex items-end sm:items-center justify-center" onclick="closeEventDetail()">
-        <div class="detail-pop relative bg-white w-full max-w-md max-h-[88vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl" onclick="event.stopPropagation()">
+    <div id="event-detail-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[65] hidden flex items-end sm:items-center justify-center p-4" onclick="closeEventDetail()">
+        <div class="detail-pop relative bg-white w-full max-w-md max-h-[88vh] overflow-y-auto rounded-3xl shadow-2xl" onclick="event.stopPropagation()">
             <button onclick="closeEventDetail()" class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-slate-100/90 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition shadow-sm"><i class="fa-solid fa-xmark"></i></button>
             <div id="event-detail-body"></div>
         </div>
