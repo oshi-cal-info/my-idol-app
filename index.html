@@ -4286,7 +4286,7 @@
             if (!text) return '';
             const trimVenueTail = (v) => {
                 let s = String(v || '');
-                const cuts = ['に出演', 'に出させて', 'で出演', 'にて開催', 'で開催', 'に開催', '、', '。', '📣', '♡', '♥', '★', '☆', '♪', '✨', '🎉', '（', '(', '【', '※', '！', '!', '？', '?'];
+                const cuts = ['に出演', 'に出させて', 'で出演', 'にて開催', 'で開催', 'に開催', '、', '。', '📣', '♡', '♥', '★', '☆', '♪', '✨', '🎉', '（', '(', '【', '「', '※', '！', '!', '？', '?'];
                 let end = s.length;
                 for (const c of cuts) { const ix = s.indexOf(c); if (ix > 0 && ix < end) end = ix; }
                 return s.slice(0, end).trim();
