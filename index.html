@@ -381,6 +381,21 @@
         </div>
     </div>
 
+    <!-- 会場モーダル -->
+    <div id="venue-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center" onclick="closeModal('venue-modal')">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md shadow-2xl border border-pink-50 max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
+            <div class="p-5 pb-3 flex items-start justify-between">
+                <div class="min-w-0">
+                    <h3 id="venue-modal-name" class="font-bold text-base text-slate-800 leading-snug"></h3>
+                    <p id="venue-modal-sub" class="text-[11px] text-slate-400 font-semibold mt-0.5"></p>
+                </div>
+                <button onclick="closeModal('venue-modal')" class="w-8 h-8 flex-shrink-0 flex items-center justify-center text-slate-300 hover:text-slate-500 transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="venue-modal-links" class="px-5 pb-3 flex space-x-2"></div>
+            <div id="venue-modal-list" class="overflow-y-auto px-5 pb-6 space-y-2"></div>
+        </div>
+    </div>
+
     <!-- 自分用メモモーダル -->
     <div id="memo-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
@@ -4523,6 +4538,81 @@
         }
 
         // カウントダウンやプッシュ通知から、対象の予定まで移動して詳細を開く
+        // 出演時間：メモ欄の「出演時間」「🎤」「出演：」に続く時刻範囲を拾う（取れない予定も多いので、ある時だけ表示）
+        function stageTime(e) {
+            if (!e || !e.regulation) return '';
+            const text = stripRegulationHtml(e.regulation);
+            const pats = [
+                /出演時間[^0-9]{0,20}(\d{1,2}):(\d{2})\s*[-〜~–]\s*(\d{1,2}):(\d{2})/,
+                /(?:🎙️|🎤)\s*(\d{1,2}):(\d{2})(?:\s*[-〜~–]\s*(\d{1,2}):(\d{2}))?/,
+                /出演[：:\s]*(\d{1,2}):(\d{2})\s*[-〜~–]\s*(\d{1,2}):(\d{2})/
+            ];
+            for (const p of pats) {
+                const m = text.match(p);
+                if (m) {
+                    const start = m[1].padStart(2, '0') + ':' + m[2];
+                    if (m[3] !== undefined) return start + '–' + m[3].padStart(2, '0') + ':' + m[4];
+                    return start;
+                }
+            }
+            return '';
+        }
+
+        function stageTimeHtml(e) {
+            const st = stageTime(e);
+            if (!st) return '';
+            return `<div class="flex items-center space-x-2 bg-purple-50/70 text-purple-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-microphone-lines"></i><span>出演 ${st}</span></div>`;
+        }
+
+        function stageBadgeHtml(e) {
+            const st = stageTime(e);
+            if (!st) return '';
+            return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-600"><i class="fa-solid fa-microphone-lines mr-1 text-[9px]"></i>出演 ${st}</span>`;
+        }
+
+        const TICKET_DOMAINS = ['tiget.net', 'ticketdive.com', 't-dv.com', 'livepocket.jp', 'eplus.jp', 'ticket.pia.jp', 'l-tike.com', 'passmarket', 'zaiko.io', 'peatix.com', 'confetti-web.com', 'ticket.rakuten.co.jp', 'livefans.jp'];
+        function ticketUrl(e) {
+            if (!e || !e.regulation) return '';
+            const urls = String(e.regulation).match(/https?:\/\/[^\s<>"'）\)]+/g) || [];
+            return urls.find(u => TICKET_DOMAINS.some(d => u.includes(d))) || '';
+        }
+
+        function venueScheduleHtml(e) {
+            const loc = effectiveLocation(e);
+            if (!loc) return '';
+            return splitVenues(loc).map(name => `<button onclick="event.stopPropagation(); openVenueModal('${name.replace(/'/g, "\\'")}')" class="w-full text-left text-[11px] font-semibold text-pink-500 hover:text-pink-600 px-1 py-0.5 transition"><i class="fa-solid fa-list-ul mr-1.5"></i>${escapeHtml(name)} の今後の予定を見る</button>`).join('');
+        }
+
+        function openVenueModal(name) {
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            const list = events
+                .filter(e => e.date >= todayStr && splitVenues(effectiveLocation(e)).includes(name))
+                .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+            document.getElementById('venue-modal-name').textContent = name;
+            document.getElementById('venue-modal-sub').textContent = '今後の予定 ' + list.length + ' 件';
+            document.getElementById('venue-modal-links').innerHTML = `
+                <a href="${mapsUrl(name)}" target="_blank" class="flex-1 flex items-center justify-center space-x-1.5 bg-pink-50/70 text-pink-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-pink-100 transition"><i class="fa-solid fa-location-dot"></i><span>地図で見る</span></a>
+                <a href="${transitUrl(name)}" target="_blank" class="flex-1 flex items-center justify-center space-x-1.5 bg-purple-50/70 text-purple-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-train-subway"></i><span>ルート検索</span></a>`;
+            const body = document.getElementById('venue-modal-list');
+            if (!list.length) {
+                body.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">今後の予定はまだありません</p>';
+            } else {
+                body.innerHTML = list.slice(0, 60).map(e => {
+                    const go = groups.find(g => g.name === e.group);
+                    const c = go ? go.color : '#ec4899';
+                    const df = dayjs(e.date).isValid() ? dayjs(e.date).format('M/D(dd)') : e.date;
+                    return `<button onclick="closeModal('venue-modal'); jumpToEvent('${e.id}')" class="w-full text-left bg-white border border-pink-50 rounded-2xl p-3 hover:bg-pink-50/40 transition">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <span class="text-[11px] font-bold text-slate-500">${df} ${e.time !== '00:00' ? e.time : ''}</span>
+                            ${e.group ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${escapeHtml(e.group)}</span>` : ''}
+                        </div>
+                        <p class="text-xs font-bold text-slate-800 leading-snug">${escapeHtml(displayTitleFor([e]))}</p>
+                    </button>`;
+                }).join('');
+            }
+            document.getElementById('venue-modal').classList.remove('hidden');
+        }
+
         function jumpToEvent(eventId) {
             const targetEvent = events.find(e => e.id === eventId);
             if (!targetEvent) return;
@@ -5352,9 +5442,12 @@
                                 </div>
                             ` : ''}
                             ${venueLinksHtml(e, true)}
+                            ${stageTimeHtml(e)}
+                            ${venueScheduleHtml(e)}
                             ${renderRegulationHtml(e)}
                             ${renderMemoHtml(e)}
                             <div class="flex space-x-2">
+                                ${ticketUrl(e) ? `<a href="${ticketUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center justify-center space-x-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[11px] font-bold px-3 py-2.5 rounded-2xl shadow-sm shadow-pink-500/30 hover:opacity-95 transition"><i class="fa-solid fa-ticket"></i><span>チケット</span></a>` : ''}
                                 <a href="${gcalUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center justify-center space-x-1.5 bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-calendar-plus"></i><span>Googleカレンダーに追加</span></a>
                                 <button onclick="event.stopPropagation(); shareEventById('${e.id}')" title="シェア" class="w-11 flex items-center justify-center bg-slate-50 text-slate-500 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-share-nodes"></i></button>
                             </div>
@@ -5383,6 +5476,7 @@
                                 ${deadlineBadgeHtml(rep)}
                                 ${weatherBadgeHtml(rep)}
                                 ${multiVenueBadgeHtml(rep)}
+                                ${!isMulti ? stageBadgeHtml(rep) : ''}
                                 ${chipsHtml}
                             </div>
                             ${isExpanded ? `<div class="mt-3 pt-3 border-t border-pink-50 space-y-2">${detailsHtml}</div>` : ''}
