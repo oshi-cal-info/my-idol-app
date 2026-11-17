@@ -3004,6 +3004,12 @@
             }, 150);
         }
 
+        // ==== 暇な日ルーレット ====
+        // 今日から1週間のうち、まだ行く予定に入れていないライブから1本ランダムで勧める。
+        // 推しと同じライブに出たことのあるグループ（共演）が出るライブは「発見枠」として当たりやすくする。
+        let roulettePickId = null;
+        let rouletteLastKey = null;
+
         function rouletteCandidates() {
             const today = dayjs().startOf('day');
             const until = today.add(6, 'day');
