@@ -4229,13 +4229,20 @@
             const text = stripRegulationHtml(e.regulation || '');
             const cleanV = (v) => { let s = String(v || '').replace('🏟', '').trim(); if (s.charCodeAt(0) === 0xFE0F) s = s.slice(1).trim(); return s; };
             if (!text) return '';
+            const trimVenueTail = (v) => {
+                let s = String(v || '');
+                const cuts = ['に出演', 'に出させて', 'で出演', 'にて開催', 'で開催', 'に開催', '、', '。', '📣', '♡', '♥', '★', '☆', '♪', '✨', '🎉', '（', '(', '【', '※', '！', '!', '？', '?'];
+                let end = s.length;
+                for (const c of cuts) { const ix = s.indexOf(c); if (ix > 0 && ix < end) end = ix; }
+                return s.slice(0, end).trim();
+            };
             const stages = [];
             text.split('\n').forEach(line => {
                 if (!line.includes('出演')) return;
                 const m = line.match(/[@＠]\s*(.+)$/);
                 if (m && !/[@＠]/.test(m[1])) {
-                    const v = m[1].trim();
-                    if (v && !stages.includes(v)) stages.push(v);
+                    const v = trimVenueTail(m[1]);
+                    if (v && v.length <= 40 && !/出演|頂きます|させて/.test(v) && !stages.includes(v)) stages.push(v);
                 }
             });
             if (stages.length) return stages.join(' / ');
@@ -4250,8 +4257,8 @@
                 const t = line.trim();
                 const am = t.match(/^[@＠]\s*(.+)$/);
                 if (am) {
-                    const v = cleanV(am[1]);
-                    if (v && v.length <= 60 && !v.includes('円') && !v.includes('http')) return v;
+                    const v = trimVenueTail(cleanV(am[1]));
+                    if (v && v.length <= 40 && !v.includes('円') && !v.includes('http') && !/出演|頂きます|させて/.test(v)) return v;
                 }
             }
             const VENUE_MARKERS = ['📍', '🎪', '🏟', '🏢', '🏫'];
