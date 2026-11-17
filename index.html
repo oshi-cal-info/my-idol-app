@@ -36,6 +36,8 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #fdf2f8; }
         .event-card { content-visibility: auto; contain-intrinsic-size: auto 130px; }
+        @keyframes detailPop { from { transform: scale(.96) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        .detail-pop { animation: detailPop .18s ease-out; }
     </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -231,7 +233,7 @@
     </div>
 
     <!-- イベント追加・編集モーダル -->
-    <div id="event-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="event-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50 max-h-[85vh] overflow-y-auto">
             <div class="flex justify-between items-center">
                 <h3 id="event-modal-heading" class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-calendar-plus text-pink-500 mr-2"></i>自分の予定を追加</h3>
@@ -274,7 +276,7 @@
     </div>
 
     <!-- 予定の修正モーダル（スプレッドシート由来の予定を自分だけ修正する） -->
-    <div id="edit-event-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="edit-event-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
             <div class="flex justify-between items-center">
                 <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-pen text-pink-500 mr-2"></i>予定を修正</h3>
@@ -364,7 +366,7 @@
     </div>
 
     <!-- グループ公式リンク一覧モーダル -->
-    <div id="group-links-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="group-links-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
             <div class="flex justify-between items-center">
                 <h3 id="group-links-title" class="font-bold text-base text-slate-800 flex items-center"></h3>
@@ -382,7 +384,7 @@
     </div>
 
     <!-- 会場モーダル -->
-    <div id="venue-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center" onclick="closeModal('venue-modal')">
+    <div id="venue-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-end sm:items-center justify-center" onclick="closeModal('venue-modal')">
         <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md shadow-2xl border border-pink-50 max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
             <div class="p-5 pb-3 flex items-start justify-between">
                 <div class="min-w-0">
@@ -396,8 +398,16 @@
         </div>
     </div>
 
+    <!-- イベント詳細モーダル -->
+    <div id="event-detail-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[65] hidden flex items-end sm:items-center justify-center" onclick="closeEventDetail()">
+        <div class="detail-pop relative bg-white w-full max-w-md max-h-[88vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl" onclick="event.stopPropagation()">
+            <button onclick="closeEventDetail()" class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-slate-100/90 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition shadow-sm"><i class="fa-solid fa-xmark"></i></button>
+            <div id="event-detail-body"></div>
+        </div>
+    </div>
+
     <!-- 自分用メモモーダル -->
-    <div id="memo-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="memo-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
             <div class="flex justify-between items-center">
                 <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-note-sticky text-amber-500 mr-2"></i>自分用メモ</h3>
@@ -2452,8 +2462,6 @@
             { name: "マリークラウン", color: "#3b82f6", visible: true }
         ];
         let events = [];
-        let expandedEvents = new Set();
-        let jumpExpandId = null; // 検索などから飛んだ時に、その予定のカードを確実に開くための対象ID
         let favorites = new Set();
         let activeFilters = new Set(); // 空 & !filtersExplicit = すべてのグループを表示
         let filtersExplicit = false; // true になると activeFilters の中身がそのまま「選択中のグループ」を表す（空なら0件表示）
@@ -4676,23 +4684,111 @@
             document.getElementById('venue-modal').classList.remove('hidden');
         }
 
+        // ==== イベント詳細モーダル（背面を暗くして、そのイベントだけを浮かび上がらせる表示） ====
+        let detailEventId = null;
+
+        function openEventDetail(eventId) {
+            const e0 = events.find(e => e.id === eventId);
+            if (!e0) return;
+            const modal = document.getElementById('event-detail-modal');
+            const keepScroll = detailEventId === eventId && !modal.classList.contains('hidden')
+                ? modal.querySelector(':scope > div').scrollTop : 0;
+            detailEventId = eventId;
+            const list = (e0.group ? events.filter(e => favGroupKey(e) === favGroupKey(e0)) : [e0])
+                .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+            document.getElementById('event-detail-body').innerHTML = liveDetailHtml(list);
+            modal.classList.remove('hidden');
+            modal.querySelector(':scope > div').scrollTop = keepScroll;
+        }
+
+        function closeEventDetail() {
+            document.getElementById('event-detail-modal').classList.add('hidden');
+            detailEventId = null;
+        }
+
+        function modalFav(id) {
+            toggleFavorite(id);
+            if (detailEventId) openEventDetail(detailEventId);
+        }
+
+        function liveDetailHtml(list) {
+            const rep = list[0];
+            const isMulti = list.length > 1;
+            const dateFormatted = dayjs(rep.date).isValid() ? dayjs(rep.date).format('M月D日(dd)') : rep.date;
+            const isToday = dayjs(rep.date).isToday();
+            const anyFav = list.some(e => favorites.has(e.id));
+            const times = [...new Set(list.map(e => e.time))];
+            const timeHtml = times.length === 1 ? times[0] : times[0] + '<span class="text-sm font-bold text-slate-400 ml-1">ほか</span>';
+            const chipsHtml = rep.group
+                ? list.map(e => {
+                    const go = groups.find(g => g.name === e.group);
+                    const c = go ? go.color : '#ec4899';
+                    return `<span onclick="event.stopPropagation(); openGroupLinksModal('${e.group.replace(/'/g, "\\'")}')" class="text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer" style="background-color: ${c}18; color: ${c};">${e.group}</span>`;
+                  }).join('')
+                : `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-user text-[9px] mr-1"></i>個人の予定</span>`;
+            const detailsHtml = list.map(e => {
+                const go = groups.find(g => g.name === e.group);
+                const c = go ? go.color : (e.group ? '#ec4899' : '#94a3b8');
+                const isFav = favorites.has(e.id);
+                return `
+                    <div class="rounded-2xl border border-pink-50 p-3 space-y-2">
+                        ${isMulti ? `
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group}</span>
+                                    <span class="text-[11px] font-bold text-slate-400">${e.time}</span>
+                                </div>
+                                <button onclick="event.stopPropagation(); modalFav('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
+                            </div>
+                        ` : ''}
+                        ${venueLinksHtml(e, true)}
+                        ${stageTimeHtml(e)}
+                        ${venueScheduleHtml(e)}
+                        ${renderRegulationHtml(e)}
+                        ${renderMemoHtml(e)}
+                        <div class="flex space-x-2">
+                            ${ticketUrl(e) ? `<a href="${ticketUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center justify-center space-x-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[11px] font-bold px-3 py-2.5 rounded-2xl shadow-sm shadow-pink-500/30 hover:opacity-95 transition"><i class="fa-solid fa-ticket"></i><span>チケット</span></a>` : ''}
+                            <a href="${gcalUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center justify-center space-x-1.5 bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-calendar-plus"></i><span>Googleカレンダーに追加</span></a>
+                            <button onclick="event.stopPropagation(); shareEventById('${e.id}')" title="シェア" class="w-11 flex items-center justify-center bg-slate-50 text-slate-500 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-share-nodes"></i></button>
+                        </div>
+                        ${!e.isSheet
+                            ? `<div class="flex justify-end space-x-3"><button onclick="event.stopPropagation(); openEditManualEventModal('${e.id}')" class="text-slate-300 hover:text-pink-500 text-[11px] transition"><i class="fa-solid fa-pen"></i> 編集</button><button onclick="event.stopPropagation(); deleteEvent('${e.id}')" class="text-slate-300 hover:text-red-500 text-[11px] transition"><i class="fa-solid fa-trash"></i> 削除</button></div>`
+                            : `<div class="flex justify-end"><button onclick="event.stopPropagation(); openEditEventModal('${e.id}')" class="text-slate-300 hover:text-pink-500 text-[11px] transition"><i class="fa-solid fa-pen"></i> 修正する</button></div>`}
+                    </div>
+                `;
+            }).join('');
+            return `
+                <div class="p-5">
+                    <p class="text-[11px] font-bold text-slate-400">${dateFormatted}${isToday ? ' <span class="px-2 py-0.5 bg-pink-500 text-white text-[10px] font-bold rounded-full ml-1">今日</span>' : ''}</p>
+                    <div class="flex items-center justify-between mt-1 mb-2 pr-10">
+                        <span class="text-3xl font-black text-slate-800 tracking-tight">${timeHtml}</span>
+                        ${!isMulti ? `<button onclick="modalFav('${rep.id}')" class="w-9 h-9 rounded-full flex items-center justify-center transition ${anyFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart"></i></button>` : ''}
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-base leading-snug mb-3">${displayTitleFor(list)}</h3>
+                    <div class="flex flex-wrap items-center gap-1.5 mb-4">
+                        ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
+                        ${specialBadgeHtml(rep)}
+                        ${deadlineBadgeHtml(rep)}
+                        ${weatherBadgeHtml(rep)}
+                        ${multiVenueBadgeHtml(rep)}
+                        ${!isMulti ? stageBadgeHtml(rep) : ''}
+                        ${chipsHtml}
+                    </div>
+                    <div class="space-y-2">${detailsHtml}</div>
+                </div>
+            `;
+        }
+
         function jumpToEvent(eventId) {
             const targetEvent = events.find(e => e.id === eventId);
             if (!targetEvent) return;
-            const sameLive = events
-                .filter(e => targetEvent.group ? favGroupKey(e) === favGroupKey(targetEvent) : e.id === targetEvent.id)
-                .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
-            expandedEvents.add('live_' + sameLive.map(e => e.id).join('|'));
-            // カードキーは表示中の顔ぶれで変わる（共演グループが非表示・絞り込み中だと部分集合になる）ので、
-            // 展開とスクロールはキーではなくイベントIDで照合する
-            jumpExpandId = eventId;
-            // 過去の予定が隠れている／グループで絞り込まれているとカード自体が無いので、先に表示できる状態にする
+            // 過去の予定が隠れている／グループで絞り込まれていると辿れないので、先に表示できる状態にする
             const todayStr = dayjs().format('YYYY-MM-DD');
             if (targetEvent.date < todayStr && !showPastEvents) {
                 showPastEvents = true;
                 updatePastToggleUI();
             }
-            // 対象グループ自体が非表示だとカードが描画されないので、そのグループだけ表示に戻す
+            // 対象グループ自体が非表示だと辿れないので、そのグループだけ表示に戻す
             if (targetEvent.group && !isGroupVisible(targetEvent.group)) {
                 const gi = groups.findIndex(g => g.name === targetEvent.group);
                 if (gi >= 0) {
@@ -4704,20 +4800,7 @@
                 clearFilter();
             }
             switchView('list');
-            render();
-            setTimeout(() => {
-                const card = Array.from(document.querySelectorAll('#view-list [data-livekey]'))
-                    .find(el => el.dataset.livekey.slice(5).split('|').includes(eventId));
-                if (card) {
-                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    card.classList.add('ring-2', 'ring-pink-400');
-                    setTimeout(() => card.classList.remove('ring-2', 'ring-pink-400'), 1800);
-                } else {
-                    const headers = Array.from(document.querySelectorAll('#view-list [data-date]'));
-                    const target = headers.find(h => h.dataset.date === targetEvent.date);
-                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }, 150);
+            openEventDetail(eventId);
         }
 
         // ==== 暇な日ルーレット ====
@@ -5465,7 +5548,6 @@
                 }
 
                 const cardKey = 'live_' + list.map(e => e.id).join('|');
-                const isExpanded = expandedEvents.has(cardKey) || (jumpExpandId !== null && list.some(e => e.id === jumpExpandId));
                 const anyFav = list.some(e => favorites.has(e.id));
                 const specialInfo = specialEventInfo(rep);
                 const specialFrameCls = specialInfo
@@ -5498,48 +5580,16 @@
                     ? `<span class="text-2xl font-black text-slate-800 tracking-tight">${times[0]}</span>`
                     : `<span class="text-2xl font-black text-slate-800 tracking-tight">${times[0]}<span class="text-xs font-bold text-slate-400 ml-1">ほか</span></span>`;
 
-                // 展開時：グループごとの詳細
-                const detailsHtml = list.map(e => {
-                    const go = groups.find(g => g.name === e.group);
-                    const c = go ? go.color : (e.group ? '#ec4899' : '#94a3b8');
-                    const isFav = favorites.has(e.id);
-                    return `
-                        <div class="rounded-2xl border border-pink-50 p-3 space-y-2">
-                            ${isMulti ? `
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group}</span>
-                                        <span class="text-[11px] font-bold text-slate-400">${e.time}</span>
-                                    </div>
-                                    <button onclick="event.stopPropagation(); toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
-                                </div>
-                            ` : ''}
-                            ${venueLinksHtml(e, true)}
-                            ${stageTimeHtml(e)}
-                            ${venueScheduleHtml(e)}
-                            ${renderRegulationHtml(e)}
-                            ${renderMemoHtml(e)}
-                            <div class="flex space-x-2">
-                                ${ticketUrl(e) ? `<a href="${ticketUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center justify-center space-x-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[11px] font-bold px-3 py-2.5 rounded-2xl shadow-sm shadow-pink-500/30 hover:opacity-95 transition"><i class="fa-solid fa-ticket"></i><span>チケット</span></a>` : ''}
-                                <a href="${gcalUrl(e)}" target="_blank" onclick="event.stopPropagation()" class="flex-1 flex items-center justify-center space-x-1.5 bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-calendar-plus"></i><span>Googleカレンダーに追加</span></a>
-                                <button onclick="event.stopPropagation(); shareEventById('${e.id}')" title="シェア" class="w-11 flex items-center justify-center bg-slate-50 text-slate-500 rounded-2xl hover:bg-slate-100 transition"><i class="fa-solid fa-share-nodes"></i></button>
-                            </div>
-                            ${!e.isSheet
-                                ? `<div class="flex justify-end space-x-3"><button onclick="event.stopPropagation(); openEditManualEventModal('${e.id}')" class="text-slate-300 hover:text-pink-500 text-[11px] transition"><i class="fa-solid fa-pen"></i> 編集</button><button onclick="event.stopPropagation(); deleteEvent('${e.id}')" class="text-slate-300 hover:text-red-500 text-[11px] transition"><i class="fa-solid fa-trash"></i> 削除</button></div>`
-                                : `<div class="flex justify-end"><button onclick="event.stopPropagation(); openEditEventModal('${e.id}')" class="text-slate-300 hover:text-pink-500 text-[11px] transition"><i class="fa-solid fa-pen"></i> 修正する</button></div>`}
-                        </div>
-                    `;
-                }).join('');
 
                 html += `
                     <div data-livekey="${cardKey}" class="event-card bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${specialFrameCls}">
                         ${barHtml}
-                        <div class="flex-1 p-4 cursor-pointer" onclick="toggleEventDetail('${cardKey}')">
+                        <div class="flex-1 p-4 cursor-pointer" onclick="openEventDetail('${rep.id}')">
                             <div class="flex items-center justify-between mb-2">
                                 ${timeHtml}
                                 <div class="flex items-center space-x-2">
                                     ${!isMulti ? `<button onclick="event.stopPropagation(); toggleFavorite('${rep.id}')" class="w-7 h-7 rounded-full flex items-center justify-center transition ${anyFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-xs"></i></button>` : ''}
-                                    <span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"><i class="fa-solid fa-chevron-down text-[10px]"></i></span>
+                                    <span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-chevron-right text-[10px]"></i></span>
                                 </div>
                             </div>
                             <h4 class="font-bold text-slate-800 text-sm leading-snug mb-2">${displayTitleFor(list)}</h4>
@@ -5552,7 +5602,6 @@
                                 ${!isMulti ? stageBadgeHtml(rep) : ''}
                                 ${chipsHtml}
                             </div>
-                            ${isExpanded ? `<div class="mt-3 pt-3 border-t border-pink-50 space-y-2">${detailsHtml}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -5694,26 +5743,6 @@
             if (!headers.length) return;
             const target = headers.find(h => h.dataset.date >= todayStr) || headers[headers.length - 1];
             target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        function toggleEventDetail(id) {
-            if (jumpExpandId !== null && id.slice(5).split('|').includes(jumpExpandId)) {
-                jumpExpandId = null; // 手動で開閉したらジャンプ展開は解除（閉じられるように）
-            }
-            if (expandedEvents.has(id)) {
-                expandedEvents.delete(id);
-            } else {
-                expandedEvents.add(id);
-            }
-            if (currentView === 'going') {
-                renderGoingView();
-            } else if (currentView === 'month') {
-                renderMonthView();
-            } else if (currentView === 'week') {
-                renderWeekView();
-            } else {
-                renderListView();
-            }
         }
 
         function selectDate(dateStr) {
