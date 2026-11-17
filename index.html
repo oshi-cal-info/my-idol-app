@@ -20,8 +20,6 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="theme-color" content="#ec4899">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isToday.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/locale/ja.js"></script>
@@ -418,7 +416,7 @@
         <div class="flex items-center space-x-2 p-3 border-b border-pink-100/70">
             <div class="relative flex-1">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
-                <input id="venue-map-search" type="text" placeholder="会場名で検索" oninput="renderVenueMapList()" class="w-full pl-9 pr-3 py-2.5 bg-pink-50/50 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                <input id="venue-map-search" type="text" placeholder="会場名で検索" oninput="venueListLimit = 60; renderVenueMapList()" class="w-full pl-9 pr-3 py-2.5 bg-pink-50/50 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
             </div>
             <button onclick="closeVenueMap()" class="w-9 h-9 rounded-full bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-xmark"></i></button>
         </div>
@@ -4767,6 +4765,26 @@
         let venueMapMarkers = {};
         let venueMapData = [];
         let selectedMapVenue = null;
+        let venueListLimit = 60;
+        let leafletLoading = null;
+
+        // Leafletは地図を初めて開くときだけ読み込む（アプリ起動を重くしないため）
+        function loadLeaflet() {
+            if (window.L) return Promise.resolve();
+            if (leafletLoading) return leafletLoading;
+            leafletLoading = new Promise((resolve, reject) => {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
+                document.head.appendChild(link);
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+            return leafletLoading;
+        }
 
         function buildVenueMapData() {
             const todayStr = dayjs().format('YYYY-MM-DD');
@@ -4785,22 +4803,24 @@
         function openVenueMap() {
             buildVenueMapData();
             selectedMapVenue = null;
+            venueListLimit = 60;
             document.getElementById('venue-map').style.height = '';
             document.getElementById('venue-map-search').value = '';
             const modal = document.getElementById('venue-map-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             renderVenueMapPanel();
-            if (window.L) {
+            loadLeaflet().then(() => {
+                if (modal.classList.contains('hidden')) return;
                 document.getElementById('venue-map').style.display = '';
                 if (!venueMap) {
                     venueMap = L.map('venue-map').setView([35.676, 139.75], 11);
                     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 }).addTo(venueMap);
                 }
                 setTimeout(() => { venueMap.invalidateSize(); refreshVenueMapPins(); }, 80);
-            } else {
+            }).catch(() => {
                 document.getElementById('venue-map').style.display = 'none';
-            }
+            });
         }
 
         function closeVenueMap() {
@@ -4880,12 +4900,14 @@
             if (selectedMapVenue) return;
             const q = (document.getElementById('venue-map-search').value || '').trim().toLowerCase();
             const panel = document.getElementById('venue-map-panel');
-            const list = venueMapData.filter(v => !q || v.name.toLowerCase().includes(q));
-            panel.innerHTML = `<p class="text-[11px] text-slate-400 px-1 pb-2">今後の予定がある会場 ${list.length} 件（ピンクのピンは地図に表示されます）</p>` + list.map(v => `
+            const matches = venueMapData.filter(v => !q || v.name.toLowerCase().includes(q));
+            const list = matches.slice(0, venueListLimit);
+            panel.innerHTML = `<p class="text-[11px] text-slate-400 px-1 pb-2">今後の予定がある会場 ${matches.length} 件（ピンクのピンは地図に表示されます）</p>` + list.map(v => `
                 <button onclick="selectMapVenue('${v.name.replace(/'/g, "\\'")}', true)" class="w-full text-left bg-white border border-pink-50 rounded-2xl p-3 mb-2 hover:bg-pink-50/40 transition flex items-center justify-between">
                     <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-location-dot ${v.geo ? 'text-pink-500' : 'text-slate-200'} mr-1.5"></i>${escapeHtml(v.name)}</span>
                     <span class="text-[10px] font-bold text-slate-400 flex-shrink-0 ml-2">${v.count}件</span>
-                </button>`).join('');
+                </button>`).join('') + (matches.length > list.length ? `
+                <button onclick="venueListLimit += 100; renderVenueMapList()" class="w-full text-center bg-white border border-pink-100 rounded-2xl p-3 mb-2 text-xs font-bold text-pink-500">もっと見る（残り${matches.length - list.length}件）</button>` : '');
         }
 
         // ==== イベント詳細モーダル（背面を暗くして、そのイベントだけを浮かび上がらせる表示） ====
