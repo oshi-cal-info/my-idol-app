@@ -422,7 +422,7 @@
             </div>
             <button onclick="closeVenueMap()" class="w-9 h-9 rounded-full bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div id="venue-map" class="w-full h-[42%] flex-shrink-0 bg-slate-100"></div>
+        <div id="venue-map" class="w-full h-[60%] flex-shrink-0 bg-slate-100"></div>
         <div id="venue-map-panel" class="flex-1 overflow-y-auto p-3 bg-pink-50/30"></div>
     </div>
 
@@ -4785,6 +4785,7 @@
         function openVenueMap() {
             buildVenueMapData();
             selectedMapVenue = null;
+            document.getElementById('venue-map').style.height = '';
             document.getElementById('venue-map-search').value = '';
             const modal = document.getElementById('venue-map-modal');
             modal.classList.remove('hidden');
@@ -4824,9 +4825,20 @@
             selectedMapVenue = name;
             const v = venueMapData.find(x => x.name === name);
             if (pan && v && v.geo && venueMap) venueMap.panTo(v.geo);
+            // 会場を選んだら地図を縮めて、予定リストを広く見せる
+            document.getElementById('venue-map').style.height = '34%';
+            if (venueMap) setTimeout(() => venueMap.invalidateSize(), 80);
             refreshVenueMapPins();
             renderVenueMapPanel();
             document.getElementById('venue-map-panel').scrollTop = 0;
+        }
+
+        function backToVenueList() {
+            selectedMapVenue = null;
+            document.getElementById('venue-map').style.height = '';
+            refreshVenueMapPins();
+            renderVenueMapPanel();
+            if (venueMap) setTimeout(() => venueMap.invalidateSize(), 80);
         }
 
         function renderVenueMapPanel() {
@@ -4838,7 +4850,7 @@
                     .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
                 const panel = document.getElementById('venue-map-panel');
                 panel.innerHTML = `
-                    <button onclick="selectedMapVenue = null; refreshVenueMapPins(); renderVenueMapPanel()" class="text-[11px] font-bold text-pink-500 mb-2"><i class="fa-solid fa-chevron-left mr-1"></i>会場一覧に戻る</button>
+                    <button onclick="backToVenueList()" class="text-[11px] font-bold text-pink-500 mb-2"><i class="fa-solid fa-chevron-left mr-1"></i>会場一覧に戻る</button>
                     <h3 class="font-bold text-slate-800 text-sm mb-1">${escapeHtml(name)}</h3>
                     <p class="text-[11px] text-slate-400 mb-2">今後の予定 ${list.length} 件</p>
                     <div class="flex space-x-2 mb-3">
