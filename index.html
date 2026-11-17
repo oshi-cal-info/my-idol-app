@@ -2254,6 +2254,149 @@
             }
         };
 
+        // グループのSpotifyアーティスト画像（160px優先、無い場合は300/320px）— 推しグループ管理チップのアバター用
+        const GROUP_IMAGES = {
+            "#よーよーよー": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178b8735b4bc69d0a7049250e9d",
+            "AQA": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02599e40026eec258577918151",
+            "Bunny La Crew": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02efc88612bb5cc10e4671edcc",
+            "Cherie!": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17815de1a00d48ce329e02497f3",
+            "Melodys High": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02746fd15d21fe6a2eef3fb624",
+            "My_Stage": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e027a05b8931b1b67ed9713b48f",
+            "RePLAY": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02332d85895bf1cc1bbfc38d53",
+            "ReverseTokyo": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178175d91cce414148c1ed9f65d",
+            "iCONiQ": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02feaaff8ac5ac6bf2219db3b5",
+            "あいすなっつ": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e0283ded816cb0348e4ff9f44a6",
+            "あすとりーのうさぎ": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e028539c58fed6ce9154bf88f89",
+            "まぶだちゅ！": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02d9ba84b64dada88a02c605cd",
+            "パラディーク": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02c1f239f9adbb3646a5453d9c",
+            "君と青": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e0224b5fd587ac325e091ff96e3",
+            "泡沫パーティーズ": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e0243c00bf16544946da9646bf6",
+            "踊れ！神風": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178e7d75e1ea930e9107371ce75",
+            "BUNGEE GUM.": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02f16c56dc0933a4108e9d3e2d",
+            "HIBANA": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f1788a5b30c5e1ded5e5689b799a",
+            "vVibe!": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178da7048cb6d43a19ea0a27828",
+            "P1QUE": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178795ab36b5995a11a641bf5a0",
+            "HERO CHARM": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02e1aebfb44bf9391dee606f35",
+            "FIRST DREAM": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178e1175b938e9d0fcf2c0872b2",
+            "FLAPSTAR": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02baa7511e0fa11491a48bb337",
+            "ポラリスマイル": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178a32cfeb40c4a83ebf152f6f2",
+            "LIVREAL": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e027d7e3e963870f74375e7f152",
+            "ルルネージュ": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02b90b49f2729b96c91f4d6aa8",
+            "パラレルサイダー": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f1787ad062c1ead997fc9eb60f2a",
+            "夜光性アミューズ": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178d347b1d54b4fd9ed27701e3a",
+            "LADYBABY": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f17814b87207cff3233bc75e22b1",
+            "TENRIN": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178e40e1609e88b8a30bb3d53f7",
+            "AdamLilith": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17831d38460e147e96ef002e9bb",
+            "Appare!": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178ed5124defcb2c34e12339682",
+            "#Mooove!": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178ba4d3a1d7d206b5c64731dcb",
+            "可憐なアイボリー": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178d928a642070121d8d0e4a1e9",
+            "AMO million": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e021c58af592634179498f22a74",
+            "AZATOY": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02a70ef194f242fdcedb68abd2",
+            "BNSI": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f1786b2b7f9f21ec179117ab69d6",
+            "BOCCHI。": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02e0f7e9c4fdf50327261120d5",
+            "Brave Mental Orchestra": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02c1df87b9e33c344d93203673",
+            "DREAMING MONSTER": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e0208b89c0d268c0f1d958dc2a3",
+            "EcruRare": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02278373055394617e85e44cf7",
+            "HelloYouth": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178add5ee9880f09c7c58556ef6",
+            "INUWASI": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178ba91108dc2f7ca2c24780620",
+            "JAPANARIZM": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02ff0096b4d9e588420274b215",
+            "Lumiétoile": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e026bd1b101cf4cfd919be08177",
+            "NEFRALISE": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178c66d0f6e424fcb56844cdb9d",
+            "NILUNLOCK": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e023793fea46e5c6157c7d35cb2",
+            "XINXIN": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e024e216ba8382d3e9fe7be07c0",
+            "neOen": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17877e951eb161e6f36a3a53806",
+            "α+": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178d503d0f3cfba7101dd42f11d",
+            "すべての瞬間は君だった。": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02acb4a2a84e44a36d4a456adf",
+            "虹色の飛行少女": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e028e1b79070cc8aaac1635d845",
+            "蛍": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02ee0cf971fc7e1dadbb2d077d",
+            "Bibbidi Chu": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02fac953f8cdbf12155cf1b534",
+            "RealRomantic": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178c2dbecf99f077e95edf5e00b",
+            "RiNCENT#": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17833e54542951e9d9bf0bc2f26",
+            "THE ORCHESTRA TOKYO": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17842515aeda6bb250b25c58834",
+            "Task have Fun": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178dffa62123b031837a8b08936",
+            "Tohkei": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02b049420732668fd8e43dd992",
+            "buGG": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02abf84086e9b8daed34d58bfb",
+            "うゆさきな": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e021806718594f67cf7f937b727",
+            "アストレイル": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17819cdecd42767b774fd30cff8",
+            "アップアップガールズ（2）": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178b900cd1b2aaf69f2f2688396",
+            "キングサリ": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f17835bfda47c7fbfa1c67639ed1",
+            "クマリデパート": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178f1c5adea171b89715cdb95ac",
+            "ジエメイ": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178524e949f28827ea65e9357b4",
+            "テラテラ": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178a8cc1eec352b57566b2f5ed3",
+            "ハレとハレ！": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e028574782ec87d490241cac5fb",
+            "ラナキュラ": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e028d07dfa5f2dd1803926ba62c",
+            "玉響storage": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e023649ea3d475f5bfc4ef2041a",
+            "美味しい曖昧": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02cc71b234f4fb1ea443945f2e",
+            "衛星とカラテア": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178309662df994d8fd7b0aa5387",
+            "限りなく白く": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02a719cea5381c5c293c12a672",
+            "LOVE 9 LOVE": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02306268b25b7ff2e47da6290d",
+            "LOVE CHANT": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f17866d55a7d8d824d0206f63c6f",
+            "SITUASION": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f17855f64df53688fbfd2ea196d1",
+            "さとりモンスター": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178e1ad3803707c09380152e9f7",
+            "わーすた": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f1782455abcc2d6d3ebc97a44154",
+            "Peel the Apple": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178ffc84737be7455a5fcc42faf",
+            "高嶺のなでしこ": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178edff12bad3a5c650f2e94cc7",
+            "FES☆TIVE": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178afc27480a833e117b7725e38",
+            "AsIs": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f1783bf593ea4d54b9f380a69ba3",
+            "手羽先センセーション": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178f804bd7cf027dd26c71a6bf6",
+            "Gran☆Ciel": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02064112a62f9a072a55db7383",
+            "melnoir": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02d61dea6c0f0c98ff0bc44da2",
+            "遥か、彼方。": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02da4238d9730935cf661f35ac",
+            "WASURENA": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e0246200099ef616e277c5e2dc2",
+            "ルージュブック": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178a82fc426ddefd7960140d88d",
+            "Pastel Closet": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e024559414b422dd866e9b16770",
+            "One Last Bloom": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02f16c120ff8f5ca8469f2bcc6",
+            "MyDearDarlin'": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178fb0509554ff66b4878c3d838",
+            "hakanai": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0205ef40f575918c3d5ff8ea84",
+            "SEKAIE☆": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02156b182de63574a38a754cf7",
+            "虜なるプレリュード": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02644387cd72286a2d4ed489e5",
+            "HAPPY CREATORS": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178d3aeb6090a8f2c1e1d14f21d",
+            "mementoa": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02f74f63c8fa9e23217680a3d9",
+            "宵越しのアンサンブル": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02561090fb9fa53251ad3d8f1b",
+            "透色ドロップ": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e0216d38afbbc5a66e5f17df2e3",
+            "AMUTA": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e0212aa06601ad3b19b0f301ffd",
+            "Root mimi": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e022a045b16e16f87def49e6500",
+            "Toi Toi Toi": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f1788256a8b8352e9725ac4dd1c7",
+            "log you": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178120b779ebf2befaf8bb6f856",
+            "NEVER END ROLL": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f1781803f18bf7b3befa29069975",
+            "Palette Parade": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178c53267ee348a90a2946d05b6",
+            "LIT MOON": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17894548d883947125f089a8668",
+            "MyDresscode": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02457e4c67b663317973c9ad55",
+            "べるべっとセンテンス": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02839e1a3f6267b98407452663",
+            "ワガママなラストノート": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0273aeb1d69fad40ff5f3dbb40",
+            "ファーストプレイリスト": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17839036007f12a554d3c56d71d",
+            "17秒前の瞬きに光を": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178a3ae15fac9c58506859a9bd6",
+            "MATE×MATE!": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02534451e793404a352b98a57c",
+            "ParaLulu": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02cb5a5d41ea365bc1d469184f",
+            "ZUTTOMOTTO【ずっともっと】": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f17860fd270bdcae6457e9176228",
+            "なみだ色の消しごむ": "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e023f78d4020bc04027dfca9d7f",
+            "LilyS/ash": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e021a74ad190efed25ce27ebecf",
+            "ドレスコード": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178c8b7252d002783c43545ec23",
+            "Sweet Alley": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02d7b3e342c5a72a4ef94c40f7",
+            "CURE'T": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02108d381b73cad7c3cc982810",
+            "ドラマチックレコード": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178526d80f709c9bd144d8173af",
+            "君に、胸キュン。": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178411bb7deadb02e0447950caa",
+            "煌めき☆アンフォレント": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f1781c813b19efec9daaf3c9ace6",
+            "VVSiS": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02efe4eb6d7d7ac1d7d5e182c4",
+            "iON!": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f1782ec15052c58f77faf605d814",
+            "HzMe": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f1781c88e55bfa4b64949dbf516b",
+            "myojou": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e028ffd40cebbe4c5e4f0111b51",
+            "ナナコロビヤオキ": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178e9e47a6875ca62c44ecfa30d",
+            "MEGAFON": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17842e9a93a253f682a818e44b9",
+            "fav me": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178270fc02200a23c3ba1aff451",
+            "iLiFE!": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178596c6e6deeba5e4ef3855953",
+            "のんふぃく！": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f1784882b1243e0c087876a7519f",
+            "ラストシーン": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f17890109772aa20bd7e8460fb65",
+            "テンシンランマン": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178e06264bf7b9c3ae2755d0d69",
+            "JamsCollection": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178c26ab82df186bfdccf693704",
+            "マリークラウン": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f1785ba94ee670d5a308dc118ed6",
+            "Devil ANTHEM.": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f178464107067ea4caf146e0b5b4",
+            "YUGUREMI": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e020c1db492f0b7ce73348344da",
+            "Axelight": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02f4b07db515f71577e72b4d49",
+            "フューチャーサイダー": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178664d6a421e3ce91e8b380014",
+            "アキシブproject": "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02f9bbd66ac907da156668cfcd",
+            "MixVeil": "https://image-cdn-fa.spotifycdn.com/image/ab6761610000f17848e0a6b9d01b9b149c573a96"
+        };
         const LINK_META = {
             x: { label: "X (Twitter)", icon: "fa-brands fa-x-twitter", color: "#000000" },
             instagram: { label: "Instagram", icon: "fa-brands fa-instagram", color: "#e1306c" },
@@ -3814,7 +3957,7 @@
                 chips += `
                     <div class="relative flex items-center gap-2 p-2 rounded-2xl border shadow-sm cursor-pointer select-none [-webkit-touch-callout:none] ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}14;border-color:${g.color}45;`}"
                         onpointerdown="chipPointerDown(${index})" onpointerup="chipPointerEnd()" onpointerleave="chipPointerEnd()" onpointercancel="chipPointerEnd()" oncontextmenu="return false" onclick="chipClick(${index})">
-                        <span class="relative w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-[13px] font-black shadow-sm" style="background-color:${g.color}">${escapeHtml(groupInitial(g.name))}${isHidden ? '' : `<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-white rounded-full shadow flex items-center justify-center"><i class="fa-solid fa-check text-[8px]" style="color:${g.color}"></i></span>`}</span>
+                        ${groupAvatarHtml(g, !isHidden)}
                         <span class="flex-1 min-w-0 text-[11px] font-bold leading-tight ${isHidden ? 'text-slate-400' : 'text-slate-800'}" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHtml(g.name)}</span>
                         ${notifyOn ? '' : '<i class="fa-solid fa-bell-slash text-[9px] text-slate-300 absolute top-1.5 right-1.5"></i>'}
                     </div>
@@ -3834,6 +3977,20 @@
             const s = (name || '').replace(/^[^\p{L}\p{N}]+/u, '');
             const ch = s.charAt(0) || (name || '').charAt(0) || '?';
             return /[a-z]/.test(ch) ? ch.toUpperCase() : ch;
+        }
+
+        // チップのアバター: Spotify画像があれば写真、無ければ色＋頭文字（読み込み失敗時も頭文字が残る）
+        function groupAvatarHtml(g, showCheck) {
+            const img = (typeof GROUP_IMAGES !== 'undefined' && GROUP_IMAGES[g.name]) ? GROUP_IMAGES[g.name] : '';
+            return `
+                <span class="relative w-8 h-8 flex-shrink-0">
+                    <span class="block w-8 h-8 rounded-lg overflow-hidden shadow-sm relative" style="background-color:${g.color}">
+                        <span class="absolute inset-0 flex items-center justify-center text-white text-[13px] font-black">${escapeHtml(groupInitial(g.name))}</span>
+                        ${img ? `<img src="${img}" alt="" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover" onerror="this.remove()">` : ''}
+                    </span>
+                    ${showCheck ? `<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-white rounded-full shadow flex items-center justify-center z-10"><i class="fa-solid fa-check text-[8px]" style="color:${g.color}"></i></span>` : ''}
+                </span>
+            `;
         }
 
         let chipPressTimer = null;
@@ -3868,7 +4025,7 @@
             document.getElementById('group-action-body').innerHTML = `
                 <div class="flex items-center justify-between mb-2 px-1">
                     <span class="flex items-center space-x-2.5 min-w-0">
-                        <span class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-[13px] font-black shadow-sm" style="background-color:${g.color}">${escapeHtml(groupInitial(g.name))}</span>
+                        ${groupAvatarHtml(g, false)}
                         <span class="font-bold text-sm text-slate-800 break-words">${escapeHtml(g.name)}</span>
                     </span>
                     <button onclick="closeModal('group-action-modal')" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0 ml-2"><i class="fa-solid fa-xmark"></i></button>
