@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #fdf2f8; }
+        .event-card { content-visibility: auto; contain-intrinsic-size: auto 130px; }
     </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -1876,21 +1877,31 @@
         // タイトルの末尾に会場名がくっついた行（『MARQUEE Fes.』渋谷Spotify O-EAST のような形）は、
         // 会場部分を落としてから照合する。判定には、その行自身の会場（メモ欄から拾えた分を含む）と
         // シート・天気辞書にある実在の会場名を使う。タイトル本体が残らない場合は落とさない。
+        // 会場名の末尾チェック用：空白を除いた会場名一覧（長い順）をキャッシュする
+        let venueCompactCache = null;
+        function venueCompactList() {
+            if (venueCompactCache) return venueCompactCache;
+            venueCompactCache = venueDict()
+                .map(v => String(v || '').replace(/\s+/g, ''))
+                .filter(v => v.length >= 4)
+                .sort((a, b) => b.length - a.length);
+            return venueCompactCache;
+        }
+
         function stripVenueSuffix(body, e) {
             const compact = String(body || '').replace(/\s+/g, '');
             if (compact.length < 8) return body;
-            const candidates = [];
-            const own = effectiveLocation(e);
-            if (own) candidates.push(own);
-            venueDict().forEach(v => candidates.push(v));
-            for (const v of candidates) {
-                const vc = String(v || '').replace(/\s+/g, '');
-                if (vc.length < 4) continue;
-                if (compact.length > vc.length && compact.endsWith(vc)) {
-                    // 会場を落としたことで末尾に残る「.」などは、通常の正規化と同じく取り除く
-                    return compact.slice(0, -vc.length).replace(/[-〜~・.。\s]+$/, '');
-                }
+            // 会場を落としたことで末尾に残る「.」などは、通常の正規化と同じく取り除く
+            const cut = (suffixLen) => compact.slice(0, -suffixLen).replace(/[-〜~・.。\s]+$/, '');
+            // 辞書の会場名と、その行自身の会場（メモ欄から拾えた分。市名まで含む形がある）の
+            // 両方を試し、より長く一致した方を落とす（短い方を先に落とすと市名などが残って合体しない）
+            let best = 0;
+            for (const vc of venueCompactList()) {
+                if (compact.length > vc.length && compact.endsWith(vc)) { best = vc.length; break; }
             }
+            const own = String(effectiveLocation(e) || '').replace(/\s+/g, '');
+            if (own.length >= 4 && own.length > best && compact.length > own.length && compact.endsWith(own)) best = own.length;
+            if (best) return cut(best);
             return body;
         }
 
@@ -1910,10 +1921,14 @@
         // 決められないので、eventsが差し替わるたびにキーを引き直す。
         let groupKeyCacheSrc = null;
         let groupKeyCache = new Map();
-        function rebuildGroupKeys() {
+        let groupKeysIncludePast = false;
+        function rebuildGroupKeys(includePast) {
             const map = new Map();
             const clusters = new Map();
+            const todayStr = dayjs().format('YYYY-MM-DD');
             events.forEach(ev => {
+                // 初回は未来分だけ引き直して軽くする。過去分は必要になった時点で全件引き直す
+                if (!includePast && ev.date && ev.date < todayStr) return;
                 const p = favGroupParts(ev);
                 if (p.solo) { map.set(ev.id, p.solo); return; }
                 if (!clusters.has(p.stem)) clusters.set(p.stem, { days: new Set(), items: [] });
@@ -1926,12 +1941,18 @@
             });
             groupKeyCache = map;
             groupKeyCacheSrc = events;
+            groupKeysIncludePast = !!includePast;
         }
 
         function favGroupKey(e) {
-            if (groupKeyCacheSrc !== events) rebuildGroupKeys();
+            if (groupKeyCacheSrc !== events) rebuildGroupKeys(false);
             const cached = groupKeyCache.get(e.id);
             if (cached) return cached;
+            if (!groupKeysIncludePast) {
+                rebuildGroupKeys(true);
+                const full = groupKeyCache.get(e.id);
+                if (full) return full;
+            }
             const p = favGroupParts(e);
             return p.solo || (p.stem + (p.day || ''));
         }
@@ -2678,7 +2699,19 @@
             }
         // 会場欄が空の行は、特典・メモ欄から会場を拾う。
         // 優先順位: 「出演…@会場」(そのグループの出演会場) > 「会場：…」(イベント全体の会場)
+        // 会場の抽出は正規表現でメモ欄全文を走査する重い処理なので、結果を予定ごとにキャッシュする。
+        // 元データ（会場欄・メモ欄）が変わっていたら引き直す。
+        const effLocCache = new WeakMap();
         function effectiveLocation(e) {
+            if (!e) return '';
+            const hit = effLocCache.get(e);
+            if (hit && hit.loc === (e.location || '') && hit.reg === (e.regulation || '')) return hit.val;
+            const val = computeEffectiveLocation(e);
+            effLocCache.set(e, { loc: e.location || '', reg: e.regulation || '', val });
+            return val;
+        }
+
+        function computeEffectiveLocation(e) {
             if (!e) return '';
             const ownLoc = String(e.location || '').trim();
             if (ownLoc && ownLoc !== '詳細受付準備中') return e.location;
@@ -3826,7 +3859,7 @@
                 }).join('');
 
                 html += `
-                    <div data-livekey="${cardKey}" class="bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${specialFrameCls}">
+                    <div data-livekey="${cardKey}" class="event-card bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${specialFrameCls}">
                         ${barHtml}
                         <div class="flex-1 p-4 cursor-pointer" onclick="toggleEventDetail('${cardKey}')">
                             <div class="flex items-center justify-between mb-2">
