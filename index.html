@@ -2453,6 +2453,7 @@
         ];
         let events = [];
         let expandedEvents = new Set();
+        let jumpExpandId = null; // 検索などから飛んだ時に、その予定のカードを確実に開くための対象ID
         let favorites = new Set();
         let activeFilters = new Set(); // 空 & !filtersExplicit = すべてのグループを表示
         let filtersExplicit = false; // true になると activeFilters の中身がそのまま「選択中のグループ」を表す（空なら0件表示）
@@ -4681,13 +4682,23 @@
             const sameLive = events
                 .filter(e => targetEvent.group ? favGroupKey(e) === favGroupKey(targetEvent) : e.id === targetEvent.id)
                 .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
-            const cardKey = 'live_' + sameLive.map(e => e.id).join('|');
-            expandedEvents.add(cardKey);
+            expandedEvents.add('live_' + sameLive.map(e => e.id).join('|'));
+            // カードキーは表示中の顔ぶれで変わる（共演グループが非表示・絞り込み中だと部分集合になる）ので、
+            // 展開とスクロールはキーではなくイベントIDで照合する
+            jumpExpandId = eventId;
             // 過去の予定が隠れている／グループで絞り込まれているとカード自体が無いので、先に表示できる状態にする
             const todayStr = dayjs().format('YYYY-MM-DD');
             if (targetEvent.date < todayStr && !showPastEvents) {
                 showPastEvents = true;
                 updatePastToggleUI();
+            }
+            // 対象グループ自体が非表示だとカードが描画されないので、そのグループだけ表示に戻す
+            if (targetEvent.group && !isGroupVisible(targetEvent.group)) {
+                const gi = groups.findIndex(g => g.name === targetEvent.group);
+                if (gi >= 0) {
+                    groups[gi].visible = true;
+                    saveUserData();
+                }
             }
             if (!matchesActiveFilters(targetEvent.group)) {
                 clearFilter();
@@ -4696,7 +4707,7 @@
             render();
             setTimeout(() => {
                 const card = Array.from(document.querySelectorAll('#view-list [data-livekey]'))
-                    .find(el => el.dataset.livekey === cardKey);
+                    .find(el => el.dataset.livekey.slice(5).split('|').includes(eventId));
                 if (card) {
                     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     card.classList.add('ring-2', 'ring-pink-400');
@@ -5454,7 +5465,7 @@
                 }
 
                 const cardKey = 'live_' + list.map(e => e.id).join('|');
-                const isExpanded = expandedEvents.has(cardKey);
+                const isExpanded = expandedEvents.has(cardKey) || (jumpExpandId !== null && list.some(e => e.id === jumpExpandId));
                 const anyFav = list.some(e => favorites.has(e.id));
                 const specialInfo = specialEventInfo(rep);
                 const specialFrameCls = specialInfo
@@ -5686,6 +5697,9 @@
         }
 
         function toggleEventDetail(id) {
+            if (jumpExpandId !== null && id.slice(5).split('|').includes(jumpExpandId)) {
+                jumpExpandId = null; // 手動で開閉したらジャンプ展開は解除（閉じられるように）
+            }
             if (expandedEvents.has(id)) {
                 expandedEvents.delete(id);
             } else {
@@ -6059,24 +6073,7 @@
             // ?event=<id> 付きで開かれた場合は、その予定まで移動して詳細を開く（プッシュ通知タップ用・フェーズ5）
             const eventIdParam = params.get('event');
             if (eventIdParam) {
-                const targetEvent = events.find(e => e.id === eventIdParam);
-                if (targetEvent) {
-                    if (targetEvent.date < dayjs().format('YYYY-MM-DD') && !showPastEvents) {
-                        showPastEvents = true;
-                        updatePastToggleUI();
-                    }
-                    const sameLive = events
-                        .filter(e => targetEvent.group ? favGroupKey(e) === favGroupKey(targetEvent) : e.id === targetEvent.id)
-                        .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
-                    expandedEvents.add('live_' + sameLive.map(e => e.id).join('|'));
-                    switchView('list');
-                    render();
-                    setTimeout(() => {
-                        const headers = Array.from(document.querySelectorAll('#view-list [data-date]'));
-                        const target = headers.find(h => h.dataset.date === targetEvent.date);
-                        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 150);
-                }
+                jumpToEvent(eventIdParam);
             }
 
             handleIncomingShare();
