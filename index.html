@@ -1873,13 +1873,35 @@
             return [...new Set(b)].sort().join('');
         }
 
+        // タイトルの末尾に会場名がくっついた行（『MARQUEE Fes.』渋谷Spotify O-EAST のような形）は、
+        // 会場部分を落としてから照合する。判定には、その行自身の会場（メモ欄から拾えた分を含む）と
+        // シート・天気辞書にある実在の会場名を使う。タイトル本体が残らない場合は落とさない。
+        function stripVenueSuffix(body, e) {
+            const compact = String(body || '').replace(/\s+/g, '');
+            if (compact.length < 8) return body;
+            const candidates = [];
+            const own = effectiveLocation(e);
+            if (own) candidates.push(own);
+            venueDict().forEach(v => candidates.push(v));
+            for (const v of candidates) {
+                const vc = String(v || '').replace(/\s+/g, '');
+                if (vc.length < 4) continue;
+                if (compact.length > vc.length && compact.endsWith(vc)) {
+                    // 会場を落としたことで末尾に残る「.」などは、通常の正規化と同じく取り除く
+                    return compact.slice(0, -vc.length).replace(/[-〜~・.。\s]+$/, '');
+                }
+            }
+            return body;
+        }
+
         function favGroupParts(e) {
             const n = normalizeEventTitle(e.title);
             if (!n) return { solo: `${e.date}__${e.title}` };
             if (isPlaceholderTitle(n)) return { solo: `${e.date}__solo__${e.id}` };
             const m = n.match(/__day[12]$/);
             const day = m ? m[0] : '';
-            const body = m ? n.slice(0, -day.length) : n;
+            let body = m ? n.slice(0, -day.length) : n;
+            body = stripVenueSuffix(body, e);
             return { stem: `${e.date}__${eventMatchKey(body)}`, day };
         }
 
