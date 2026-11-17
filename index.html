@@ -4217,9 +4217,64 @@
             if (!e) return '';
             const hit = effLocCache.get(e);
             if (hit && hit.loc === (e.location || '') && hit.reg === (e.regulation || '')) return hit.val;
-            const val = computeEffectiveLocation(e);
+            const raw = computeEffectiveLocation(e);
+            const val = raw ? canonicalVenue(raw) : raw;
             effLocCache.set(e, { loc: e.location || '', reg: e.regulation || '', val });
             return val;
+        }
+
+        // 会場名の表記揺れ正規化：大文字小文字・全角半角・空白・都市名プレフィックスの違いを吸収し、
+        // 同じ会場は「一番多い表記」に統一して返す（会場ページや天気の照合も揃う）
+        const VENUE_PREFIXES = ['渋谷区', '新宿区', '東京都', '大阪市', '名古屋市', '渋谷', '新宿', '池袋', '秋葉原', '品川', '東京', '大阪', '名古屋', 'shibuya', 'shinjuku', 'ikebukuro', 'akihabara', 'tokyo', 'osaka', 'nagoya'];
+        const VENUE_KEY_ALIAS = { 'stellarball': 'ステラボール' };
+        function venueKey(name) {
+            let s = String(name || '').normalize('NFKC').toLowerCase().replace(/[\s・]/g, '');
+            for (const pre of VENUE_PREFIXES) {
+                if (s.startsWith(pre) && s.length > pre.length + 2) { s = s.slice(pre.length); break; }
+            }
+            return VENUE_KEY_ALIAS[s] || s;
+        }
+
+        let venueCanonCache = null;
+        function venueCanonMap() {
+            const evs = (typeof events !== 'undefined' && Array.isArray(events)) ? events : [];
+            if (venueCanonCache && venueCanonCache.n === evs.length) return venueCanonCache.map;
+            const groupsMap = new Map();
+            const raws = evs.map(ev => {
+                const raw = computeEffectiveLocation(ev);
+                if (raw) splitVenues(raw).forEach(p => {
+                    const k = venueKey(p);
+                    if (!k) return;
+                    if (!groupsMap.has(k)) groupsMap.set(k, new Map());
+                    const m = groupsMap.get(k);
+                    m.set(p, (m.get(p) || 0) + 1);
+                });
+                return raw;
+            });
+            const proper = (v) => /[A-Z]/.test(v) || /[ぁ-ヶ一-龯]/.test(v);
+            const map = new Map();
+            groupsMap.forEach((m, k) => {
+                let best = '', bestN = -1;
+                m.forEach((n, v) => {
+                    if (n > bestN || (n === bestN && proper(v) && !proper(best))) { bestN = n; best = v; }
+                });
+                map.set(k, best);
+            });
+            venueCanonCache = { n: evs.length, map };
+            evs.forEach((ev, i) => {
+                const raw = raws[i];
+                if (!raw) return;
+                const val = splitVenues(raw).map(p => map.get(venueKey(p)) || p).join(' / ');
+                effLocCache.set(ev, { loc: ev.location || '', reg: ev.regulation || '', val });
+            });
+            return map;
+        }
+
+        function canonicalVenue(name) {
+            if (!name) return '';
+            const map = venueCanonMap();
+            if (!map.size) return name;
+            return splitVenues(name).map(p => map.get(venueKey(p)) || p).join(' / ');
         }
 
         function computeEffectiveLocation(e) {
