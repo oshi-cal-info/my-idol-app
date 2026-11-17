@@ -72,17 +72,15 @@
     <!-- メインコンテンツ -->
     <main class="max-w-md mx-auto p-4 space-y-4">
         
-        <div class="flex justify-between items-center px-1">
-            <h2 class="text-base font-bold text-slate-700 flex items-center">
+        <div class="sticky top-[76px] z-20 px-1 pt-1 pb-2 bg-white/90 backdrop-blur-md rounded-b-[1.5rem] shadow-sm shadow-pink-100/50">
+            <h2 class="text-base font-bold text-slate-700 flex items-center px-1">
                 <i class="fa-solid fa-sparkles text-pink-500 mr-2"></i>スケジュールまとめ
             </h2>
-            <div class="flex items-center space-x-2">
-                <div class="flex bg-pink-100/60 p-1 rounded-full text-xs font-bold">
-                    <button id="tab-list" onclick="switchView('list')" class="px-4 py-1.5 rounded-full transition bg-white text-pink-600 shadow-sm">リスト</button>
-                    <button id="tab-going" onclick="switchView('going')" class="px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700">行く予定<span id="going-count-badge" class="hidden ml-1 text-[10px] font-bold text-pink-500"></span></button>
-                    <button id="tab-week" onclick="switchView('week')" class="px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700">週表示</button>
-                    <button id="tab-month" onclick="switchView('month')" class="px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700">月表示</button>
-                </div>
+            <div class="flex bg-pink-100/60 p-1 rounded-full text-xs font-bold mt-2 w-full">
+                <button id="tab-list" onclick="switchView('list')" class="flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap bg-white text-pink-600 shadow-sm">リスト</button>
+                <button id="tab-going" onclick="switchView('going')" class="flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap text-slate-500 hover:text-slate-700">行く予定<span id="going-count-badge" class="hidden ml-1 text-[10px] font-bold text-pink-500"></span></button>
+                <button id="tab-week" onclick="switchView('week')" class="flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap text-slate-500 hover:text-slate-700">週表示</button>
+                <button id="tab-month" onclick="switchView('month')" class="flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap text-slate-500 hover:text-slate-700">月表示</button>
             </div>
         </div>
 
@@ -169,8 +167,11 @@
 
     <!-- フローティング追加ボタン -->
     <div class="fixed bottom-6 right-6 z-20 flex flex-col items-center space-y-3">
-        <button onclick="goToToday()" title="今日へ" class="w-11 h-11 rounded-full bg-white text-pink-500 shadow-md shadow-pink-200/60 flex items-center justify-center hover:bg-pink-50 transition">
-            <i class="fa-solid fa-calendar-day text-sm"></i>
+        <button onclick="openSearchModal()" title="予定を検索" class="w-11 h-11 rounded-full bg-white text-purple-500 shadow-md shadow-pink-200/60 flex items-center justify-center hover:bg-purple-50 transition">
+            <i class="fa-solid fa-magnifying-glass text-sm"></i>
+        </button>
+        <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" title="一番上へ戻る" class="w-11 h-11 rounded-full bg-white text-pink-500 shadow-md shadow-pink-200/60 flex items-center justify-center hover:bg-pink-50 transition">
+            <i class="fa-solid fa-arrow-up text-sm"></i>
         </button>
         <button onclick="openAddModal()" title="自分だけの予定を追加" class="w-14 h-14 rounded-full bg-gradient-to-tr from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/40 flex items-center justify-center text-xl hover:scale-105 transition">
             <i class="fa-solid fa-plus"></i>
@@ -2975,21 +2976,33 @@
             const sameLive = events
                 .filter(e => targetEvent.group ? favGroupKey(e) === favGroupKey(targetEvent) : e.id === targetEvent.id)
                 .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
-            expandedEvents.add('live_' + sameLive.map(e => e.id).join('|'));
+            const cardKey = 'live_' + sameLive.map(e => e.id).join('|');
+            expandedEvents.add(cardKey);
+            // 過去の予定が隠れている／グループで絞り込まれているとカード自体が無いので、先に表示できる状態にする
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            if (targetEvent.date < todayStr && !showPastEvents) {
+                showPastEvents = true;
+                updatePastToggleUI();
+            }
+            if (!matchesActiveFilters(targetEvent.group)) {
+                clearFilter();
+            }
             switchView('list');
             render();
             setTimeout(() => {
-                const headers = Array.from(document.querySelectorAll('#view-list [data-date]'));
-                const target = headers.find(h => h.dataset.date === targetEvent.date);
-                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const card = Array.from(document.querySelectorAll('#view-list [data-livekey]'))
+                    .find(el => el.dataset.livekey === cardKey);
+                if (card) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    card.classList.add('ring-2', 'ring-pink-400');
+                    setTimeout(() => card.classList.remove('ring-2', 'ring-pink-400'), 1800);
+                } else {
+                    const headers = Array.from(document.querySelectorAll('#view-list [data-date]'));
+                    const target = headers.find(h => h.dataset.date === targetEvent.date);
+                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             }, 150);
         }
-
-        // ==== 暇な日ルーレット ====
-        // 今日から1週間のうち、まだ行く予定に入れていないライブから1本ランダムで勧める。
-        // 推しと同じライブに出たことのあるグループ（共演）が出るライブは「発見枠」として当たりやすくする。
-        let roulettePickId = null;
-        let rouletteLastKey = null;
 
         function rouletteCandidates() {
             const today = dayjs().startOf('day');
@@ -3772,7 +3785,7 @@
                 }).join('');
 
                 html += `
-                    <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${specialFrameCls}">
+                    <div data-livekey="${cardKey}" class="bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${specialFrameCls}">
                         ${barHtml}
                         <div class="flex-1 p-4 cursor-pointer" onclick="toggleEventDetail('${cardKey}')">
                             <div class="flex items-center justify-between mb-2">
@@ -3943,6 +3956,10 @@
             }
             if (currentView === 'going') {
                 renderGoingView();
+            } else if (currentView === 'month') {
+                renderMonthView();
+            } else if (currentView === 'week') {
+                renderWeekView();
             } else {
                 renderListView();
             }
@@ -3967,86 +3984,8 @@
                 return;
             }
 
-            // 同じタイトルのライブは1枚にまとめる
-            const liveMap = new Map();
-            filtered.forEach(e => {
-                const key = e.group ? favGroupKey(e) : 'solo__' + e.id;
-                if (!liveMap.has(key)) liveMap.set(key, []);
-                liveMap.get(key).push(e);
-            });
-            const lives = [...liveMap.values()].sort((a, b) => a[0].time.localeCompare(b[0].time));
-
-            let html = `<h4 class="text-xs font-bold text-slate-500 px-1">${dayjs(selectedDate).format('M月D日')}の予定</h4>`;
-
-            lives.forEach(list => {
-                const rep = list[0];
-                const isMulti = list.length > 1;
-                const repGroupObj = groups.find(g => g.name === rep.group);
-                const repColor = repGroupObj ? repGroupObj.color : (rep.group ? '#ec4899' : '#94a3b8');
-
-                const barHtml = isMulti
-                    ? `<span class="w-1.5 rounded-full overflow-hidden flex flex-col">${list.map(e => {
-                            const go = groups.find(g => g.name === e.group);
-                            return `<span class="flex-1" style="background-color:${go ? go.color : '#ec4899'}"></span>`;
-                        }).join('')}</span>`
-                    : `<span class="w-1.5 rounded-full" style="background-color: ${repColor}"></span>`;
-
-                const chipsHtml = rep.group
-                    ? list.map(e => {
-                        const go = groups.find(g => g.name === e.group);
-                        const c = go ? go.color : '#ec4899';
-                        return `<span onclick="openGroupLinksModal('${e.group.replace(/'/g, "\\'")}')" class="text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer" style="background-color: ${c}15; color: ${c};">${e.group}</span>`;
-                      }).join('')
-                    : `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-user text-[9px] mr-1"></i>個人の予定</span>`;
-
-                const detailsHtml = list.map(e => {
-                    const go = groups.find(g => g.name === e.group);
-                    const c = go ? go.color : (e.group ? '#ec4899' : '#94a3b8');
-                    const isFav = favorites.has(e.id);
-                    return `
-                        <div class="${isMulti ? 'rounded-xl border border-pink-50 p-2.5 mt-2' : ''}">
-                            ${isMulti ? `
-                                <div class="flex items-center justify-between mb-1">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}15;color:${c};">${e.group}</span>
-                                        <span class="text-[11px] font-semibold text-slate-400">${e.time}</span>
-                                    </div>
-                                    <button onclick="toggleFavorite('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
-                                </div>
-                            ` : ''}
-                            ${venueInlineLinksHtml(e)}
-                            ${renderRegulationHtml(e)}
-                            <div class="mt-1.5">${renderMemoHtml(e)}</div>
-                            <div class="flex items-center space-x-3 mt-1.5">
-                                <a href="${gcalUrl(e)}" target="_blank" class="inline-flex items-center text-[11px] text-slate-500 font-semibold hover:underline"><i class="fa-solid fa-calendar-plus mr-1.5"></i>Googleカレンダーに追加</a>
-                                <button onclick="shareEventById('${e.id}')" class="inline-flex items-center text-[11px] text-slate-500 font-semibold hover:underline"><i class="fa-solid fa-share-nodes mr-1.5"></i>シェア</button>
-                            </div>
-                            ${!e.isSheet
-                                ? `<div class="flex justify-end space-x-3 mt-1"><button onclick="openEditManualEventModal('${e.id}')" class="text-slate-300 hover:text-pink-500 text-[11px] transition"><i class="fa-solid fa-pen"></i> 編集</button><button onclick="deleteEvent('${e.id}')" class="text-slate-300 hover:text-red-500 text-[11px] transition"><i class="fa-solid fa-trash"></i> 削除</button></div>`
-                                : `<div class="flex justify-end mt-1"><button onclick="openEditEventModal('${e.id}')" class="text-slate-300 hover:text-pink-500 text-[11px] transition"><i class="fa-solid fa-pen"></i> 修正する</button></div>`}
-                        </div>
-                    `;
-                }).join('');
-
-                html += `
-                    <div class="bg-white p-3.5 rounded-2xl shadow-sm flex items-stretch space-x-3 ${isMulti ? 'border-2 border-purple-200' : 'border border-pink-100/60'}">
-                        ${barHtml}
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-bold text-slate-400">${rep.time}${isMulti && [...new Set(list.map(e => e.time))].length > 1 ? ' ほか' : ''}</span>
-                                ${!isMulti ? `<button onclick="toggleFavorite('${rep.id}')" class="w-6 h-6 flex items-center justify-center transition ${favorites.has(rep.id) ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-xs"></i></button>` : ''}
-                            </div>
-                            <h5 class="font-bold text-xs text-slate-800 mb-1.5">${displayTitleFor(list)}</h5>
-                            <div class="flex flex-wrap items-center gap-1.5 mb-1">
-                                ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
-                                ${chipsHtml}
-                            </div>
-                            ${detailsHtml}
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
+            // リスト表示と同じカードで描く（同じライブは1枚にまとめ、タップで詳細を展開）
+            container.innerHTML = buildEventCardsHtml(filtered);
         }
 
         function switchView(view) {
@@ -4060,8 +3999,8 @@
             const monthDiv = document.getElementById('view-month');
             const weekDiv = document.getElementById('view-week');
 
-            const activeCls = "px-4 py-1.5 rounded-full transition bg-white text-pink-600 shadow-sm";
-            const inactiveCls = "px-4 py-1.5 rounded-full transition text-slate-500 hover:text-slate-700";
+            const activeCls = "flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap bg-white text-pink-600 shadow-sm";
+            const inactiveCls = "flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap text-slate-500 hover:text-slate-700";
 
             listBtn.className = view === 'list' ? activeCls : inactiveCls;
             goingBtn.className = view === 'going' ? activeCls : inactiveCls;
