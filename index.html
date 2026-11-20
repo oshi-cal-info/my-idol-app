@@ -2942,6 +2942,35 @@
 
                 found.push({ date: key, label: m[0].trim(), isPresale });
             }
+
+            // 「11/13(金) 23:59まで」型: 日付と「まで」の間に時刻が入る形式も拾う
+            // （従来の正規表現は間の数字に阻まれて、世間で一番多いこの形式を拾えていなかった）
+            // 特典会の終了時刻などを誤って拾わないよう、同じ行〜直前45文字に販売系キーワードがある場合だけ採用する
+            const salesKw = /🎫|チケット|先行|抽選|販売|発売|受付|申込|申し込み|締切|応募|先着|予約|購入|一般|FC/i;
+            const re2 = /(\d{1,2})\s*[\/.月]\s*(\d{1,2})\s*日?(?:\s*[（(][月火水木金土日][）)])?(?:\s*の)?\s*(?:[0-2]?\d:[0-5]\d)?\s*まで/g;
+            while ((m = re2.exec(text)) !== null) {
+                const month = parseInt(m[1], 10);
+                const day = parseInt(m[2], 10);
+                if (month < 1 || month > 12 || day < 1 || day > 31) continue;
+
+                const evDate = dayjs(e.date);
+                let year = evDate.isValid() ? evDate.year() : dayjs().year();
+                if (evDate.isValid() && month > evDate.month() + 1) year -= 1;
+
+                const d = dayjs(`${year}-${('0'+month).slice(-2)}-${('0'+day).slice(-2)}`);
+                if (!d.isValid()) continue;
+                const key = d.format('YYYY-MM-DD');
+                if (found.some(f => f.date === key)) continue;
+
+                const lineStart = text.lastIndexOf('\n', m.index) + 1;
+                const context = text.slice(Math.max(lineStart, m.index - 45), m.index + m[0].length);
+                if (!salesKw.test(context)) continue;
+
+                const wideContext = text.slice(Math.max(0, m.index - 45), m.index + m[0].length);
+                const isPresale = /先行|抽選|FC先行|フォロワー|優先/i.test(wideContext);
+
+                found.push({ date: key, label: m[0].trim(), isPresale });
+            }
             return found;
         }
 
@@ -2960,6 +2989,7 @@
                         event: e,
                         deadline: d.date,
                         label: d.label,
+                        isPresale: d.isPresale,
                         daysLeft: dd.diff(today, 'day')
                     });
                 });
@@ -3004,8 +3034,9 @@
             const c = go ? go.color : '#ec4899';
             const urgent = d.daysLeft <= 2;
             const dayLabel = d.daysLeft === 0 ? '今日まで' : `あと${d.daysLeft}日`;
+            const tUrl = ticketUrl(d.event);
             return `
-                <div class="rounded-2xl p-3.5 border ${urgent ? 'bg-red-50 border-red-200' : 'bg-amber-50/60 border-amber-100'}">
+                <div onclick="toggleDeadlineMenu(); openEventDetail('${d.event.id}')" class="rounded-2xl p-3.5 border cursor-pointer hover:shadow-md transition ${urgent ? 'bg-red-50 border-red-200' : 'bg-amber-50/60 border-amber-100'}">
                     <div class="flex items-center justify-between mb-1.5">
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${d.event.group || '個人の予定'}</span>
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${urgent ? 'bg-red-500 text-white' : 'bg-amber-400 text-white'}">${dayLabel}</span>
@@ -3013,6 +3044,7 @@
                     <p class="text-xs font-bold text-slate-800 mb-1 leading-snug">${escapeHtml(d.event.title)}</p>
                     <p class="text-[10px] text-slate-500 mb-0.5">ライブ: ${dayjs(d.event.date).format('M/D(dd)')}</p>
                     <p class="text-[10px] font-semibold ${urgent ? 'text-red-600' : 'text-amber-700'}">締切: ${dayjs(d.deadline).format('M/D(dd)')}</p>
+                    ${tUrl ? `<a href="${tUrl}" target="_blank" onclick="event.stopPropagation()" class="mt-2.5 flex items-center justify-center space-x-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[11px] font-bold px-3 py-2 rounded-xl shadow-sm shadow-pink-500/30 hover:opacity-95 transition"><i class="fa-solid fa-ticket"></i><span>チケット</span></a>` : ''}
                 </div>
             `;
         }
