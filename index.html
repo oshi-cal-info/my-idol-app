@@ -916,24 +916,24 @@ img { max-width: 100%; }
 /* --- header --- */
 .app-header {
   position: sticky; top: 0; z-index: 30;
-  padding: 1rem 1.25rem 1.1rem;
+  padding: 1rem 1rem 1.1rem;
   background: linear-gradient(120deg, color-mix(in srgb, var(--primary-container) 55%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 55%, var(--surface-container-lowest)));
   border-radius: 0 0 2rem 2rem;
   box-shadow: 0 6px 24px color-mix(in srgb, var(--primary) 16%, transparent);
 }
 .logo-mark {
-  width: 2.75rem; height: 2.75rem; border-radius: 9999px; flex-shrink: 0;
+  width: 2.5rem; height: 2.5rem; border-radius: 9999px; flex-shrink: 0;
   background: linear-gradient(135deg, var(--primary), var(--tertiary));
   color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 1.05rem; box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 .logo-title {
-  font-size: 1.3rem; font-weight: 900; letter-spacing: .02em; line-height: 1;
+  font-size: 1.12rem; font-weight: 900; letter-spacing: .02em; line-height: 1.15; white-space: nowrap; flex-shrink: 0;
   background: linear-gradient(90deg, var(--primary), var(--tertiary));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .icon-btn {
-  width: 2.75rem; height: 2.75rem; border-radius: 9999px; flex-shrink: 0;
+  width: 2.5rem; height: 2.5rem; border-radius: 9999px; flex-shrink: 0;
   background: var(--surface-container-lowest); border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center; position: relative;
   font-size: .95rem; box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 14%, transparent);
@@ -1152,13 +1152,13 @@ button {
     <!-- ヘッダー -->
     <header class="app-header">
         <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-2">
             <div class="logo-mark">
                 <i class="fa-solid fa-calendar-days"></i>
             </div>
             <h1 class="logo-title">Oshi-Cal</h1>
         </div>
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-1.5">
             <button onclick="openSearchModal()" title="予定を検索" class="icon-btn" style="color:var(--tertiary)">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </button>
@@ -7501,9 +7501,8 @@ button {
             applyThemeMode();
         }
         function cycleThemeMode() {
-            const order = ['light', 'dark', 'auto'];
-            const next = order[(order.indexOf(getThemeMode()) + 1) % order.length];
-            setThemeMode(next);
+            // ヘッダーボタンはライト⇄ダークの2値切替（端末連動はメニュー内のセグメントで選ぶ）
+            setThemeMode(document.body.classList.contains('dark') ? 'light' : 'dark');
         }
         function initBeerTheme() {
             const apply = () => {
