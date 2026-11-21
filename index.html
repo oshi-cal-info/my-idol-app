@@ -1230,6 +1230,14 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
 @keyframes morph { 0%,100% { border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%; } 33% { border-radius: 62% 38% 40% 60% / 55% 62% 38% 45%; } 66% { border-radius: 45% 55% 58% 42% / 38% 40% 60% 62%; } }
 body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 72%, var(--surface-container-high)), color-mix(in srgb, var(--tertiary) 72%, var(--surface-container-high))); }
 
+/* --- expressive round 5: button group on the other seg bars --- */
+/* month view mini toggle (fit-content bar): active button grows via padding */
+.seg-bar.mini .seg-btn.on { padding-left: 1.6rem; padding-right: 1.6rem; }
+/* theme seg in the drawer: flex button group, gentle grow (long labels) */
+#theme-mode-seg { display: flex; }
+#theme-mode-seg .seg-btn { flex: 1 1 0; }
+#theme-mode-seg .seg-btn.on { flex-grow: 1.25; }
+
     </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
