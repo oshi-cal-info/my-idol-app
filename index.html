@@ -929,7 +929,7 @@ img { max-width: 100%; }
 }
 .logo-title {
   font-size: 1.12rem; font-weight: 900; letter-spacing: .02em; line-height: 1; white-space: nowrap; flex-shrink: 0;
-  color: var(--primary); display: flex; align-items: center; height: 2.5rem; margin: 0;
+  color: var(--primary); display: flex; align-items: center; height: 2.5rem; margin: 0 0 0 .3rem;
 }
 .icon-btn {
   width: 2.5rem; height: 2.5rem; border-radius: 9999px; flex-shrink: 0;
@@ -952,7 +952,7 @@ img { max-width: 100%; }
   border-radius: 9999px;
 }
 .seg-btn {
-  min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: .5rem .25rem; border: none; background: transparent; cursor: pointer;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; gap: .3rem; padding: .5rem .25rem; border: none; background: transparent; cursor: pointer;
   border-radius: 9999px; font-size: .72rem; font-weight: 700; white-space: nowrap;
   color: var(--on-surface-variant);
   transition: all .3s cubic-bezier(.34,1.3,.64,1);
@@ -1129,6 +1129,8 @@ input[type="color"].fld { padding: .3rem; height: 2.75rem; cursor: pointer; }
 button {
   box-sizing: border-box;
   padding: 0;
+  margin: 0;
+  gap: 0;
   min-inline-size: 0;
   block-size: auto;
   color: inherit;
@@ -1162,6 +1164,22 @@ button {
 /* flex column scroll areas must be allowed to shrink */
 #group-management-list, #filter-group-list { min-height: 0; }
 
+/* going-count badge: compact pill glued to its label */
+#going-count-badge {
+  background: var(--primary); color: var(--on-primary);
+  border-radius: 9999px; padding: .1rem .38rem; line-height: 1.25;
+  font-size: 9px; font-weight: 800;
+}
+.seg-btn.on #going-count-badge { background: var(--on-primary); color: var(--primary); }
+/* Expressive spring on the bottom nav */
+.view-nav .seg-btn { transition: transform .45s cubic-bezier(.34,1.8,.64,1), background-color .3s, color .3s; }
+.view-nav .seg-btn:active { transform: scale(.9); }
+.view-nav .seg-btn.on { animation: nav-pop .5s cubic-bezier(.34,1.8,.64,1); }
+@keyframes nav-pop { 0% { transform: scale(.75); } 55% { transform: scale(1.09); } 100% { transform: scale(1); } }
+/* drawer: nothing inside may widen the panel */
+#group-management-list { overflow-x: hidden; min-width: 0; }
+.drawer-panel > * { min-width: 0; }
+
     </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -1178,7 +1196,7 @@ button {
     <!-- ヘッダー -->
     <header class="app-header">
         <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-3">
             <div class="logo-mark">
                 <i class="fa-solid fa-calendar-days"></i>
             </div>
@@ -1205,12 +1223,6 @@ button {
     <!-- メインコンテンツ -->
     <main class="max-w-md mx-auto p-4 space-y-4">
         
-        <div class="px-1">
-            <h2 class="text-base font-bold text-slate-700 flex items-center">
-                <i class="fa-solid fa-sparkles text-pink-500 mr-2"></i>スケジュールまとめ
-            </h2>
-        </div>
-
         <!-- フィルターバー -->
         <div class="filter-bar">
             <button onclick="openFilterModal()" class="filter-main">
@@ -1297,7 +1309,7 @@ button {
     <!-- 下部フローティングナビ（表示切替） -->
     <div class="view-nav" role="navigation" aria-label="表示切替">
         <button id="tab-list" onclick="switchView('list')" class="seg-btn on">リスト</button>
-        <button id="tab-going" onclick="switchView('going')" class="seg-btn">行く予定<span id="going-count-badge" class="hidden" style="margin-left:.2rem;font-size:9px;font-weight:800"></span></button>
+        <button id="tab-going" onclick="switchView('going')" class="seg-btn">行く予定<span id="going-count-badge" class="hidden"></span></button>
         <button id="tab-week" onclick="switchView('week')" class="seg-btn">週表示</button>
         <button id="tab-month" onclick="switchView('month')" class="seg-btn">月表示</button>
     </div>
@@ -5209,7 +5221,7 @@ button {
                     <span class="flex items-center space-x-3 min-w-0">
                         <span class="w-4 h-4 rounded-full shadow-sm flex-shrink-0" style="background: linear-gradient(135deg,#ec4899,#a855f7)"></span>
                         <span class="text-left min-w-0">
-                            <span class="block font-bold text-xs text-slate-800">全グループをGoogleカレンダーで購読</span>
+                            <span class="block font-bold text-[11px] text-slate-800">全グループをGoogleカレンダーで購読</span>
                             <span class="block text-[10px] text-slate-400">新規ライブがカレンダーに自動で並びます</span>
                         </span>
                     </span>
@@ -5230,7 +5242,7 @@ button {
                 const isHidden = g.visible === false;
                 const notifyOn = g.notify !== false;
                 chips += `
-                    <div class="relative flex items-center gap-2 p-2 rounded-2xl border shadow-sm cursor-pointer select-none [-webkit-touch-callout:none] ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}14;border-color:${g.color}45;`}"
+                    <div class="relative flex items-center gap-2 p-2 rounded-2xl border shadow-sm cursor-pointer select-none min-w-0 overflow-hidden [-webkit-touch-callout:none] ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}14;border-color:${g.color}45;`}"
                         onpointerdown="chipPointerDown(${index})" onpointerup="chipPointerEnd()" onpointerleave="chipPointerEnd()" onpointercancel="chipPointerEnd()" oncontextmenu="return false" onclick="chipClick(${index})">
                         ${groupAvatarHtml(g, !isHidden)}
                         <span class="flex-1 min-w-0 text-[11px] font-bold leading-tight ${isHidden ? 'text-slate-400' : 'text-slate-800'}" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;border-radius:0;">${escapeHtml(g.name)}</span>
