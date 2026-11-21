@@ -19,7 +19,6 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="theme-color" content="#ec4899">
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isToday.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/locale/ja.js"></script>
@@ -33,13 +32,1096 @@
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/beercss@3.9.7/dist/cdn/beer.min.css" rel="stylesheet">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.9.7/dist/cdn/beer.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #fdf2f8; }
-        .event-card { content-visibility: auto; contain-intrinsic-size: auto 130px; }
-        @keyframes detailPop { from { transform: scale(.96) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-        .detail-pop { animation: detailPop .18s ease-out; }
-        .vpin { width: 30px; height: 30px; border-radius: 9999px; background: #ec4899; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); cursor: pointer; }
-        .vpin-sel { background: #a855f7; transform: scale(1.25); }
+.block{display:block}
+.inline-block{display:inline-block}
+.flex{display:flex}
+.inline-flex{display:inline-flex}
+.grid{display:grid}
+.hidden{display:none !important}
+.flex-col{flex-direction:column}
+.flex-wrap{flex-wrap:wrap}
+.flex-1{flex:1 1 0%}
+.flex-shrink-0{flex-shrink:0}
+.shrink-0{flex-shrink:0}
+.min-w-0{min-width:0}
+.items-center{align-items:center}
+.items-start{align-items:flex-start}
+.items-end{align-items:flex-end}
+.items-baseline{align-items:baseline}
+.items-stretch{align-items:stretch}
+.justify-center{justify-content:center}
+.justify-between{justify-content:space-between}
+.justify-end{justify-content:flex-end}
+.fixed{position:fixed}
+.absolute{position:absolute}
+.relative{position:relative}
+.sticky{position:sticky}
+.inset-0{top:0;right:0;bottom:0;left:0}
+.top-0{top:0}
+.right-0{right:0}
+.bottom-0{bottom:0}
+.overflow-hidden{overflow:hidden}
+.overflow-y-auto{overflow-y:auto}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.whitespace-nowrap{white-space:nowrap}
+.break-all{word-break:break-all}
+.break-words{overflow-wrap:break-word}
+.object-cover{object-fit:cover}
+.select-none{user-select:none}
+.cursor-pointer{cursor:pointer}
+.resize-none{resize:none}
+.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-cols-7{grid-template-columns:repeat(7,minmax(0,1fr))}
+.text-center{text-align:center}
+.text-left{text-align:left}
+.w-full{width:100%}
+.h-full{height:100%}
+.w-fit{width:fit-content}
+.min-h-screen{min-height:100vh}
+.max-w-sm{max-width:24rem}
+.max-w-md{max-width:28rem}
+.max-w-\[90vw\]{max-width:90vw}
+.z-10{z-index:10}
+.z-20{z-index:20}
+.z-30{z-index:30}
+.z-50{z-index:50}
+.z-\[60\]{z-index:60}
+.z-\[65\]{z-index:65}
+.z-\[80\]{z-index:80}
+.h-\[18px\]{height:18px}
+.h-\[60\%\]{height:60%}
+.min-w-\[18px\]{min-width:18px}
+.w-\[76px\]{width:76px}
+.max-h-\[80vh\]{max-height:80vh}
+.max-h-\[85vh\]{max-height:85vh}
+.max-h-\[88vh\]{max-height:88vh}
+.top-\[92px\]{top:92px}
+.scroll-mt-\[140px\]{scroll-margin-top:140px}
+.-top-1{top:-0.25rem}
+.-right-1{right:-0.25rem}
+.-bottom-1{bottom:-0.25rem}
+.top-1\/2{top:50%}
+.-translate-y-1\/2{transform:translateY(-50%)}
+.translate-x-full{transform:translateX(100%)}
+.backdrop-blur-sm{backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.bg-clip-text{-webkit-background-clip:text;background-clip:text}
+.accent-pink-500{accent-color:var(--primary)}
+.\[-webkit-touch-callout\:none\]{-webkit-touch-callout:none}
+.top-0{top:0}
+.top-1{top:0.25rem}
+.top-1\.5{top:0.375rem}
+.top-2{top:0.5rem}
+.top-2\.5{top:0.625rem}
+.top-3{top:0.75rem}
+.top-3\.5{top:0.875rem}
+.top-4{top:1rem}
+.top-5{top:1.25rem}
+.top-6{top:1.5rem}
+.top-8{top:2rem}
+.right-0{right:0}
+.right-1{right:0.25rem}
+.right-1\.5{right:0.375rem}
+.right-2{right:0.5rem}
+.right-2\.5{right:0.625rem}
+.right-3{right:0.75rem}
+.right-3\.5{right:0.875rem}
+.right-4{right:1rem}
+.right-5{right:1.25rem}
+.right-6{right:1.5rem}
+.right-8{right:2rem}
+.bottom-0{bottom:0}
+.bottom-1{bottom:0.25rem}
+.bottom-1\.5{bottom:0.375rem}
+.bottom-2{bottom:0.5rem}
+.bottom-2\.5{bottom:0.625rem}
+.bottom-3{bottom:0.75rem}
+.bottom-3\.5{bottom:0.875rem}
+.bottom-4{bottom:1rem}
+.bottom-5{bottom:1.25rem}
+.bottom-6{bottom:1.5rem}
+.bottom-8{bottom:2rem}
+.left-0{left:0}
+.left-1{left:0.25rem}
+.left-1\.5{left:0.375rem}
+.left-2{left:0.5rem}
+.left-2\.5{left:0.625rem}
+.left-3{left:0.75rem}
+.left-3\.5{left:0.875rem}
+.left-4{left:1rem}
+.left-5{left:1.25rem}
+.left-6{left:1.5rem}
+.left-8{left:2rem}
+.p-0{padding:0}
+.px-0{padding-left:0;padding-right:0}
+.py-0{padding-top:0;padding-bottom:0}
+.pt-0{padding-top:0}
+.pb-0{padding-bottom:0}
+.pl-0{padding-left:0}
+.pr-0{padding-right:0}
+.mt-0{margin-top:0}
+.mb-0{margin-bottom:0}
+.ml-0{margin-left:0}
+.mr-0{margin-right:0}
+.gap-0{gap:0}
+.w-0{width:0}
+.h-0{height:0}
+.space-x-0 > * + *{margin-left:0}
+.space-y-0 > * + *{margin-top:0}
+.p-px{padding:1px}
+.px-px{padding-left:1px;padding-right:1px}
+.py-px{padding-top:1px;padding-bottom:1px}
+.pt-px{padding-top:1px}
+.pb-px{padding-bottom:1px}
+.pl-px{padding-left:1px}
+.pr-px{padding-right:1px}
+.mt-px{margin-top:1px}
+.mb-px{margin-bottom:1px}
+.ml-px{margin-left:1px}
+.mr-px{margin-right:1px}
+.gap-px{gap:1px}
+.w-px{width:1px}
+.h-px{height:1px}
+.space-x-px > * + *{margin-left:1px}
+.space-y-px > * + *{margin-top:1px}
+.p-0\.5{padding:0.125rem}
+.px-0\.5{padding-left:0.125rem;padding-right:0.125rem}
+.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}
+.pt-0\.5{padding-top:0.125rem}
+.pb-0\.5{padding-bottom:0.125rem}
+.pl-0\.5{padding-left:0.125rem}
+.pr-0\.5{padding-right:0.125rem}
+.mt-0\.5{margin-top:0.125rem}
+.mb-0\.5{margin-bottom:0.125rem}
+.ml-0\.5{margin-left:0.125rem}
+.mr-0\.5{margin-right:0.125rem}
+.gap-0\.5{gap:0.125rem}
+.w-0\.5{width:0.125rem}
+.h-0\.5{height:0.125rem}
+.space-x-0\.5 > * + *{margin-left:0.125rem}
+.space-y-0\.5 > * + *{margin-top:0.125rem}
+.p-1{padding:0.25rem}
+.px-1{padding-left:0.25rem;padding-right:0.25rem}
+.py-1{padding-top:0.25rem;padding-bottom:0.25rem}
+.pt-1{padding-top:0.25rem}
+.pb-1{padding-bottom:0.25rem}
+.pl-1{padding-left:0.25rem}
+.pr-1{padding-right:0.25rem}
+.mt-1{margin-top:0.25rem}
+.mb-1{margin-bottom:0.25rem}
+.ml-1{margin-left:0.25rem}
+.mr-1{margin-right:0.25rem}
+.gap-1{gap:0.25rem}
+.w-1{width:0.25rem}
+.h-1{height:0.25rem}
+.space-x-1 > * + *{margin-left:0.25rem}
+.space-y-1 > * + *{margin-top:0.25rem}
+.p-1\.5{padding:0.375rem}
+.px-1\.5{padding-left:0.375rem;padding-right:0.375rem}
+.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}
+.pt-1\.5{padding-top:0.375rem}
+.pb-1\.5{padding-bottom:0.375rem}
+.pl-1\.5{padding-left:0.375rem}
+.pr-1\.5{padding-right:0.375rem}
+.mt-1\.5{margin-top:0.375rem}
+.mb-1\.5{margin-bottom:0.375rem}
+.ml-1\.5{margin-left:0.375rem}
+.mr-1\.5{margin-right:0.375rem}
+.gap-1\.5{gap:0.375rem}
+.w-1\.5{width:0.375rem}
+.h-1\.5{height:0.375rem}
+.space-x-1\.5 > * + *{margin-left:0.375rem}
+.space-y-1\.5 > * + *{margin-top:0.375rem}
+.p-2{padding:0.5rem}
+.px-2{padding-left:0.5rem;padding-right:0.5rem}
+.py-2{padding-top:0.5rem;padding-bottom:0.5rem}
+.pt-2{padding-top:0.5rem}
+.pb-2{padding-bottom:0.5rem}
+.pl-2{padding-left:0.5rem}
+.pr-2{padding-right:0.5rem}
+.mt-2{margin-top:0.5rem}
+.mb-2{margin-bottom:0.5rem}
+.ml-2{margin-left:0.5rem}
+.mr-2{margin-right:0.5rem}
+.gap-2{gap:0.5rem}
+.w-2{width:0.5rem}
+.h-2{height:0.5rem}
+.space-x-2 > * + *{margin-left:0.5rem}
+.space-y-2 > * + *{margin-top:0.5rem}
+.p-2\.5{padding:0.625rem}
+.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}
+.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}
+.pt-2\.5{padding-top:0.625rem}
+.pb-2\.5{padding-bottom:0.625rem}
+.pl-2\.5{padding-left:0.625rem}
+.pr-2\.5{padding-right:0.625rem}
+.mt-2\.5{margin-top:0.625rem}
+.mb-2\.5{margin-bottom:0.625rem}
+.ml-2\.5{margin-left:0.625rem}
+.mr-2\.5{margin-right:0.625rem}
+.gap-2\.5{gap:0.625rem}
+.w-2\.5{width:0.625rem}
+.h-2\.5{height:0.625rem}
+.space-x-2\.5 > * + *{margin-left:0.625rem}
+.space-y-2\.5 > * + *{margin-top:0.625rem}
+.p-3{padding:0.75rem}
+.px-3{padding-left:0.75rem;padding-right:0.75rem}
+.py-3{padding-top:0.75rem;padding-bottom:0.75rem}
+.pt-3{padding-top:0.75rem}
+.pb-3{padding-bottom:0.75rem}
+.pl-3{padding-left:0.75rem}
+.pr-3{padding-right:0.75rem}
+.mt-3{margin-top:0.75rem}
+.mb-3{margin-bottom:0.75rem}
+.ml-3{margin-left:0.75rem}
+.mr-3{margin-right:0.75rem}
+.gap-3{gap:0.75rem}
+.w-3{width:0.75rem}
+.h-3{height:0.75rem}
+.space-x-3 > * + *{margin-left:0.75rem}
+.space-y-3 > * + *{margin-top:0.75rem}
+.p-3\.5{padding:0.875rem}
+.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}
+.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}
+.pt-3\.5{padding-top:0.875rem}
+.pb-3\.5{padding-bottom:0.875rem}
+.pl-3\.5{padding-left:0.875rem}
+.pr-3\.5{padding-right:0.875rem}
+.mt-3\.5{margin-top:0.875rem}
+.mb-3\.5{margin-bottom:0.875rem}
+.ml-3\.5{margin-left:0.875rem}
+.mr-3\.5{margin-right:0.875rem}
+.gap-3\.5{gap:0.875rem}
+.w-3\.5{width:0.875rem}
+.h-3\.5{height:0.875rem}
+.space-x-3\.5 > * + *{margin-left:0.875rem}
+.space-y-3\.5 > * + *{margin-top:0.875rem}
+.p-4{padding:1rem}
+.px-4{padding-left:1rem;padding-right:1rem}
+.py-4{padding-top:1rem;padding-bottom:1rem}
+.pt-4{padding-top:1rem}
+.pb-4{padding-bottom:1rem}
+.pl-4{padding-left:1rem}
+.pr-4{padding-right:1rem}
+.mt-4{margin-top:1rem}
+.mb-4{margin-bottom:1rem}
+.ml-4{margin-left:1rem}
+.mr-4{margin-right:1rem}
+.gap-4{gap:1rem}
+.w-4{width:1rem}
+.h-4{height:1rem}
+.space-x-4 > * + *{margin-left:1rem}
+.space-y-4 > * + *{margin-top:1rem}
+.p-5{padding:1.25rem}
+.px-5{padding-left:1.25rem;padding-right:1.25rem}
+.py-5{padding-top:1.25rem;padding-bottom:1.25rem}
+.pt-5{padding-top:1.25rem}
+.pb-5{padding-bottom:1.25rem}
+.pl-5{padding-left:1.25rem}
+.pr-5{padding-right:1.25rem}
+.mt-5{margin-top:1.25rem}
+.mb-5{margin-bottom:1.25rem}
+.ml-5{margin-left:1.25rem}
+.mr-5{margin-right:1.25rem}
+.gap-5{gap:1.25rem}
+.w-5{width:1.25rem}
+.h-5{height:1.25rem}
+.space-x-5 > * + *{margin-left:1.25rem}
+.space-y-5 > * + *{margin-top:1.25rem}
+.p-6{padding:1.5rem}
+.px-6{padding-left:1.5rem;padding-right:1.5rem}
+.py-6{padding-top:1.5rem;padding-bottom:1.5rem}
+.pt-6{padding-top:1.5rem}
+.pb-6{padding-bottom:1.5rem}
+.pl-6{padding-left:1.5rem}
+.pr-6{padding-right:1.5rem}
+.mt-6{margin-top:1.5rem}
+.mb-6{margin-bottom:1.5rem}
+.ml-6{margin-left:1.5rem}
+.mr-6{margin-right:1.5rem}
+.gap-6{gap:1.5rem}
+.w-6{width:1.5rem}
+.h-6{height:1.5rem}
+.space-x-6 > * + *{margin-left:1.5rem}
+.space-y-6 > * + *{margin-top:1.5rem}
+.p-7{padding:1.75rem}
+.px-7{padding-left:1.75rem;padding-right:1.75rem}
+.py-7{padding-top:1.75rem;padding-bottom:1.75rem}
+.pt-7{padding-top:1.75rem}
+.pb-7{padding-bottom:1.75rem}
+.pl-7{padding-left:1.75rem}
+.pr-7{padding-right:1.75rem}
+.mt-7{margin-top:1.75rem}
+.mb-7{margin-bottom:1.75rem}
+.ml-7{margin-left:1.75rem}
+.mr-7{margin-right:1.75rem}
+.gap-7{gap:1.75rem}
+.w-7{width:1.75rem}
+.h-7{height:1.75rem}
+.space-x-7 > * + *{margin-left:1.75rem}
+.space-y-7 > * + *{margin-top:1.75rem}
+.p-8{padding:2rem}
+.px-8{padding-left:2rem;padding-right:2rem}
+.py-8{padding-top:2rem;padding-bottom:2rem}
+.pt-8{padding-top:2rem}
+.pb-8{padding-bottom:2rem}
+.pl-8{padding-left:2rem}
+.pr-8{padding-right:2rem}
+.mt-8{margin-top:2rem}
+.mb-8{margin-bottom:2rem}
+.ml-8{margin-left:2rem}
+.mr-8{margin-right:2rem}
+.gap-8{gap:2rem}
+.w-8{width:2rem}
+.h-8{height:2rem}
+.space-x-8 > * + *{margin-left:2rem}
+.space-y-8 > * + *{margin-top:2rem}
+.p-9{padding:2.25rem}
+.px-9{padding-left:2.25rem;padding-right:2.25rem}
+.py-9{padding-top:2.25rem;padding-bottom:2.25rem}
+.pt-9{padding-top:2.25rem}
+.pb-9{padding-bottom:2.25rem}
+.pl-9{padding-left:2.25rem}
+.pr-9{padding-right:2.25rem}
+.mt-9{margin-top:2.25rem}
+.mb-9{margin-bottom:2.25rem}
+.ml-9{margin-left:2.25rem}
+.mr-9{margin-right:2.25rem}
+.gap-9{gap:2.25rem}
+.w-9{width:2.25rem}
+.h-9{height:2.25rem}
+.space-x-9 > * + *{margin-left:2.25rem}
+.space-y-9 > * + *{margin-top:2.25rem}
+.p-10{padding:2.5rem}
+.px-10{padding-left:2.5rem;padding-right:2.5rem}
+.py-10{padding-top:2.5rem;padding-bottom:2.5rem}
+.pt-10{padding-top:2.5rem}
+.pb-10{padding-bottom:2.5rem}
+.pl-10{padding-left:2.5rem}
+.pr-10{padding-right:2.5rem}
+.mt-10{margin-top:2.5rem}
+.mb-10{margin-bottom:2.5rem}
+.ml-10{margin-left:2.5rem}
+.mr-10{margin-right:2.5rem}
+.gap-10{gap:2.5rem}
+.w-10{width:2.5rem}
+.h-10{height:2.5rem}
+.space-x-10 > * + *{margin-left:2.5rem}
+.space-y-10 > * + *{margin-top:2.5rem}
+.p-11{padding:2.75rem}
+.px-11{padding-left:2.75rem;padding-right:2.75rem}
+.py-11{padding-top:2.75rem;padding-bottom:2.75rem}
+.pt-11{padding-top:2.75rem}
+.pb-11{padding-bottom:2.75rem}
+.pl-11{padding-left:2.75rem}
+.pr-11{padding-right:2.75rem}
+.mt-11{margin-top:2.75rem}
+.mb-11{margin-bottom:2.75rem}
+.ml-11{margin-left:2.75rem}
+.mr-11{margin-right:2.75rem}
+.gap-11{gap:2.75rem}
+.w-11{width:2.75rem}
+.h-11{height:2.75rem}
+.space-x-11 > * + *{margin-left:2.75rem}
+.space-y-11 > * + *{margin-top:2.75rem}
+.p-12{padding:3rem}
+.px-12{padding-left:3rem;padding-right:3rem}
+.py-12{padding-top:3rem;padding-bottom:3rem}
+.pt-12{padding-top:3rem}
+.pb-12{padding-bottom:3rem}
+.pl-12{padding-left:3rem}
+.pr-12{padding-right:3rem}
+.mt-12{margin-top:3rem}
+.mb-12{margin-bottom:3rem}
+.ml-12{margin-left:3rem}
+.mr-12{margin-right:3rem}
+.gap-12{gap:3rem}
+.w-12{width:3rem}
+.h-12{height:3rem}
+.space-x-12 > * + *{margin-left:3rem}
+.space-y-12 > * + *{margin-top:3rem}
+.p-14{padding:3.5rem}
+.px-14{padding-left:3.5rem;padding-right:3.5rem}
+.py-14{padding-top:3.5rem;padding-bottom:3.5rem}
+.pt-14{padding-top:3.5rem}
+.pb-14{padding-bottom:3.5rem}
+.pl-14{padding-left:3.5rem}
+.pr-14{padding-right:3.5rem}
+.mt-14{margin-top:3.5rem}
+.mb-14{margin-bottom:3.5rem}
+.ml-14{margin-left:3.5rem}
+.mr-14{margin-right:3.5rem}
+.gap-14{gap:3.5rem}
+.w-14{width:3.5rem}
+.h-14{height:3.5rem}
+.space-x-14 > * + *{margin-left:3.5rem}
+.space-y-14 > * + *{margin-top:3.5rem}
+.p-16{padding:4rem}
+.px-16{padding-left:4rem;padding-right:4rem}
+.py-16{padding-top:4rem;padding-bottom:4rem}
+.pt-16{padding-top:4rem}
+.pb-16{padding-bottom:4rem}
+.pl-16{padding-left:4rem}
+.pr-16{padding-right:4rem}
+.mt-16{margin-top:4rem}
+.mb-16{margin-bottom:4rem}
+.ml-16{margin-left:4rem}
+.mr-16{margin-right:4rem}
+.gap-16{gap:4rem}
+.w-16{width:4rem}
+.h-16{height:4rem}
+.space-x-16 > * + *{margin-left:4rem}
+.space-y-16 > * + *{margin-top:4rem}
+.p-20{padding:5rem}
+.px-20{padding-left:5rem;padding-right:5rem}
+.py-20{padding-top:5rem;padding-bottom:5rem}
+.pt-20{padding-top:5rem}
+.pb-20{padding-bottom:5rem}
+.pl-20{padding-left:5rem}
+.pr-20{padding-right:5rem}
+.mt-20{margin-top:5rem}
+.mb-20{margin-bottom:5rem}
+.ml-20{margin-left:5rem}
+.mr-20{margin-right:5rem}
+.gap-20{gap:5rem}
+.w-20{width:5rem}
+.h-20{height:5rem}
+.space-x-20 > * + *{margin-left:5rem}
+.space-y-20 > * + *{margin-top:5rem}
+.p-24{padding:6rem}
+.px-24{padding-left:6rem;padding-right:6rem}
+.py-24{padding-top:6rem;padding-bottom:6rem}
+.pt-24{padding-top:6rem}
+.pb-24{padding-bottom:6rem}
+.pl-24{padding-left:6rem}
+.pr-24{padding-right:6rem}
+.mt-24{margin-top:6rem}
+.mb-24{margin-bottom:6rem}
+.ml-24{margin-left:6rem}
+.mr-24{margin-right:6rem}
+.gap-24{gap:6rem}
+.w-24{width:6rem}
+.h-24{height:6rem}
+.space-x-24 > * + *{margin-left:6rem}
+.space-y-24 > * + *{margin-top:6rem}
+.mx-auto{margin-left:auto;margin-right:auto}
+.-mt-2{margin-top:-0.5rem}
+.gap-x-3{column-gap:0.75rem}
+.gap-y-1{row-gap:0.25rem}
+.py-px{padding-top:1px;padding-bottom:1px}
+.text-xs{font-size:0.75rem;line-height:1rem}
+.text-sm{font-size:0.875rem;line-height:1.25rem}
+.text-base{font-size:1rem;line-height:1.5rem}
+.text-lg{font-size:1.125rem;line-height:1.75rem}
+.text-xl{font-size:1.25rem;line-height:1.75rem}
+.text-2xl{font-size:1.5rem;line-height:2rem}
+.text-3xl{font-size:1.875rem;line-height:2.25rem}
+.text-4xl{font-size:2.25rem;line-height:2.5rem}
+.font-medium{font-weight:500}
+.font-semibold{font-weight:600}
+.font-bold{font-weight:700}
+.font-black{font-weight:900}
+.leading-none{line-height:1}
+.leading-tight{line-height:1.25}
+.leading-snug{line-height:1.375}
+.leading-relaxed{line-height:1.625}
+.tracking-wide{letter-spacing:0.025em}
+.tracking-tight{letter-spacing:-0.025em}
+.underline{text-decoration-line:underline}
+.text-\[8px\]{font-size:8px;line-height:1.35}
+.text-\[9px\]{font-size:9px;line-height:1.35}
+.text-\[10px\]{font-size:10px;line-height:1.35}
+.text-\[11px\]{font-size:11px;line-height:1.35}
+.text-\[13px\]{font-size:13px;line-height:1.35}
+.text-\[26px\]{font-size:26px;line-height:1.35}
+.bg-white{background-color:var(--surface-container-lowest)}
+.text-white{color:#fff}
+.border-white{border-color:#fff}
+.bg-white\/20{background-color:rgba(255,255,255,.2)}
+.text-white\/20{color:rgba(255,255,255,.2)}
+.border-white\/20{border-color:rgba(255,255,255,.2)}
+.bg-white\/25{background-color:rgba(255,255,255,.25)}
+.text-white\/25{color:rgba(255,255,255,.25)}
+.border-white\/25{border-color:rgba(255,255,255,.25)}
+.bg-white\/50{background-color:rgba(255,255,255,.5)}
+.text-white\/50{color:rgba(255,255,255,.5)}
+.border-white\/50{border-color:rgba(255,255,255,.5)}
+.bg-white\/60{background-color:rgba(255,255,255,.6)}
+.text-white\/60{color:rgba(255,255,255,.6)}
+.border-white\/60{border-color:rgba(255,255,255,.6)}
+.bg-white\/70{background-color:rgba(255,255,255,.7)}
+.text-white\/70{color:rgba(255,255,255,.7)}
+.border-white\/70{border-color:rgba(255,255,255,.7)}
+.bg-white\/80{background-color:rgba(255,255,255,.8)}
+.text-white\/80{color:rgba(255,255,255,.8)}
+.border-white\/80{border-color:rgba(255,255,255,.8)}
+.bg-white\/90{background-color:rgba(255,255,255,.9)}
+.text-white\/90{color:rgba(255,255,255,.9)}
+.border-white\/90{border-color:rgba(255,255,255,.9)}
+.bg-black\/40{background-color:rgba(0,0,0,.4)}
+.text-black\/40{color:rgba(0,0,0,.4)}
+.border-black\/40{border-color:rgba(0,0,0,.4)}
+.bg-black\/50{background-color:rgba(0,0,0,.5)}
+.text-black\/50{color:rgba(0,0,0,.5)}
+.border-black\/50{border-color:rgba(0,0,0,.5)}
+.bg-slate-50{background-color:var(--surface-container-low)}
+.text-slate-50{color:var(--surface-container-low)}
+.border-slate-50{border-color:var(--surface-container-low)}
+.bg-slate-100{background-color:var(--surface-container)}
+.text-slate-100{color:var(--surface-container)}
+.border-slate-100{border-color:var(--surface-container)}
+.bg-slate-100\/90{background-color:color-mix(in srgb, var(--surface-container) 90%, transparent)}
+.text-slate-100\/90{color:color-mix(in srgb, var(--surface-container) 90%, transparent)}
+.border-slate-100\/90{border-color:color-mix(in srgb, var(--surface-container) 90%, transparent)}
+.bg-slate-200{background-color:color-mix(in srgb, var(--on-surface-variant) 55%, var(--background))}
+.text-slate-200{color:color-mix(in srgb, var(--on-surface-variant) 55%, var(--background))}
+.border-slate-200{border-color:color-mix(in srgb, var(--on-surface-variant) 55%, var(--background))}
+.bg-slate-300{background-color:color-mix(in srgb, var(--on-surface-variant) 55%, var(--background))}
+.text-slate-300{color:color-mix(in srgb, var(--on-surface-variant) 55%, var(--background))}
+.border-slate-300{border-color:color-mix(in srgb, var(--on-surface-variant) 55%, var(--background))}
+.bg-slate-400{background-color:var(--on-surface-variant)}
+.text-slate-400{color:var(--on-surface-variant)}
+.border-slate-400{border-color:var(--on-surface-variant)}
+.bg-slate-500{background-color:var(--on-surface-variant)}
+.text-slate-500{color:var(--on-surface-variant)}
+.border-slate-500{border-color:var(--on-surface-variant)}
+.bg-slate-600{background-color:color-mix(in srgb, var(--on-surface) 72%, var(--background))}
+.text-slate-600{color:color-mix(in srgb, var(--on-surface) 72%, var(--background))}
+.border-slate-600{border-color:color-mix(in srgb, var(--on-surface) 72%, var(--background))}
+.bg-slate-700{background-color:var(--on-surface)}
+.text-slate-700{color:var(--on-surface)}
+.border-slate-700{border-color:var(--on-surface)}
+.bg-slate-800{background-color:var(--on-surface)}
+.text-slate-800{color:var(--on-surface)}
+.border-slate-800{border-color:var(--on-surface)}
+.bg-pink-50{background-color:color-mix(in srgb, var(--primary-container) 50%, var(--surface-container-lowest))}
+.text-pink-50{color:color-mix(in srgb, var(--primary-container) 50%, var(--surface-container-lowest))}
+.border-pink-50{border-color:color-mix(in srgb, var(--primary-container) 50%, var(--surface-container-lowest))}
+.bg-pink-50\/30{background-color:color-mix(in srgb, var(--primary-container) 30%, transparent)}
+.text-pink-50\/30{color:color-mix(in srgb, var(--primary-container) 30%, transparent)}
+.border-pink-50\/30{border-color:color-mix(in srgb, var(--primary-container) 30%, transparent)}
+.bg-pink-50\/40{background-color:color-mix(in srgb, var(--primary-container) 40%, transparent)}
+.text-pink-50\/40{color:color-mix(in srgb, var(--primary-container) 40%, transparent)}
+.border-pink-50\/40{border-color:color-mix(in srgb, var(--primary-container) 40%, transparent)}
+.bg-pink-50\/50{background-color:color-mix(in srgb, var(--primary-container) 50%, transparent)}
+.text-pink-50\/50{color:color-mix(in srgb, var(--primary-container) 50%, transparent)}
+.border-pink-50\/50{border-color:color-mix(in srgb, var(--primary-container) 50%, transparent)}
+.bg-pink-50\/60{background-color:color-mix(in srgb, var(--primary-container) 60%, transparent)}
+.text-pink-50\/60{color:color-mix(in srgb, var(--primary-container) 60%, transparent)}
+.border-pink-50\/60{border-color:color-mix(in srgb, var(--primary-container) 60%, transparent)}
+.bg-pink-50\/70{background-color:color-mix(in srgb, var(--primary-container) 70%, transparent)}
+.text-pink-50\/70{color:color-mix(in srgb, var(--primary-container) 70%, transparent)}
+.border-pink-50\/70{border-color:color-mix(in srgb, var(--primary-container) 70%, transparent)}
+.bg-pink-100{background-color:var(--primary-container)}
+.text-pink-100{color:var(--primary-container)}
+.border-pink-100{border-color:var(--primary-container)}
+.bg-pink-100\/60{background-color:color-mix(in srgb, var(--primary-container) 60%, transparent)}
+.text-pink-100\/60{color:color-mix(in srgb, var(--primary-container) 60%, transparent)}
+.border-pink-100\/60{border-color:color-mix(in srgb, var(--primary-container) 60%, transparent)}
+.bg-pink-100\/70{background-color:color-mix(in srgb, var(--primary-container) 70%, transparent)}
+.text-pink-100\/70{color:color-mix(in srgb, var(--primary-container) 70%, transparent)}
+.border-pink-100\/70{border-color:color-mix(in srgb, var(--primary-container) 70%, transparent)}
+.bg-pink-100\/80{background-color:color-mix(in srgb, var(--primary-container) 80%, transparent)}
+.text-pink-100\/80{color:color-mix(in srgb, var(--primary-container) 80%, transparent)}
+.border-pink-100\/80{border-color:color-mix(in srgb, var(--primary-container) 80%, transparent)}
+.bg-pink-200{background-color:color-mix(in srgb, var(--primary) 30%, #fff)}
+.text-pink-200{color:color-mix(in srgb, var(--primary) 30%, #fff)}
+.border-pink-200{border-color:color-mix(in srgb, var(--primary) 30%, #fff)}
+.bg-pink-300{background-color:color-mix(in srgb, var(--primary) 45%, #fff)}
+.text-pink-300{color:color-mix(in srgb, var(--primary) 45%, #fff)}
+.border-pink-300{border-color:color-mix(in srgb, var(--primary) 45%, #fff)}
+.bg-pink-400{background-color:var(--primary)}
+.text-pink-400{color:var(--primary)}
+.border-pink-400{border-color:var(--primary)}
+.bg-pink-500{background-color:var(--primary)}
+.text-pink-500{color:var(--primary)}
+.border-pink-500{border-color:var(--primary)}
+.bg-pink-600{background-color:var(--primary)}
+.text-pink-600{color:var(--primary)}
+.border-pink-600{border-color:var(--primary)}
+.bg-purple-50{background-color:color-mix(in srgb, var(--tertiary-container) 50%, var(--surface-container-lowest))}
+.text-purple-50{color:color-mix(in srgb, var(--tertiary-container) 50%, var(--surface-container-lowest))}
+.border-purple-50{border-color:color-mix(in srgb, var(--tertiary-container) 50%, var(--surface-container-lowest))}
+.bg-purple-50\/60{background-color:color-mix(in srgb, var(--tertiary-container) 60%, transparent)}
+.text-purple-50\/60{color:color-mix(in srgb, var(--tertiary-container) 60%, transparent)}
+.border-purple-50\/60{border-color:color-mix(in srgb, var(--tertiary-container) 60%, transparent)}
+.bg-purple-50\/70{background-color:color-mix(in srgb, var(--tertiary-container) 70%, transparent)}
+.text-purple-50\/70{color:color-mix(in srgb, var(--tertiary-container) 70%, transparent)}
+.border-purple-50\/70{border-color:color-mix(in srgb, var(--tertiary-container) 70%, transparent)}
+.bg-purple-100{background-color:var(--tertiary-container)}
+.text-purple-100{color:var(--tertiary-container)}
+.border-purple-100{border-color:var(--tertiary-container)}
+.bg-purple-400{background-color:var(--tertiary)}
+.text-purple-400{color:var(--tertiary)}
+.border-purple-400{border-color:var(--tertiary)}
+.bg-purple-500{background-color:var(--tertiary)}
+.text-purple-500{color:var(--tertiary)}
+.border-purple-500{border-color:var(--tertiary)}
+.bg-purple-600{background-color:var(--tertiary)}
+.text-purple-600{color:var(--tertiary)}
+.border-purple-600{border-color:var(--tertiary)}
+.bg-purple-700{background-color:var(--tertiary)}
+.text-purple-700{color:var(--tertiary)}
+.border-purple-700{border-color:var(--tertiary)}
+.bg-amber-50{background-color:color-mix(in srgb, #f59e0b 9%, var(--surface-container-lowest))}
+.text-amber-50{color:color-mix(in srgb, #f59e0b 9%, var(--surface-container-lowest))}
+.border-amber-50{border-color:color-mix(in srgb, #f59e0b 9%, var(--surface-container-lowest))}
+.bg-amber-50\/60{background-color:color-mix(in srgb, #f59e0b 10%, transparent)}
+.text-amber-50\/60{color:color-mix(in srgb, #f59e0b 10%, transparent)}
+.border-amber-50\/60{border-color:color-mix(in srgb, #f59e0b 10%, transparent)}
+.bg-amber-100{background-color:color-mix(in srgb, #f59e0b 22%, var(--surface-container-lowest))}
+.text-amber-100{color:color-mix(in srgb, #f59e0b 22%, var(--surface-container-lowest))}
+.border-amber-100{border-color:color-mix(in srgb, #f59e0b 22%, var(--surface-container-lowest))}
+.bg-amber-200{background-color:color-mix(in srgb, #f59e0b 45%, #fff)}
+.text-amber-200{color:color-mix(in srgb, #f59e0b 45%, #fff)}
+.border-amber-200{border-color:color-mix(in srgb, #f59e0b 45%, #fff)}
+.bg-amber-400{background-color:#fbbf24}
+.text-amber-400{color:#fbbf24}
+.border-amber-400{border-color:#fbbf24}
+.bg-amber-500{background-color:#f59e0b}
+.text-amber-500{color:#f59e0b}
+.border-amber-500{border-color:#f59e0b}
+.bg-amber-600{background-color:#d97706}
+.text-amber-600{color:#d97706}
+.border-amber-600{border-color:#d97706}
+.bg-amber-700{background-color:#b45309}
+.text-amber-700{color:#b45309}
+.border-amber-700{border-color:#b45309}
+.bg-sky-50{background-color:color-mix(in srgb, #0ea5e9 9%, var(--surface-container-lowest))}
+.text-sky-50{color:color-mix(in srgb, #0ea5e9 9%, var(--surface-container-lowest))}
+.border-sky-50{border-color:color-mix(in srgb, #0ea5e9 9%, var(--surface-container-lowest))}
+.bg-sky-50\/60{background-color:color-mix(in srgb, #0ea5e9 10%, transparent)}
+.text-sky-50\/60{color:color-mix(in srgb, #0ea5e9 10%, transparent)}
+.border-sky-50\/60{border-color:color-mix(in srgb, #0ea5e9 10%, transparent)}
+.bg-sky-100{background-color:color-mix(in srgb, #0ea5e9 20%, var(--surface-container-lowest))}
+.text-sky-100{color:color-mix(in srgb, #0ea5e9 20%, var(--surface-container-lowest))}
+.border-sky-100{border-color:color-mix(in srgb, #0ea5e9 20%, var(--surface-container-lowest))}
+.bg-sky-600{background-color:#0284c7}
+.text-sky-600{color:#0284c7}
+.border-sky-600{border-color:#0284c7}
+.bg-red-50{background-color:var(--error-container)}
+.text-red-50{color:var(--error-container)}
+.border-red-50{border-color:var(--error-container)}
+.bg-red-200{background-color:color-mix(in srgb, var(--error) 35%, var(--outline-variant))}
+.text-red-200{color:color-mix(in srgb, var(--error) 35%, var(--outline-variant))}
+.border-red-200{border-color:color-mix(in srgb, var(--error) 35%, var(--outline-variant))}
+.bg-red-400{background-color:var(--error)}
+.text-red-400{color:var(--error)}
+.border-red-400{border-color:var(--error)}
+.bg-red-500{background-color:var(--error)}
+.text-red-500{color:var(--error)}
+.border-red-500{border-color:var(--error)}
+.bg-red-600{background-color:var(--error)}
+.text-red-600{color:var(--error)}
+.border-red-600{border-color:var(--error)}
+.bg-indigo-50{background-color:color-mix(in srgb, var(--tertiary-container) 50%, var(--surface-container-lowest))}
+.text-indigo-50{color:color-mix(in srgb, var(--tertiary-container) 50%, var(--surface-container-lowest))}
+.border-indigo-50{border-color:color-mix(in srgb, var(--tertiary-container) 50%, var(--surface-container-lowest))}
+.bg-indigo-500{background-color:var(--tertiary)}
+.text-indigo-500{color:var(--tertiary)}
+.border-indigo-500{border-color:var(--tertiary)}
+.bg-rose-400{background-color:#fb7185}
+.text-rose-400{color:#fb7185}
+.border-rose-400{border-color:#fb7185}
+.bg-yellow-500{background-color:#eab308}
+.text-yellow-500{color:#eab308}
+.border-yellow-500{border-color:#eab308}
+.bg-transparent{background-color:transparent}
+.text-transparent{color:transparent}
+.border-transparent{border-color:transparent}
+.text-transparent{color:transparent}
+.bg-white\/80{background-color:color-mix(in srgb, var(--surface-container-lowest) 80%, transparent)}
+.bg-white\/90{background-color:color-mix(in srgb, var(--surface-container-lowest) 90%, transparent)}
+.border{border:1px solid var(--outline-variant)}
+.border-2{border:2px solid var(--outline-variant)}
+.border-b{border-bottom:1px solid var(--outline-variant)}
+.border-t{border-top:1px solid var(--outline-variant)}
+.border-dashed{border-style:dashed}
+.rounded-lg{border-radius:0.5rem}
+.rounded-xl{border-radius:0.75rem}
+.rounded-2xl{border-radius:1rem}
+.rounded-3xl{border-radius:1.5rem}
+.rounded-full{border-radius:9999px}
+.rounded-t-3xl{border-radius:1.5rem 1.5rem 0 0}
+.rounded-b-\[2rem\]{border-radius:0 0 2rem 2rem}
+.first\:border-t-0:first-child{border-top:0}
+.first\:mt-0:first-child{margin-top:0}
+.first\:pt-0:first-child{padding-top:0}
+.shadow-sm{box-shadow:0 1px 3px rgb(0 0 0/.08)}
+.shadow{box-shadow:0 1px 4px rgb(0 0 0/.10)}
+.shadow-md{box-shadow:0 4px 14px rgb(0 0 0/.12)}
+.shadow-lg{box-shadow:0 10px 28px rgb(0 0 0/.16)}
+.shadow-2xl{box-shadow:0 24px 48px rgb(0 0 0/.22)}
+.shadow-pink-200\/40{box-shadow:0 8px 24px color-mix(in srgb, var(--primary) 28%, transparent)}
+.shadow-pink-200\/60{box-shadow:0 8px 24px color-mix(in srgb, var(--primary) 28%, transparent)}
+.shadow-pink-300\/50{box-shadow:0 8px 24px color-mix(in srgb, var(--primary) 28%, transparent)}
+.shadow-pink-500\/30{box-shadow:0 8px 24px color-mix(in srgb, var(--primary) 28%, transparent)}
+.shadow-pink-500\/40{box-shadow:0 8px 24px color-mix(in srgb, var(--primary) 28%, transparent)}
+.shadow-purple-500\/30{box-shadow:0 8px 24px color-mix(in srgb, var(--primary) 28%, transparent)}
+.bg-gradient-to-r{background-image:linear-gradient(90deg, var(--gf, transparent), var(--gv, var(--gt, transparent)), var(--gt, transparent))}
+.bg-gradient-to-br{background-image:linear-gradient(135deg, var(--gf, transparent), var(--gt, transparent))}
+.bg-gradient-to-tr{background-image:linear-gradient(to top right, var(--gf, transparent), var(--gt, transparent))}
+.from-pink-500{--gf:var(--primary)}
+.from-pink-400{--gf:color-mix(in srgb, var(--primary) 72%, #fff)}
+.from-pink-50{--gf:color-mix(in srgb, var(--primary-container) 50%, var(--surface-container-lowest))}
+.from-purple-50{--gf:color-mix(in srgb, var(--tertiary-container) 50%, var(--surface-container-lowest))}
+.from-amber-400{--gf:#fbbf24}
+.to-purple-500{--gt:var(--tertiary)}
+.to-purple-600{--gt:color-mix(in srgb, var(--tertiary) 88%, #000)}
+.to-purple-400{--gt:color-mix(in srgb, var(--tertiary) 72%, #fff)}
+.to-purple-50{--gt:color-mix(in srgb, var(--tertiary-container) 50%, var(--surface-container-lowest))}
+.to-pink-400{--gt:color-mix(in srgb, var(--primary) 72%, #fff)}
+.to-pink-50{--gt:color-mix(in srgb, var(--primary-container) 50%, var(--surface-container-lowest))}
+.to-rose-400{--gt:#fb7185}
+.to-yellow-500{--gt:#eab308}
+.via-white{--gv:var(--surface-container-lowest)}
+.opacity-0{opacity:0}
+.opacity-50{opacity:.5}
+.opacity-60{opacity:.6}
+.transition{transition:all .2s cubic-bezier(.4,0,.2,1)}
+.transition-opacity{transition:opacity .25s ease}
+.transition-transform{transition:transform .3s cubic-bezier(.34,1.2,.64,1)}
+.duration-300{transition-duration:.3s}
+.hover\:bg-amber-50:hover{background-color:color-mix(in srgb, #f59e0b 9%, var(--surface-container-lowest))}
+.hover\:bg-amber-100:hover{background-color:color-mix(in srgb, #f59e0b 22%, var(--surface-container-lowest))}
+.hover\:bg-pink-50:hover{background-color:color-mix(in srgb, var(--primary-container) 50%, var(--surface-container-lowest))}
+.hover\:bg-pink-50\/40:hover{background-color:color-mix(in srgb, var(--primary-container) 40%, transparent)}
+.hover\:bg-pink-100:hover{background-color:var(--primary-container)}
+.hover\:bg-pink-100\/60:hover{background-color:color-mix(in srgb, var(--primary-container) 60%, transparent)}
+.hover\:bg-purple-50:hover{background-color:color-mix(in srgb, var(--tertiary-container) 50%, var(--surface-container-lowest))}
+.hover\:bg-purple-100:hover{background-color:var(--tertiary-container)}
+.hover\:bg-slate-50:hover{background-color:var(--surface-container-low)}
+.hover\:bg-slate-100:hover{background-color:var(--surface-container)}
+.hover\:bg-slate-200:hover{background-color:color-mix(in srgb, var(--on-surface-variant) 55%, var(--background))}
+.hover\:bg-white\/30:hover{background-color:rgba(255,255,255,.3)}
+.hover\:text-pink-500:hover{color:var(--primary)}
+.hover\:text-pink-600:hover{color:var(--primary)}
+.hover\:text-pink-400:hover{color:var(--primary)}
+.hover\:text-slate-500:hover{color:var(--on-surface-variant)}
+.hover\:text-slate-600:hover{color:color-mix(in srgb, var(--on-surface) 72%, var(--background))}
+.hover\:text-slate-700:hover{color:var(--on-surface)}
+.hover\:text-red-500:hover{color:var(--error)}
+.hover\:text-amber-400:hover{color:#fbbf24}
+.hover\:opacity-95:hover{opacity:.95}
+.hover\:scale-105:hover{transform:scale(1.05)}
+.hover\:shadow-md:hover{box-shadow:0 4px 14px rgb(0 0 0/.12)}
+.hover\:underline:hover{text-decoration-line:underline}
+.hover\:from-pink-100:hover{--gf:var(--primary-container)}
+.hover\:to-purple-100:hover{--gt:var(--tertiary-container)}
+.focus\:outline-none:focus{outline:none}
+.focus\:ring-2:focus{box-shadow:0 0 0 2px var(--rc, var(--primary))}
+.focus\:ring-pink-400{--rc:var(--primary)}
+.focus\:ring-amber-300{--rc:#fcd34d}
+.focus\:ring-sky-300{--rc:#7dd3fc}
+@media (min-width:640px){
+.sm\:items-center{align-items:center}
+.sm\:rounded-3xl{border-radius:1.5rem}
+}.w-80{width:20rem}
+.border-amber-300{border-color:#fcd34d}
+.border-purple-200{border-color:color-mix(in srgb, var(--tertiary) 30%, #fff)}
+.border-pink-300{border-color:color-mix(in srgb, var(--primary) 45%, #fff)}
+.hover\:bg-pink-50\/60:hover{background-color:color-mix(in srgb, var(--primary-container) 60%, transparent)}
+
+/* border colors re-asserted after width rules */
+.border-white{border-color:#fff}
+.border-white\/20{border-color:rgba(255,255,255,.2)}
+.border-white\/25{border-color:rgba(255,255,255,.25)}
+.border-white\/50{border-color:rgba(255,255,255,.5)}
+.border-white\/60{border-color:rgba(255,255,255,.6)}
+.border-white\/70{border-color:rgba(255,255,255,.7)}
+.border-white\/80{border-color:rgba(255,255,255,.8)}
+.border-white\/90{border-color:rgba(255,255,255,.9)}
+.border-black\/40{border-color:rgba(0,0,0,.4)}
+.border-black\/50{border-color:rgba(0,0,0,.5)}
+.border-slate-50{border-color:var(--surface-container-low)}
+.border-slate-100{border-color:var(--surface-container)}
+.border-slate-100\/90{border-color:color-mix(in srgb, var(--surface-container) 90%, transparent)}
+.border-slate-200{border-color:color-mix(in srgb, var(--on-surface-variant) 55%, var(--background))}
+.border-slate-300{border-color:color-mix(in srgb, var(--on-surface-variant) 55%, var(--background))}
+.border-slate-400{border-color:var(--on-surface-variant)}
+.border-slate-500{border-color:var(--on-surface-variant)}
+.border-slate-600{border-color:color-mix(in srgb, var(--on-surface) 72%, var(--background))}
+.border-slate-700{border-color:var(--on-surface)}
+.border-slate-800{border-color:var(--on-surface)}
+.border-pink-50{border-color:color-mix(in srgb, var(--primary-container) 50%, var(--surface-container-lowest))}
+.border-pink-50\/30{border-color:color-mix(in srgb, var(--primary-container) 30%, transparent)}
+.border-pink-50\/40{border-color:color-mix(in srgb, var(--primary-container) 40%, transparent)}
+.border-pink-50\/50{border-color:color-mix(in srgb, var(--primary-container) 50%, transparent)}
+.border-pink-50\/60{border-color:color-mix(in srgb, var(--primary-container) 60%, transparent)}
+.border-pink-50\/70{border-color:color-mix(in srgb, var(--primary-container) 70%, transparent)}
+.border-pink-100{border-color:var(--primary-container)}
+.border-pink-100\/60{border-color:color-mix(in srgb, var(--primary-container) 60%, transparent)}
+.border-pink-100\/70{border-color:color-mix(in srgb, var(--primary-container) 70%, transparent)}
+.border-pink-100\/80{border-color:color-mix(in srgb, var(--primary-container) 80%, transparent)}
+.border-pink-200{border-color:color-mix(in srgb, var(--primary) 30%, #fff)}
+.border-pink-300{border-color:color-mix(in srgb, var(--primary) 45%, #fff)}
+.border-pink-400{border-color:var(--primary)}
+.border-pink-500{border-color:var(--primary)}
+.border-pink-600{border-color:var(--primary)}
+.border-purple-50{border-color:color-mix(in srgb, var(--tertiary-container) 50%, var(--surface-container-lowest))}
+.border-purple-50\/60{border-color:color-mix(in srgb, var(--tertiary-container) 60%, transparent)}
+.border-purple-50\/70{border-color:color-mix(in srgb, var(--tertiary-container) 70%, transparent)}
+.border-purple-100{border-color:var(--tertiary-container)}
+.border-purple-400{border-color:var(--tertiary)}
+.border-purple-500{border-color:var(--tertiary)}
+.border-purple-600{border-color:var(--tertiary)}
+.border-purple-700{border-color:var(--tertiary)}
+.border-amber-50{border-color:color-mix(in srgb, #f59e0b 9%, var(--surface-container-lowest))}
+.border-amber-50\/60{border-color:color-mix(in srgb, #f59e0b 10%, transparent)}
+.border-amber-100{border-color:color-mix(in srgb, #f59e0b 22%, var(--surface-container-lowest))}
+.border-amber-200{border-color:color-mix(in srgb, #f59e0b 45%, #fff)}
+.border-amber-400{border-color:#fbbf24}
+.border-amber-500{border-color:#f59e0b}
+.border-amber-600{border-color:#d97706}
+.border-amber-700{border-color:#b45309}
+.border-sky-50{border-color:color-mix(in srgb, #0ea5e9 9%, var(--surface-container-lowest))}
+.border-sky-50\/60{border-color:color-mix(in srgb, #0ea5e9 10%, transparent)}
+.border-sky-100{border-color:color-mix(in srgb, #0ea5e9 20%, var(--surface-container-lowest))}
+.border-sky-600{border-color:#0284c7}
+.border-red-50{border-color:var(--error-container)}
+.border-red-200{border-color:color-mix(in srgb, var(--error) 35%, var(--outline-variant))}
+.border-red-400{border-color:var(--error)}
+.border-red-500{border-color:var(--error)}
+.border-red-600{border-color:var(--error)}
+.border-indigo-50{border-color:color-mix(in srgb, var(--tertiary-container) 50%, var(--surface-container-lowest))}
+.border-indigo-500{border-color:var(--tertiary)}
+.border-rose-400{border-color:#fb7185}
+.border-yellow-500{border-color:#eab308}
+.border-transparent{border-color:transparent}
+.border-amber-300{border-color:#fcd34d}
+.border-purple-200{border-color:color-mix(in srgb, var(--tertiary) 30%, #fff)}
+.border-pink-300{border-color:color-mix(in srgb, var(--primary) 45%, #fff)}
+
+/* ===== Oshi-Cal MD3 (Beer CSS) + Expressive component layer ===== */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", sans-serif;
+  background-color: var(--background);
+  color: var(--on-surface);
+  min-height: 100vh;
+  padding-bottom: 6rem;
+  margin: 0;
+}
+::selection { background: var(--primary-container); }
+* { scrollbar-width: thin; scrollbar-color: var(--outline-variant) transparent; }
+*::-webkit-scrollbar { width: 5px; height: 5px; }
+*::-webkit-scrollbar-thumb { background: var(--outline-variant); border-radius: 99px; }
+a { color: var(--primary); }
+input, textarea, select, button { font: inherit; }
+img { max-width: 100%; }
+
+/* --- header --- */
+.app-header {
+  position: sticky; top: 0; z-index: 30;
+  padding: 1rem 1.25rem 1.1rem;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--primary-container) 55%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 55%, var(--surface-container-lowest)));
+  border-radius: 0 0 2rem 2rem;
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+.logo-mark {
+  width: 2.75rem; height: 2.75rem; border-radius: 9999px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--primary), var(--tertiary));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 1.05rem; box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+.logo-title {
+  font-size: 1.3rem; font-weight: 900; letter-spacing: .02em; line-height: 1;
+  background: linear-gradient(90deg, var(--primary), var(--tertiary));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.icon-btn {
+  width: 2.75rem; height: 2.75rem; border-radius: 9999px; flex-shrink: 0;
+  background: var(--surface-container-lowest); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; position: relative;
+  font-size: .95rem; box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 14%, transparent);
+  transition: transform .25s cubic-bezier(.34,1.4,.64,1), background .2s;
+}
+.icon-btn:active { transform: scale(.9); }
+.icon-btn .bdg {
+  position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 9999px; background: #f59e0b; color: #fff; font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* --- view tabs (expressive segmented) --- */
+.seg-bar {
+  display: flex; gap: .25rem; margin-top: .8rem; padding: .3rem;
+  background: color-mix(in srgb, var(--primary-container) 55%, var(--surface-container-lowest));
+  border-radius: 9999px;
+}
+.seg-btn {
+  flex: 1; padding: .5rem .25rem; border: none; background: transparent; cursor: pointer;
+  border-radius: 9999px; font-size: .72rem; font-weight: 700; white-space: nowrap;
+  color: var(--on-surface-variant);
+  transition: all .3s cubic-bezier(.34,1.3,.64,1);
+}
+.seg-btn.on {
+  background: var(--primary); color: var(--on-primary);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 38%, transparent);
+}
+.seg-bar.mini { width: fit-content; margin: 0 auto; padding: .25rem; }
+.seg-bar.mini .seg-btn { flex: none; padding: .45rem 1rem; font-size: .68rem; }
+
+/* --- filter bar --- */
+.filter-bar {
+  display: flex; align-items: center; gap: .5rem;
+  background: var(--surface-container-lowest); padding: .6rem;
+  border-radius: 1.5rem; border: 1px solid var(--outline-variant);
+  box-shadow: 0 1px 3px rgb(0 0 0/.06);
+}
+.filter-main {
+  flex: 1; display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  padding: .55rem .8rem .55rem .9rem; border-radius: 1.1rem; cursor: pointer;
+  background: color-mix(in srgb, var(--primary-container) 45%, var(--surface-container-lowest));
+  border: 1px solid var(--outline-variant);
+  font-size: .72rem; font-weight: 600; color: var(--on-surface); text-align: left;
+}
+.mini-btn {
+  width: 2.25rem; height: 2.25rem; border-radius: 1.1rem; flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--primary-container) 45%, var(--surface-container-lowest));
+  border: 1px solid var(--outline-variant); color: var(--on-surface-variant); font-size: .72rem;
+  transition: all .2s;
+}
+.mini-btn.on { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+
+/* --- FAB stack --- */
+.fab-sub {
+  width: 2.75rem; height: 2.75rem; border-radius: 9999px; border: none; cursor: pointer;
+  background: var(--surface-container-lowest); color: var(--primary);
+  display: flex; align-items: center; justify-content: center; font-size: .85rem;
+  box-shadow: 0 4px 14px rgb(0 0 0/.14);
+  transition: transform .25s cubic-bezier(.34,1.4,.64,1);
+}
+.fab-sub:active { transform: scale(.88); }
+.fab-main {
+  width: 3.6rem; height: 3.6rem; border: none; cursor: pointer;
+  border-radius: 1.4rem;
+  background: linear-gradient(135deg, var(--primary), var(--tertiary));
+  color: #fff; font-size: 1.25rem;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--primary) 42%, transparent);
+  transition: transform .3s cubic-bezier(.34,1.5,.64,1), border-radius .3s;
+}
+.fab-main:active { transform: scale(.9); border-radius: 9999px; }
+
+/* --- event cards --- */
+.event-card {
+  content-visibility: auto; contain-intrinsic-size: auto 130px;
+  border-radius: 1.75rem !important;
+  transition: transform .25s cubic-bezier(.34,1.3,.64,1);
+}
+.event-card:active { transform: scale(.985); }
+
+/* --- dialogs & sheets --- */
+@keyframes detailPop { from { transform: scale(.94) translateY(14px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+.detail-pop { animation: detailPop .3s cubic-bezier(.34,1.3,.64,1); }
+.ovl:not(.hidden) > .dlg-card { animation: detailPop .32s cubic-bezier(.34,1.3,.64,1); }
+.dlg-card {
+  background: var(--surface-container-high) !important;
+  border-radius: 1.75rem !important;
+  border: 1px solid var(--outline-variant);
+}
+.sheet-card {
+  background: var(--surface-container-high) !important;
+  border-radius: 2rem 2rem 0 0 !important;
+  border: 1px solid var(--outline-variant); border-bottom: none;
+}
+@media (min-width:640px){ .sheet-card { border-radius: 2rem !important; border-bottom: 1px solid var(--outline-variant); } }
+.drawer-panel {
+  background: var(--surface-container-low) !important;
+  box-shadow: -18px 0 44px rgb(0 0 0/.22);
+}
+
+/* --- form fields (MD3 filled, expressive radius) --- */
+.fld {
+  width: 100%; padding: .75rem .9rem; border-radius: 1.1rem;
+  background: var(--surface-container-highest);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  font-size: .75rem; font-weight: 600;
+  outline: none; transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box; appearance: none;
+}
+.fld:focus { border-color: var(--primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 45%, transparent); }
+.fld::placeholder { color: var(--on-surface-variant); opacity: .75; font-weight: 500; }
+textarea.fld { resize: none; }
+input[type="color"].fld { padding: .3rem; height: 2.75rem; cursor: pointer; }
+.fld-label { display: block; font-size: .68rem; font-weight: 700; color: var(--on-surface-variant); margin-bottom: .3rem; }
+
+/* --- buttons --- */
+.btn-primary {
+  width: 100%; padding: .9rem; border: none; cursor: pointer;
+  background: linear-gradient(90deg, var(--primary), var(--tertiary));
+  color: #fff; font-weight: 700; font-size: .75rem;
+  border-radius: 1.25rem; box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 32%, transparent);
+  transition: transform .25s cubic-bezier(.34,1.4,.64,1), opacity .2s;
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+}
+.btn-primary:active { transform: scale(.97); }
+.btn-tonal {
+  width: 100%; padding: .8rem; border: 1px solid var(--outline-variant); cursor: pointer;
+  background: var(--surface-container); color: var(--on-surface-variant);
+  font-weight: 700; font-size: .72rem; border-radius: 1.25rem;
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+  transition: background .2s;
+}
+.btn-tonal:active { background: var(--surface-container-high); }
+
+/* --- chips --- */
+.gchip {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .45rem .8rem; border-radius: 9999px; cursor: pointer;
+  font-size: .7rem; font-weight: 700; border: 1px solid var(--outline-variant);
+  background: var(--surface-container-lowest); color: var(--on-surface-variant);
+  transition: all .25s cubic-bezier(.34,1.3,.64,1);
+}
+.gchip.on { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
+.gchip:active { transform: scale(.94); }
+
+/* --- calendar / week cells --- */
+.cal-cell {
+  aspect-ratio: 1/1.08; border-radius: 1rem; border: none; cursor: pointer;
+  background: var(--surface-container-low); color: var(--on-surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  font-size: .72rem; font-weight: 700; position: relative; padding: 2px;
+  transition: all .25s cubic-bezier(.34,1.3,.64,1);
+}
+.cal-cell.dim { background: transparent; color: var(--on-surface-variant); opacity: .45; }
+.cal-cell.today { box-shadow: inset 0 0 0 2px var(--primary); color: var(--primary); }
+.cal-cell.sel { background: var(--primary); color: var(--on-primary); border-radius: 1.4rem; }
+.cal-cell.sel.today { box-shadow: inset 0 0 0 2px var(--on-primary); }
+.wk-cell {
+  border-radius: 1.1rem; border: none; cursor: pointer; padding: .5rem 2px;
+  background: var(--surface-container-low); color: var(--on-surface);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  transition: all .25s cubic-bezier(.34,1.3,.64,1);
+}
+.wk-cell.today { box-shadow: inset 0 0 0 2px var(--primary); }
+.wk-cell.sel { background: var(--primary); color: var(--on-primary); border-radius: 1.5rem; }
+
+/* --- venue map (Leaflet guards) --- */
+.leaflet-pane img, .leaflet-tile { max-width: none !important; }
+.vpin { width: 30px; height: 30px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid var(--surface-container-lowest); box-shadow: 0 2px 6px rgba(0,0,0,.3); cursor: pointer; }
+.vpin-sel { background: var(--tertiary); transform: scale(1.25); }
+
+/* --- summary card keeps its brand gradient --- */
+.summary-shell {
+  background: linear-gradient(135deg, var(--primary), var(--tertiary)) !important;
+  border-radius: 2rem !important;
+}
+
+/* --- misc --- */
+.today-live-banner { border-radius: 1.75rem; }
+.wx-badge { white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  .detail-pop, .ovl:not(.hidden) > .dlg-card { animation: none; }
+  * { transition-duration: .01s !important; }
+}
+
     </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -50,35 +1132,39 @@
         gtag('config', 'G-8M7KLCRHDB');
     </script>
 </head>
-<body class="text-slate-800 min-h-screen pb-24">
+<body>
+    <script>(function(){try{var m=localStorage.getItem('oshiThemeMode')||'auto';if(m==='dark'||(m==='auto'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.body.classList.add('dark');}}catch(e){}})();</script>
 
     <!-- ヘッダー -->
-    <header class="bg-gradient-to-r from-pink-50 via-white to-purple-50 sticky top-0 z-30 px-5 py-4 rounded-b-[2rem] shadow-md shadow-pink-200/40">
+    <header class="app-header">
         <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
-            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-pink-400 to-purple-400 flex items-center justify-center text-white shadow-md shadow-pink-300/50">
-                <i class="fa-solid fa-calendar-days text-lg"></i>
+            <div class="logo-mark">
+                <i class="fa-solid fa-calendar-days"></i>
             </div>
-            <h1 class="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent tracking-wide">Oshi-Cal</h1>
+            <h1 class="logo-title">Oshi-Cal</h1>
         </div>
         <div class="flex items-center space-x-2">
-            <button onclick="openSearchModal()" title="予定を検索" class="w-11 h-11 rounded-full bg-white flex items-center justify-center text-purple-500 hover:bg-purple-50 transition shadow-sm shadow-pink-200/60">
-                <i class="fa-solid fa-magnifying-glass text-base"></i>
+            <button onclick="openSearchModal()" title="予定を検索" class="icon-btn" style="color:var(--tertiary)">
+                <i class="fa-solid fa-magnifying-glass"></i>
             </button>
-            <button onclick="toggleDeadlineMenu()" title="チケット締切" class="relative w-11 h-11 rounded-full bg-white flex items-center justify-center text-amber-500 hover:bg-amber-50 transition shadow-sm shadow-pink-200/60">
-                <i class="fa-solid fa-clock text-base"></i>
-                <span id="deadline-count-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold items-center justify-center"></span>
+            <button onclick="toggleDeadlineMenu()" title="チケット締切" class="icon-btn" style="color:#d97706">
+                <i class="fa-solid fa-clock"></i>
+                <span id="deadline-count-badge" class="bdg hidden"></span>
             </button>
-            <button onclick="toggleMenu()" class="w-11 h-11 rounded-full bg-white flex items-center justify-center text-pink-500 hover:bg-pink-50 transition shadow-sm shadow-pink-200/60">
-                <i class="fa-solid fa-bars text-base"></i>
+            <button id="theme-mode-btn" onclick="cycleThemeMode()" title="テーマ（ライト／ダーク）" class="icon-btn" style="color:var(--primary)">
+                <i class="fa-solid fa-circle-half-stroke"></i>
+            </button>
+            <button onclick="toggleMenu()" title="メニュー" class="icon-btn" style="color:var(--primary)">
+                <i class="fa-solid fa-bars"></i>
             </button>
         </div>
         </div>
-        <div class="flex bg-pink-100/60 p-1 rounded-full text-xs font-bold mt-3 w-full">
-            <button id="tab-list" onclick="switchView('list')" class="flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap bg-white text-pink-600 shadow-sm">リスト</button>
-            <button id="tab-going" onclick="switchView('going')" class="flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap text-slate-500 hover:text-slate-700">行く予定<span id="going-count-badge" class="hidden ml-1 text-[10px] font-bold text-pink-500"></span></button>
-            <button id="tab-week" onclick="switchView('week')" class="flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap text-slate-500 hover:text-slate-700">週表示</button>
-            <button id="tab-month" onclick="switchView('month')" class="flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap text-slate-500 hover:text-slate-700">月表示</button>
+        <div class="seg-bar">
+            <button id="tab-list" onclick="switchView('list')" class="seg-btn on">リスト</button>
+            <button id="tab-going" onclick="switchView('going')" class="seg-btn">行く予定<span id="going-count-badge" class="hidden" style="margin-left:.25rem;font-size:10px;font-weight:700"></span></button>
+            <button id="tab-week" onclick="switchView('week')" class="seg-btn">週表示</button>
+            <button id="tab-month" onclick="switchView('month')" class="seg-btn">月表示</button>
         </div>
     </header>
 
@@ -92,16 +1178,16 @@
         </div>
 
         <!-- フィルターバー -->
-        <div class="flex items-center space-x-2 bg-white p-2.5 rounded-2xl shadow-sm border border-pink-100/60">
-            <button onclick="openFilterModal()" class="relative flex-1 flex items-center justify-between pl-3.5 pr-3 py-2 bg-pink-50/50 border border-pink-100 rounded-xl text-xs font-semibold text-slate-700">
+        <div class="filter-bar">
+            <button onclick="openFilterModal()" class="filter-main">
                 <span id="filter-summary-label" class="flex items-center"><i class="fa-solid fa-filter text-pink-400 text-xs mr-2"></i>すべてのグループ</span>
                 <i class="fa-solid fa-chevron-down text-[10px] text-pink-400"></i>
             </button>
-            <button onclick="clearFilter()" title="絞り込みをリセット" class="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-pink-600 bg-pink-50/50 border border-pink-100 rounded-xl transition">
-                <i class="fa-solid fa-rotate-right text-xs"></i>
+            <button onclick="clearFilter()" title="絞り込みをリセット" class="mini-btn">
+                <i class="fa-solid fa-rotate-right"></i>
             </button>
-            <button id="past-toggle-btn" onclick="togglePastEvents()" title="過去の予定を表示" class="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-pink-600 bg-pink-50/50 border border-pink-100 rounded-xl transition">
-                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+            <button id="past-toggle-btn" onclick="togglePastEvents()" title="過去の予定を表示" class="mini-btn">
+                <i class="fa-solid fa-clock-rotate-left"></i>
             </button>
         </div>
 
@@ -127,9 +1213,9 @@
 
         <!-- 月表示ビュー -->
         <div id="view-month" class="hidden space-y-4">
-            <div class="flex bg-pink-100/60 p-1 rounded-full text-[11px] font-bold w-fit mx-auto">
-                <button id="month-mode-all-btn" onclick="setMonthShowFavoritesOnly(false)" class="px-4 py-1.5 rounded-full transition">すべて</button>
-                <button id="month-mode-going-btn" onclick="setMonthShowFavoritesOnly(true)" class="px-4 py-1.5 rounded-full transition">行く予定だけ</button>
+            <div class="seg-bar mini">
+                <button id="month-mode-all-btn" onclick="setMonthShowFavoritesOnly(false)" class="seg-btn on">すべて</button>
+                <button id="month-mode-going-btn" onclick="setMonthShowFavoritesOnly(true)" class="seg-btn">行く予定だけ</button>
             </div>
             <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/60">
                 <div class="flex justify-between items-center mb-4 px-2">
@@ -174,23 +1260,23 @@
 
     <!-- フローティング追加ボタン -->
     <div class="fixed bottom-6 right-6 z-20 flex flex-col items-center space-y-3">
-        <button onclick="openVenueMap()" title="会場マップ" class="w-11 h-11 rounded-full bg-white text-pink-500 shadow-md shadow-pink-200/60 flex items-center justify-center hover:bg-pink-50 transition">
+        <button onclick="openVenueMap()" title="会場マップ" class="fab-sub">
             <i class="fa-solid fa-map-location-dot text-sm"></i>
         </button>
-        <button onclick="openSearchModal()" title="予定を検索" class="w-11 h-11 rounded-full bg-white text-purple-500 shadow-md shadow-pink-200/60 flex items-center justify-center hover:bg-purple-50 transition">
+        <button onclick="openSearchModal()" title="予定を検索" class="fab-sub" style="color:var(--tertiary)">
             <i class="fa-solid fa-magnifying-glass text-sm"></i>
         </button>
-        <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" title="一番上へ戻る" class="w-11 h-11 rounded-full bg-white text-pink-500 shadow-md shadow-pink-200/60 flex items-center justify-center hover:bg-pink-50 transition">
+        <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" title="一番上へ戻る" class="fab-sub">
             <i class="fa-solid fa-arrow-up text-sm"></i>
         </button>
-        <button onclick="openAddModal()" title="自分だけの予定を追加" class="w-14 h-14 rounded-full bg-gradient-to-tr from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/40 flex items-center justify-center text-xl hover:scale-105 transition">
+        <button onclick="openAddModal()" title="自分だけの予定を追加" class="fab-main">
             <i class="fa-solid fa-plus"></i>
         </button>
     </div>
 
     <!-- サイドメニュー（グループ管理） -->
     <div id="side-menu" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" onclick="toggleMenu()">
-        <div class="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-2xl p-6 flex flex-col transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
+        <div class="drawer-panel absolute right-0 top-0 bottom-0 w-80 shadow-2xl p-6 flex flex-col transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4 border-b border-pink-50 pb-4">
                 <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-users-rectangle mr-2 text-pink-500"></i>推しグループ管理</h3>
                 <button onclick="toggleMenu()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
@@ -214,9 +1300,17 @@
                 <p class="text-[9px] text-slate-400 mt-1.5 leading-relaxed">ログインすると、お気に入り・メモ・グループ設定を他の端末とも共有できるようになります。</p>
             </div>
 
+            <div class="mb-4">
+                <p class="fld-label">テーマ</p>
+                <div class="seg-bar" style="margin-top:0" id="theme-mode-seg">
+                    <button type="button" data-tmode="light" onclick="setThemeMode('light')" class="seg-btn">ライト</button>
+                    <button type="button" data-tmode="dark" onclick="setThemeMode('dark')" class="seg-btn">ダーク</button>
+                    <button type="button" data-tmode="auto" onclick="setThemeMode('auto')" class="seg-btn">端末に合わせる</button>
+                </div>
+            </div>
             <div class="relative mb-3">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
-                <input id="group-search" type="text" placeholder="グループ名で検索" oninput="renderGroupManagementList()" class="w-full pl-9 pr-3 py-2.5 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                <input id="group-search" type="text" placeholder="グループ名で検索" oninput="renderGroupManagementList()" class="fld" style="padding-left:2.3rem">
             </div>
             <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="group-management-list"></div>
             <p class="mt-3 text-[10px] text-slate-400 leading-relaxed px-1">
@@ -238,8 +1332,8 @@
     </div>
 
     <!-- イベント追加・編集モーダル -->
-    <div id="event-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50 max-h-[85vh] overflow-y-auto">
+    <div id="event-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
+        <div class="dlg-card w-full max-w-sm p-6 space-y-4 max-h-[85vh] overflow-y-auto">
             <div class="flex justify-between items-center">
                 <h3 id="event-modal-heading" class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-calendar-plus text-pink-500 mr-2"></i>自分の予定を追加</h3>
                 <button onclick="closeModal('event-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
@@ -248,41 +1342,41 @@
             <form id="event-form" onsubmit="saveEvent(event)" class="space-y-3">
                 <input type="hidden" id="modal-edit-id" value="">
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">グループ（任意）</label>
+                    <label class="fld-label">グループ（任意）</label>
                     <div id="modal-group-chips" class="flex flex-wrap gap-1.5 mb-2"></div>
-                    <input type="text" id="modal-group-custom" oninput="renderGroupChips()" placeholder="上から選ぶか、新しいグループ名を入力" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <input type="text" id="modal-group-custom" oninput="renderGroupChips()" placeholder="上から選ぶか、新しいグループ名を入力" class="fld">
                     <p class="text-[10px] text-slate-400 mt-1 px-1">チップをタップで選択。空欄なら「個人の予定」、まだ無いグループ名を入力すると新しく追加されます。</p>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">タイトル</label>
-                    <input type="text" id="modal-title" required placeholder="例: ご飯タイム／生誕ライブ" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <label class="fld-label">タイトル</label>
+                    <input type="text" id="modal-title" required placeholder="例: ご飯タイム／生誕ライブ" class="fld">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-1">日付</label>
-                        <input type="date" id="modal-date" required class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                        <label class="fld-label">日付</label>
+                        <input type="date" id="modal-date" required class="fld">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-1">時間</label>
-                        <input type="time" id="modal-time" required class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                        <label class="fld-label">時間</label>
+                        <input type="time" id="modal-time" required class="fld">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">場所</label>
-                    <input type="text" id="modal-location" placeholder="例: 渋谷O-EAST" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <label class="fld-label">場所</label>
+                    <input type="text" id="modal-location" placeholder="例: 渋谷O-EAST" class="fld">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">入場特典・時間などのメモ</label>
-                    <textarea id="modal-regulation" rows="3" placeholder="例: 入場 17:00／特典会 18:00〜／開演 19:00" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400 resize-none"></textarea>
+                    <label class="fld-label">入場特典・時間などのメモ</label>
+                    <textarea id="modal-regulation" rows="3" placeholder="例: 入場 17:00／特典会 18:00〜／開演 19:00" class="fld"></textarea>
                 </div>
-                <button type="submit" id="event-modal-submit-btn" class="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-2xl shadow-md shadow-pink-500/30 hover:opacity-95 transition text-xs mt-2">保存する</button>
+                <button type="submit" id="event-modal-submit-btn" class="btn-primary" style="margin-top:.5rem">保存する</button>
             </form>
         </div>
     </div>
 
     <!-- 予定の修正モーダル（スプレッドシート由来の予定を自分だけ修正する） -->
-    <div id="edit-event-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
+    <div id="edit-event-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
+        <div class="dlg-card w-full max-w-sm p-6 space-y-4">
             <div class="flex justify-between items-center">
                 <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-pen text-pink-500 mr-2"></i>予定を修正</h3>
                 <button onclick="closeModal('edit-event-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
@@ -291,38 +1385,38 @@
             <form onsubmit="saveEventEdit(event)" class="space-y-3">
                 <input type="hidden" id="edit-event-id" value="">
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">タイトル</label>
-                    <input type="text" id="edit-modal-title" required class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <label class="fld-label">タイトル</label>
+                    <input type="text" id="edit-modal-title" required class="fld">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-1">日付</label>
-                        <input type="date" id="edit-modal-date" required class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                        <label class="fld-label">日付</label>
+                        <input type="date" id="edit-modal-date" required class="fld">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-1">時間</label>
-                        <input type="time" id="edit-modal-time" required class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                        <label class="fld-label">時間</label>
+                        <input type="time" id="edit-modal-time" required class="fld">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">場所</label>
-                    <input type="text" id="edit-modal-location" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <label class="fld-label">場所</label>
+                    <input type="text" id="edit-modal-location" class="fld">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">メモ・レギュレーション</label>
-                    <textarea id="edit-modal-regulation" rows="3" class="w-full p-3 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400 resize-none"></textarea>
+                    <label class="fld-label">メモ・レギュレーション</label>
+                    <textarea id="edit-modal-regulation" rows="3" class="fld"></textarea>
                 </div>
                 <div class="flex space-x-2">
                     <button type="button" onclick="clearEventOverride()" class="flex-1 py-3 bg-slate-50 text-slate-400 font-bold rounded-2xl text-xs border border-slate-100">元に戻す</button>
-                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-2xl shadow-md text-xs">保存する</button>
+                    <button type="submit" class="btn-primary" style="flex:1">保存する</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- グループ絞り込みモーダル -->
-    <div id="filter-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-pink-50 max-h-[80vh] flex flex-col">
+    <div id="filter-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="dlg-card w-full max-w-sm p-6 max-h-[80vh] flex flex-col">
             <div class="flex justify-between items-center mb-3">
                 <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-filter text-pink-500 mr-2"></i>グループで絞り込み</h3>
                 <button onclick="closeModal('filter-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
@@ -333,15 +1427,15 @@
             </div>
             <div class="relative mb-3">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
-                <input id="filter-search" type="text" placeholder="グループ名で検索" oninput="renderFilterGroupList()" class="w-full pl-9 pr-3 py-2.5 bg-pink-50/40 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                <input id="filter-search" type="text" placeholder="グループ名で検索" oninput="renderFilterGroupList()" class="fld" style="padding-left:2.3rem">
             </div>
             <div id="filter-group-list" class="flex-1 overflow-y-auto space-y-1.5 pr-1"></div>
         </div>
     </div>
 
     <!-- グループ表示設定モーダル -->
-    <div id="group-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
+    <div id="group-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="dlg-card w-full max-w-sm p-6 space-y-4">
             <div class="flex justify-between items-center">
                 <h3 class="font-bold text-base text-slate-800">表示設定</h3>
                 <button onclick="closeModal('group-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
@@ -349,12 +1443,12 @@
             <form id="group-form" onsubmit="saveGroup(event)" class="space-y-3">
                 <input type="hidden" id="group-edit-index" value="">
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">グループ</label>
+                    <label class="fld-label">グループ</label>
                     <p id="group-modal-name-label" class="w-full p-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700"></p>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">テーマカラー</label>
-                    <input type="color" id="group-modal-color" value="#ec4899" class="w-full h-10 p-1 bg-pink-50/40 border border-pink-100 rounded-2xl cursor-pointer">
+                    <label class="fld-label">テーマカラー</label>
+                    <input type="color" id="group-modal-color" value="#ec4899" class="fld">
                 </div>
                 <label class="flex items-center justify-between p-3 bg-pink-50/40 border border-pink-100 rounded-2xl cursor-pointer">
                     <span class="text-[11px] font-bold text-slate-500">このグループの予定をスケジュールに表示する</span>
@@ -365,14 +1459,14 @@
                     <input type="checkbox" id="group-modal-notify" checked class="w-4 h-4 accent-pink-500">
                 </label>
                 <p class="text-[10px] text-slate-400 px-1">※ ここでの設定はあなたの端末にのみ保存されます。公式リンクやスケジュールの取得元は管理者のみが変更できます。</p>
-                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-2xl shadow-md shadow-pink-500/30 hover:opacity-95 transition text-xs mt-2">保存する</button>
+                <button type="submit" class="btn-primary" style="margin-top:.5rem">保存する</button>
             </form>
         </div>
     </div>
 
     <!-- グループ公式リンク一覧モーダル -->
-    <div id="group-links-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
+    <div id="group-links-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
+        <div class="dlg-card w-full max-w-sm p-6 space-y-4">
             <div class="flex justify-between items-center">
                 <h3 id="group-links-title" class="font-bold text-base text-slate-800 flex items-center"></h3>
                 <button onclick="closeModal('group-links-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
@@ -382,15 +1476,15 @@
     </div>
 
     <!-- グループ操作シート（管理リストでチップを長押し） -->
-    <div id="group-action-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] hidden flex items-end sm:items-center justify-center" onclick="closeModal('group-action-modal')">
-        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-5 pb-6 shadow-2xl border border-pink-50 max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <div id="group-action-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] hidden flex items-end sm:items-center justify-center" onclick="closeModal('group-action-modal')">
+        <div class="sheet-card w-full max-w-sm p-5 pb-6 max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
             <div id="group-action-body"></div>
         </div>
     </div>
 
     <!-- 会場モーダル -->
-    <div id="venue-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-end sm:items-center justify-center" onclick="closeModal('venue-modal')">
-        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md shadow-2xl border border-pink-50 max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
+    <div id="venue-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-end sm:items-center justify-center" onclick="closeModal('venue-modal')">
+        <div class="sheet-card w-full max-w-md max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
             <div class="p-5 pb-3 flex items-start justify-between">
                 <div class="min-w-0">
                     <h3 id="venue-modal-name" class="font-bold text-base text-slate-800 leading-snug"></h3>
@@ -404,8 +1498,8 @@
     </div>
 
     <!-- イベント詳細モーダル -->
-    <div id="event-detail-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[65] hidden flex items-end sm:items-center justify-center p-4" onclick="closeEventDetail()">
-        <div class="detail-pop relative bg-white w-full max-w-md max-h-[88vh] overflow-y-auto rounded-3xl shadow-2xl" onclick="event.stopPropagation()">
+    <div id="event-detail-modal" class="ovl fixed inset-0 bg-black/50 backdrop-blur-sm z-[65] hidden flex items-end sm:items-center justify-center p-4" onclick="closeEventDetail()">
+        <div class="detail-pop dlg-card relative w-full max-w-md max-h-[88vh] overflow-y-auto" onclick="event.stopPropagation()">
             <button onclick="closeEventDetail()" class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-slate-100/90 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition shadow-sm"><i class="fa-solid fa-xmark"></i></button>
             <div id="event-detail-body"></div>
         </div>
@@ -416,7 +1510,7 @@
         <div class="flex items-center space-x-2 p-3 border-b border-pink-100/70">
             <div class="relative flex-1">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
-                <input id="venue-map-search" type="text" placeholder="会場名で検索" oninput="venueListLimit = 60; renderVenueMapList()" class="w-full pl-9 pr-3 py-2.5 bg-pink-50/50 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                <input id="venue-map-search" type="text" placeholder="会場名で検索" oninput="venueListLimit = 60; renderVenueMapList()" class="fld" style="padding-left:2.3rem">
             </div>
             <button onclick="closeVenueMap()" class="w-9 h-9 rounded-full bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-xmark"></i></button>
         </div>
@@ -425,41 +1519,41 @@
     </div>
 
     <!-- 自分用メモモーダル -->
-    <div id="memo-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl border border-pink-50">
+    <div id="memo-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
+        <div class="dlg-card w-full max-w-sm p-6 space-y-4">
             <div class="flex justify-between items-center">
                 <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-note-sticky text-amber-500 mr-2"></i>自分用メモ</h3>
                 <button onclick="closeModal('memo-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form onsubmit="saveMemo(event)" class="space-y-3">
                 <input type="hidden" id="memo-event-id" value="">
-                <textarea id="memo-text" rows="4" placeholder="例: Aちゃんと参戦／自分の整理番号は123番" class="w-full p-3 bg-amber-50/60 border border-amber-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"></textarea>
+                <textarea id="memo-text" rows="4" placeholder="例: Aちゃんと参戦／自分の整理番号は123番" class="fld"></textarea>
                 <div class="grid grid-cols-2 gap-2">
                     <label class="block">
                         <span class="text-[10px] font-bold text-slate-400">チェキ枚数</span>
-                        <input id="memo-cheki" type="number" inputmode="numeric" min="0" step="1" placeholder="0" class="w-full mt-1 p-3 bg-sky-50/60 border border-sky-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-300">
+                        <input id="memo-cheki" type="number" inputmode="numeric" min="0" step="1" placeholder="0" class="fld" style="margin-top:.25rem">
                     </label>
                     <label class="block">
                         <span class="text-[10px] font-bold text-slate-400">使った金額（円）</span>
-                        <input id="memo-spend" type="number" inputmode="numeric" min="0" step="1" placeholder="0" class="w-full mt-1 p-3 bg-sky-50/60 border border-sky-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-300">
+                        <input id="memo-spend" type="number" inputmode="numeric" min="0" step="1" placeholder="0" class="fld" style="margin-top:.25rem">
                     </label>
                 </div>
                 <p class="text-[10px] text-slate-300 font-semibold">チェキと金額は参戦記録としてサマリーに集計されるよ</p>
                 <div class="flex space-x-2">
                     <button type="button" onclick="deleteMemo()" class="flex-1 py-3 bg-slate-50 text-slate-400 font-bold rounded-2xl text-xs border border-slate-100">削除</button>
-                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-amber-400 to-pink-400 text-white font-bold rounded-2xl shadow-md text-xs">保存する</button>
+                    <button type="submit" class="btn-primary" style="flex:1">保存する</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- 予定検索 -->
-    <div id="search-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-start justify-center p-4 pt-16" onclick="closeSearchModal()">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl max-h-[80vh] flex flex-col" onclick="event.stopPropagation()">
+    <div id="search-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-start justify-center p-4 pt-16" onclick="closeSearchModal()">
+        <div class="dlg-card w-full max-w-sm p-5 max-h-[80vh] flex flex-col" onclick="event.stopPropagation()">
             <div class="flex items-center space-x-2 mb-3">
                 <div class="relative flex-1">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
-                    <input id="search-input" type="text" placeholder="タイトル・グループ・会場で検索" oninput="renderSearchResults()" class="w-full pl-9 pr-3 py-2.5 bg-pink-50/50 border border-pink-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <input id="search-input" type="text" placeholder="タイトル・グループ・会場で検索" oninput="renderSearchResults()" class="fld" style="padding-left:2.3rem">
                 </div>
                 <button onclick="closeSearchModal()" class="w-9 h-9 rounded-full bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -468,8 +1562,8 @@
     </div>
 
     <!-- 推し活サマリー -->
-    <div id="summary-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="toggleSummary()">
-        <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-3xl w-full max-w-sm p-5 shadow-2xl max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <div id="summary-modal" class="ovl fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="toggleSummary()">
+        <div class="summary-shell bg-gradient-to-br from-pink-500 to-purple-600 w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-black text-base text-white"><i class="fa-solid fa-chart-simple mr-2"></i>推し活まとめ</h3>
                 <button onclick="toggleSummary()" class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition"><i class="fa-solid fa-xmark text-xs"></i></button>
@@ -486,8 +1580,8 @@
 
     <!-- チケット締切メニュー -->
     <!-- 今日の現場 詳細パネル -->
-    <div id="today-live-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="closeTodayLiveModal()">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-3 shadow-2xl max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <div id="today-live-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="closeTodayLiveModal()">
+        <div class="dlg-card w-full max-w-sm p-6 space-y-3 max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center">
                 <h3 class="font-black text-base text-slate-800"><i class="fa-solid fa-star text-pink-500 mr-2"></i>今日の現場</h3>
                 <button onclick="closeTodayLiveModal()" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
@@ -497,7 +1591,7 @@
     </div>
 
     <div id="deadline-menu" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" onclick="toggleDeadlineMenu()">
-        <div class="absolute right-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white shadow-2xl p-6 flex flex-col transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
+        <div class="drawer-panel absolute right-0 top-0 bottom-0 w-80 max-w-[90vw] shadow-2xl p-6 flex flex-col transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-2 border-b border-pink-50 pb-4">
                 <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-clock mr-2 text-amber-500"></i>チケット締切</h3>
                 <button onclick="toggleDeadlineMenu()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
@@ -6070,8 +7164,8 @@
             const monthDiv = document.getElementById('view-month');
             const weekDiv = document.getElementById('view-week');
 
-            const activeCls = "flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap bg-white text-pink-600 shadow-sm";
-            const inactiveCls = "flex-1 px-2 py-1.5 rounded-full transition whitespace-nowrap text-slate-500 hover:text-slate-700";
+            const activeCls = "seg-btn on";
+            const inactiveCls = "seg-btn";
 
             listBtn.className = view === 'list' ? activeCls : inactiveCls;
             goingBtn.className = view === 'going' ? activeCls : inactiveCls;
@@ -6097,8 +7191,8 @@
             const allBtn = document.getElementById('month-mode-all-btn');
             const goingBtn = document.getElementById('month-mode-going-btn');
             if (!allBtn || !goingBtn) return;
-            const activeCls = "px-4 py-1.5 rounded-full transition bg-white text-pink-600 shadow-sm";
-            const inactiveCls = "px-4 py-1.5 rounded-full transition text-slate-500";
+            const activeCls = "seg-btn on";
+            const inactiveCls = "seg-btn";
             allBtn.className = !monthShowFavoritesOnly ? activeCls : inactiveCls;
             goingBtn.className = monthShowFavoritesOnly ? activeCls : inactiveCls;
         }
@@ -6247,9 +7341,9 @@
             const btn = document.getElementById('past-toggle-btn');
             if (!btn) return;
             if (showPastEvents) {
-                btn.className = "w-9 h-9 flex items-center justify-center text-white bg-pink-500 border border-pink-500 rounded-xl transition";
+                btn.className = "mini-btn on";
             } else {
-                btn.className = "w-9 h-9 flex items-center justify-center text-slate-400 hover:text-pink-600 bg-pink-50/50 border border-pink-100 rounded-xl transition";
+                btn.className = "mini-btn";
             }
         }
 
@@ -6372,7 +7466,45 @@
             window.history.replaceState({}, '', window.location.pathname);
         }
 
+        // ==== テーマ（Beer CSS / MD3: ライト・ダーク・端末連動） ====
+        function getThemeMode() {
+            try { return localStorage.getItem('oshiThemeMode') || 'auto'; } catch (e) { return 'auto'; }
+        }
+        function applyThemeMode() {
+            const mode = getThemeMode();
+            const dark = mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.body.classList.toggle('dark', dark);
+            document.querySelectorAll('#theme-mode-seg [data-tmode]').forEach(b => {
+                b.classList.toggle('on', b.getAttribute('data-tmode') === mode);
+            });
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', dark ? '#211318' : '#ec4899');
+        }
+        function setThemeMode(mode) {
+            try { localStorage.setItem('oshiThemeMode', mode); } catch (e) {}
+            applyThemeMode();
+        }
+        function cycleThemeMode() {
+            const order = ['light', 'dark', 'auto'];
+            const next = order[(order.indexOf(getThemeMode()) + 1) % order.length];
+            setThemeMode(next);
+        }
+        function initBeerTheme() {
+            const apply = () => {
+                try { if (typeof ui === 'function') ui('theme', '#ec4899'); } catch (e) {}
+                applyThemeMode();
+            };
+            apply();
+            setTimeout(apply, 900); // モジュール読み込みが遅れた場合の保険
+            try {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                    if (getThemeMode() === 'auto') applyThemeMode();
+                });
+            } catch (e) {}
+        }
+
         window.onload = async () => {
+            initBeerTheme();
             loadUserData();
             loadCachedSheetData(); // キャッシュがあれば先に表示する（parseCSV内でrenderまで行われる）
             render();
