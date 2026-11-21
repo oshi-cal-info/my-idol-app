@@ -1159,6 +1159,9 @@ button {
 .view-nav .seg-btn { padding: .68rem .1rem; font-size: .72rem; border-radius: 9999px; }
 .fab-stack { bottom: calc(5.7rem + env(safe-area-inset-bottom)); right: 1rem; }
 
+/* flex column scroll areas must be allowed to shrink */
+#group-management-list, #filter-group-list { min-height: 0; }
+
     </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -1292,12 +1295,12 @@ button {
     </footer>
 
     <!-- 下部フローティングナビ（表示切替） -->
-    <nav class="view-nav" aria-label="表示切替">
+    <div class="view-nav" role="navigation" aria-label="表示切替">
         <button id="tab-list" onclick="switchView('list')" class="seg-btn on">リスト</button>
         <button id="tab-going" onclick="switchView('going')" class="seg-btn">行く予定<span id="going-count-badge" class="hidden" style="margin-left:.2rem;font-size:9px;font-weight:800"></span></button>
         <button id="tab-week" onclick="switchView('week')" class="seg-btn">週表示</button>
         <button id="tab-month" onclick="switchView('month')" class="seg-btn">月表示</button>
-    </nav>
+    </div>
 
     <!-- フローティング追加ボタン -->
     <div class="fab-stack fixed bottom-6 right-6 z-20 flex flex-col items-center space-y-3">
