@@ -1122,6 +1122,20 @@ input[type="color"].fld { padding: .3rem; height: 2.75rem; cursor: pointer; }
   * { transition-duration: .01s !important; }
 }
 
+/* --- Beer CSS bare-button defaults neutralizer ---
+   Beer CSS styles every bare <button> with box-sizing:content-box, padding:0 1.5rem,
+   block-size:2.5rem and color:var(--on-primary), which inflates fixed-size icon
+   buttons into wide ovals and breaks the header layout. Reset them here; every
+   app button gets its real look from its own classes. */
+button {
+  box-sizing: border-box;
+  padding: 0;
+  min-inline-size: 0;
+  block-size: auto;
+  color: inherit;
+  background: none;
+}
+
     </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -7474,6 +7488,8 @@ input[type="color"].fld { padding: .3rem; height: 2.75rem; cursor: pointer; }
             const mode = getThemeMode();
             const dark = mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             document.body.classList.toggle('dark', dark);
+            // ui('theme')で生成した変数はモード固定で入るため、切替時はBeer側のモード適用も呼んで即時反映させる
+            try { if (typeof ui === 'function') ui('mode', dark ? 'dark' : 'light'); } catch (e) {}
             document.querySelectorAll('#theme-mode-seg [data-tmode]').forEach(b => {
                 b.classList.toggle('on', b.getAttribute('data-tmode') === mode);
             });
