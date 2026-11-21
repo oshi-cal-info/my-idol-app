@@ -5233,7 +5233,7 @@ button {
                     <div class="relative flex items-center gap-2 p-2 rounded-2xl border shadow-sm cursor-pointer select-none [-webkit-touch-callout:none] ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}14;border-color:${g.color}45;`}"
                         onpointerdown="chipPointerDown(${index})" onpointerup="chipPointerEnd()" onpointerleave="chipPointerEnd()" onpointercancel="chipPointerEnd()" oncontextmenu="return false" onclick="chipClick(${index})">
                         ${groupAvatarHtml(g, !isHidden)}
-                        <span class="flex-1 min-w-0 text-[11px] font-bold leading-tight ${isHidden ? 'text-slate-400' : 'text-slate-800'}" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHtml(g.name)}</span>
+                        <span class="flex-1 min-w-0 text-[11px] font-bold leading-tight ${isHidden ? 'text-slate-400' : 'text-slate-800'}" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;border-radius:0;">${escapeHtml(g.name)}</span>
                         ${notifyOn ? '' : '<i class="fa-solid fa-bell-slash text-[9px] text-slate-300 absolute top-1.5 right-1.5"></i>'}
                     </div>
                 `;
