@@ -1151,14 +1151,15 @@ button {
   position: fixed; left: 50%; transform: translateX(-50%);
   bottom: calc(.85rem + env(safe-area-inset-bottom)); z-index: 45;
   width: min(27rem, calc(100vw - 1.5rem));
-  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: .25rem;
+  display: flex; gap: .25rem;
   padding: .35rem; border-radius: 9999px;
   background: color-mix(in srgb, var(--surface-container-high) 88%, transparent);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
   border: 1px solid var(--outline-variant);
   box-shadow: 0 14px 34px rgb(0 0 0/.28);
 }
-.view-nav .seg-btn { padding: .68rem .1rem; font-size: .72rem; border-radius: 9999px; }
+.view-nav .seg-btn { flex: 1 1 0; padding: .68rem .1rem; font-size: .72rem; border-radius: 9999px; }
+.view-nav .seg-btn.on { flex-grow: 1.55; }
 .fab-stack { bottom: calc(5.7rem + env(safe-area-inset-bottom)); right: 1rem; }
 
 /* flex column scroll areas must be allowed to shrink */
@@ -1172,7 +1173,7 @@ button {
 }
 .seg-btn.on #going-count-badge { background: var(--on-primary); color: var(--primary); }
 /* Expressive spring on the bottom nav */
-.view-nav .seg-btn { transition: transform .3s cubic-bezier(.34,1.25,.64,1), background-color .3s, color .3s; }
+.view-nav .seg-btn { transition: flex-grow .5s cubic-bezier(.34,1.3,.64,1), transform .3s cubic-bezier(.34,1.25,.64,1), background-color .3s, color .3s; }
 .view-nav .seg-btn:active { transform: scale(.96); }
 .seg-btn.on { animation: nav-pop .35s cubic-bezier(.34,1.25,.64,1); }
 @keyframes nav-pop { 0% { transform: scale(.94); } 55% { transform: scale(1.025); } 100% { transform: scale(1); } }
@@ -1211,6 +1212,23 @@ body.dark .to-yellow-500 { --gt: color-mix(in srgb, #eab308 72%, var(--surface-c
 /* today banner: deepest stops + full-opacity subtext in dark mode */
 body.dark .today-live-banner { --gf: color-mix(in srgb, var(--primary) 52%, var(--surface-container-high)); --gt: color-mix(in srgb, var(--tertiary) 52%, var(--surface-container-high)); }
 body.dark .today-live-banner .text-white\/70 { color: #fff; }
+
+/* --- expressive round 4: wavy progress + morphing shape --- */
+.wave-progress { position: relative; height: 12px; margin-top: 10px; }
+.wave-progress svg { display: block; width: 100%; height: 12px; overflow: visible; }
+.wave-progress path { fill: none; stroke-width: 3.5; stroke-linecap: round; }
+.wave-progress .wp-track { stroke: color-mix(in srgb, var(--wc, var(--primary)) 20%, transparent); }
+.wave-progress .wp-fill { stroke: var(--wc, var(--primary)); stroke-dasharray: calc(var(--wp, 0) * 100) 100; }
+.wave-progress.ind { margin-top: 0; }
+.wave-progress.ind .wp-fill { stroke-dasharray: 26 74; animation: wp-dash 1.3s linear infinite; }
+@keyframes wp-dash { to { stroke-dashoffset: -100; } }
+.morph-blob { width: 74px; height: 74px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px;
+  background: linear-gradient(135deg, var(--primary), var(--tertiary));
+  border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+  animation: morph 7s ease-in-out infinite; }
+.morph-blob.sm { width: 46px; height: 46px; font-size: 17px; }
+@keyframes morph { 0%,100% { border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%; } 33% { border-radius: 62% 38% 40% 60% / 55% 62% 38% 45%; } 66% { border-radius: 45% 55% 58% 42% / 38% 40% 60% 62%; } }
+body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 72%, var(--surface-container-high)), color-mix(in srgb, var(--tertiary) 72%, var(--surface-container-high))); }
 
     </style>
     <!-- Google Analytics (GA4) -->
@@ -1653,7 +1671,7 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
     <div id="summary-modal" class="ovl fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="toggleSummary()">
         <div class="summary-shell bg-gradient-to-br from-pink-500 to-purple-600 w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-black text-base text-white"><i class="fa-solid fa-chart-simple mr-2"></i>推し活まとめ</h3>
+                <h3 class="font-black text-xl text-white"><i class="fa-solid fa-chart-simple mr-2"></i>推し活まとめ</h3>
                 <button onclick="toggleSummary()" class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition"><i class="fa-solid fa-xmark text-xs"></i></button>
             </div>
             <div id="summary-body"></div>
@@ -5852,8 +5870,10 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
             const big = t.daysLeft === 0
                 ? `<span class="text-[26px] font-black text-pink-500 tracking-tight">今日！</span>`
                 : `<span class="inline-flex items-baseline text-pink-500"><span class="text-[11px] font-black mr-0.5">あと</span><span class="text-4xl font-black tracking-tight">${t.daysLeft}</span><span class="text-xs font-black ml-0.5">日</span></span>`;
+            const wp = t.daysLeft === 0 ? 1 : Math.max(.06, Math.min(1, 1 - t.daysLeft / 30));
             return `
-                <div onclick="jumpToEvent('${e.id}')" class="cursor-pointer bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm flex items-center space-x-3">
+                <div onclick="jumpToEvent('${e.id}')" class="cursor-pointer bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm">
+                    <div class="flex items-center space-x-3">
                     <div class="flex-shrink-0 w-[76px] text-center">
                         ${big}
                         <p class="text-[9px] font-bold text-slate-400 mt-0.5">${t.isFav ? '次の推しライブまで' : '次のライブまで'}</p>
@@ -5869,6 +5889,8 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
                         <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${dateLabel}${e.time && e.time !== '00:00' ? ' ' + e.time : ''}${effectiveLocation(e) ? ' ・ ' + escapeHtml(effectiveLocation(e)) : ''}</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-slate-300 text-xs flex-shrink-0"></i>
+                    </div>
+                    <div class="wave-progress " style="--wp:${wp};--wc:${c}"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path class="wp-track" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/><path class="wp-fill" pathLength="100" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/></svg></div>
                 </div>
             `;
         }
@@ -6399,11 +6421,11 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
             if (lives.length === 0) return '';
 
             return `
-                <div onclick="openTodayLiveModal()" class="today-live-banner sticky top-[92px] z-20 cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl px-4 py-3 shadow-md shadow-pink-500/40 flex items-center justify-between">
+                <div onclick="openTodayLiveModal()" class="today-live-banner sticky top-[92px] z-20 cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl px-4 py-3.5 shadow-md shadow-pink-500/40 flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                         <span class="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-star text-[10px]"></i></span>
-                        <span class="text-white font-black text-xs">今日の現場</span>
-                        <span class="text-white/70 text-[10px] font-bold">${dayjs().format('M月D日(dd)')}・${lives.length}件</span>
+                        <span class="text-white font-black text-sm">今日の現場</span>
+                        <span class="text-white/70 text-[11px] font-bold">${dayjs().format('M月D日(dd)')}・${lives.length}件</span>
                     </div>
                     <i class="fa-solid fa-chevron-right text-white/80 text-xs"></i>
                 </div>
@@ -6416,7 +6438,7 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
             if (!container) return;
 
             if (lives.length === 0) {
-                container.innerHTML = `<p class="text-center text-xs text-slate-400 py-8">今日の予定はありません</p>`;
+                container.innerHTML = `<div class="text-center py-8"><div class="morph-blob sm mx-auto mb-3"><i class="fa-regular fa-moon"></i></div><p class="text-xs text-slate-400">今日の予定はありません</p></div>`;
             } else {
                 container.innerHTML = lives.map(list => {
                     const rep = list[0];
@@ -6928,13 +6950,13 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
             if (filtered.length === 0) {
                 const emptyBox = sheetDataReady ? `
                     <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
-                        <i class="fa-regular fa-calendar-xmark text-4xl text-pink-300 mb-3"></i>
+                        <div class="morph-blob mx-auto mb-4"><i class="fa-regular fa-calendar-xmark"></i></div>
                         <p class="text-xs text-slate-400 font-medium">予定がありません</p>
                     </div>
                 ` : `
                     <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
-                        <i class="fa-solid fa-spinner fa-spin text-4xl text-pink-300 mb-3"></i>
-                        <p class="text-xs text-slate-400 font-medium">読み込み中…</p>
+                        <div class="morph-blob mx-auto mb-4"><i class="fa-solid fa-music"></i></div><div class="wave-progress ind mx-auto" style="max-width:180px"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path class="wp-track" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/><path class="wp-fill" pathLength="100" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/></svg></div>
+                        <p class="text-xs text-slate-400 font-medium mt-3">読み込み中…</p>
                     </div>
                 `;
                 container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + emptyBox;
@@ -6965,8 +6987,8 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
                 if (!sheetDataReady && favorites.size > 0) {
                     container.innerHTML = `
                         <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
-                            <i class="fa-solid fa-spinner fa-spin text-4xl text-pink-300 mb-3"></i>
-                            <p class="text-xs text-slate-400 font-medium">読み込み中…</p>
+                            <div class="morph-blob mx-auto mb-4"><i class="fa-solid fa-music"></i></div><div class="wave-progress ind mx-auto" style="max-width:180px"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path class="wp-track" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/><path class="wp-fill" pathLength="100" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/></svg></div>
+                            <p class="text-xs text-slate-400 font-medium mt-3">読み込み中…</p>
                         </div>
                     `;
                     hydrateWeather();
@@ -6974,7 +6996,7 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
                 }
                 container.innerHTML = `
                     <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
-                        <i class="fa-regular fa-heart text-4xl text-pink-300 mb-3"></i>
+                        <div class="morph-blob mx-auto mb-4"><i class="fa-solid fa-heart"></i></div>
                         <p class="text-xs text-slate-400 font-medium">まだ「行く予定」がありません</p>
                         <p class="text-[10px] text-slate-400 mt-1.5">リストの♡をタップすると、ここに追加されるよ</p>
                     </div>
@@ -7231,6 +7253,7 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="bg-white rounded-2xl p-4 text-center border border-pink-100/60 text-xs text-slate-400 shadow-sm">
+                        <div class="morph-blob sm mx-auto mb-2"><i class="fa-regular fa-moon"></i></div>
                         ${dayjs(selectedDate).format('M月D日')}の予定はありません
                     </div>
                 `;
