@@ -1187,6 +1187,27 @@ button:active { transform: scale(.965); }
    text onto icons across the whole app. Cancel it: spacing comes from gap. */
 :is(button, .button, .chip) > :is(i, img, svg) { margin: 0; }
 
+/* --- dark mode: calm the luminous spots --- */
+body.dark .logo-mark {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 80%, var(--surface-container-high)), color-mix(in srgb, var(--tertiary) 80%, var(--surface-container-high)));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+body.dark .fab-main {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 80%, var(--surface-container-high)), color-mix(in srgb, var(--tertiary) 80%, var(--surface-container-high)));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+body.dark .btn-primary {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 85%, var(--surface-container-high)), color-mix(in srgb, var(--tertiary) 85%, var(--surface-container-high)));
+}
+body.dark .seg-btn.on { box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 16%, transparent); }
+body.dark .app-header { box-shadow: 0 6px 24px color-mix(in srgb, var(--primary) 7%, transparent); }
+body.dark .from-pink-500 { --gf: color-mix(in srgb, var(--primary) 76%, var(--surface-container-high)); }
+body.dark .to-purple-500 { --gt: color-mix(in srgb, var(--tertiary) 76%, var(--surface-container-high)); }
+body.dark .from-pink-400 { --gf: color-mix(in srgb, var(--primary) 62%, var(--surface-container-high)); }
+body.dark .to-rose-400 { --gt: color-mix(in srgb, #fb7185 72%, var(--surface-container-high)); }
+body.dark .from-amber-400 { --gf: color-mix(in srgb, #fbbf24 72%, var(--surface-container-high)); }
+body.dark .to-yellow-500 { --gt: color-mix(in srgb, #eab308 72%, var(--surface-container-high)); }
+
     </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
