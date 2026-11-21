@@ -1180,6 +1180,10 @@ button {
 #group-management-list { overflow-x: hidden; min-width: 0; }
 .drawer-panel > * { min-width: 0; }
 
+/* Beer gives button>icon a -0.5rem margin (Material compensation) which pulls
+   text onto icons across the whole app. Cancel it: spacing comes from gap. */
+:is(button, .button, .chip) > :is(i, img, svg) { margin: 0; }
+
     </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
