@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" content="#fdf2f7" />
+<link rel="icon" href="data:," />
+<title>Oshi-Cal — 推し活カレンダー | アイドルのライブ予定、ぜんぶひとつに</title>
+<meta name="description" content="167のアイドルグループのライブ・イベント予定を自動で集約。新着プッシュ通知、チケット締切アラート、推し活まとめまで。Oshi-Calの紹介ページ。" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Oshi-Cal" />
+<meta property="og:title" content="Oshi-Cal — 推し活カレンダー | アイドルのライブ予定、ぜんぶひとつに" />
+<meta property="og:description" content="167のアイドルグループのライブ・イベント予定を自動で集約。新着プッシュ通知、チケット締切アラート、推し活まとめまで。Oshi-Calの紹介ページ。" />
+<meta property="og:url" content="https://oshi-cal-info.github.io/my-idol-app/lp/" />
+<meta property="og:image" content="https://oshi-cal-info.github.io/my-idol-app/ogp-v2.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet" />
+<style>
+  /* ============ Theme tokens ============ */
+  :root{
+    --seed:#f9a8d4;
+    --seed-deep:#c2437e;
+    --seed-ink:#7c1d4e;
+    --seed-soft:#fde7f1;
+    --seed-softer:#fdf2f7;
+    --seed-container:#fbd3e6;
+    --bg:#fffafd;
+    --surface:#ffffff;
+    --surface-2:#fdf2f7;
+    --surface-3:#f7e8f0;
+    --ink:#2b1520;
+    --ink-2:#6d5560;
+    --ink-3:#9a7f8b;
+    --line:#f0dbe6;
+    --lav:#e3defc; --lav-deep:#5a4fb3; --lav-soft:#f0eefc;
+    --mint:#cdeeda; --mint-deep:#14684a; --mint-soft:#e9f7ef;
+    --peach:#ffe0c7; --peach-deep:#9a4a12; --peach-soft:#fff3e8;
+    --sky:#cfe8fb; --sky-deep:#175d8f; --sky-soft:#eaf5fd;
+    --lemon:#fdf0b8; --lemon-deep:#7a5c00;
+    --plum:#31122b; --plum-2:#4a1e40;
+    --r-xl:36px; --r-lg:28px; --r-md:20px;
+    --spring:cubic-bezier(.34,1.56,.44,1);
+    --spring-soft:cubic-bezier(.22,1.4,.36,1);
+    --shadow:0 10px 30px rgba(194,67,126,.10);
+  }
+  html[data-theme="dark"]{
+    --bg:#171017; --surface:#241722; --surface-2:#2c1c2a; --surface-3:#382434;
+    --ink:#fbeef5; --ink-2:#cdb0bf; --ink-3:#9d7f90; --line:#3d2838;
+    --seed-soft:#3a1f31; --seed-softer:#2a1825; --seed-container:#57273f;
+    --seed-ink:#f9a8d4; --seed-deep:#f48fc0;
+    --lav:#2e2a55; --lav-deep:#c6bdf7; --lav-soft:#262240;
+    --mint:#173d2e; --mint-deep:#8fe0bb; --mint-soft:#1b2f27;
+    --peach:#4a2c14; --peach-deep:#ffc491; --peach-soft:#332217;
+    --sky:#17344a; --sky-deep:#a5d6fa; --sky-soft:#1c2b38;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  @media (prefers-color-scheme: dark){
+    html:not([data-theme="light"]){
+      --bg:#171017; --surface:#241722; --surface-2:#2c1c2a; --surface-3:#382434;
+      --ink:#fbeef5; --ink-2:#cdb0bf; --ink-3:#9d7f90; --line:#3d2838;
+      --seed-soft:#3a1f31; --seed-softer:#2a1825; --seed-container:#57273f;
+      --seed-ink:#f9a8d4; --seed-deep:#f48fc0;
+      --lav:#2e2a55; --lav-deep:#c6bdf7; --lav-soft:#262240;
+      --mint:#173d2e; --mint-deep:#8fe0bb; --mint-soft:#1b2f27;
+      --peach:#4a2c14; --peach-deep:#ffc491; --peach-soft:#332217;
+      --sky:#17344a; --sky-deep:#a5d6fa; --sky-soft:#1c2b38;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+    transition:background .4s ease,color .4s ease;
+  }
+  button,[role="button"],a.btn,summary{min-height:2.25rem}
+  button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
+  button:active,.btn:active{transform:scale(.96)}
+  button,.btn{transition:transform .35s var(--spring),background .25s ease,color .25s ease,flex .45s var(--spring-soft)}
+  a{color:var(--seed-deep)}
+  :focus-visible{outline:3px solid var(--seed-deep); outline-offset:2px; border-radius:8px}
+  .display{font-family:"Zen Maru Gothic","M PLUS Rounded 1c",sans-serif}
+
+  /* ============ Top bar ============ */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; gap:.6rem;
+    padding:.6rem clamp(.8rem,3vw,1.6rem);
+    background:color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  }
+  .logo{display:flex; align-items:center; gap:.65rem; text-decoration:none; color:var(--ink); min-height:2.75rem}
+  .logo-mark{
+    width:44px;height:44px; flex:none; display:grid; place-items:center;
+    background:var(--seed); color:#fff;
+    border-radius:38% 62% 60% 40% / 45% 42% 58% 55%;
+    animation:morph 9s ease-in-out infinite;
+  }
+  .logo-mark svg{width:24px;height:24px}
+  .logo-name{font-weight:900; font-size:1.3rem; letter-spacing:.01em}
+  .logo-name em{font-style:normal; color:var(--seed-deep)}
+  .topnav{margin-left:auto; display:flex; align-items:center; gap:.35rem}
+  .topnav a.link{
+    display:none; padding:.55rem .95rem; border-radius:999px; text-decoration:none;
+    color:var(--ink-2); font-weight:700; font-size:.92rem;
+  }
+  .topnav a.link:hover{background:var(--seed-soft); color:var(--ink)}
+  @media(min-width:760px){.topnav a.link{display:inline-flex; align-items:center}}
+  .icon-btn{
+    width:44px;height:44px; border-radius:50%; display:grid; place-items:center;
+    background:var(--surface-2); color:var(--ink); flex:none;
+  }
+  .icon-btn:hover{background:var(--seed-soft)}
+  .icon-btn svg{width:21px;height:21px}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+    border-radius:999px; font-weight:800; text-decoration:none; border:none;
+    padding:.8rem 1.6rem; font-size:1rem; min-height:3.25rem;
+  }
+  .btn-primary{background:var(--seed-deep); color:#fff; box-shadow:0 8px 22px rgba(194,67,126,.28)}
+  .btn-primary:hover{background:var(--seed-ink)}
+  html[data-theme="dark"] .btn-primary{color:#2b0f1e}
+  .btn-tonal{background:var(--seed-container); color:var(--seed-ink)}
+  .btn-outline{background:transparent; color:var(--ink); box-shadow:inset 0 0 0 2px var(--line)}
+  .btn-outline:hover{box-shadow:inset 0 0 0 2px var(--seed)}
+
+  main{max-width:1180px; margin:0 auto; padding:0 clamp(.8rem,3vw,1.6rem) 4rem}
+
+  /* ============ Hero (pale panel + collage) ============ */
+  .hero{
+    margin-top:.6rem; border-radius:var(--r-xl); overflow:hidden;
+    background:var(--seed-softer);
+    display:grid; grid-template-columns:1fr;
+  }
+  @media(min-width:900px){.hero{grid-template-columns:1.05fr .95fr}}
+  .hero-copy{padding:clamp(1.8rem,5vw,3.6rem); display:flex; flex-direction:column; justify-content:center; gap:1.3rem}
+  .hero-chip{
+    align-self:flex-start; display:inline-flex; align-items:center; gap:.45rem;
+    background:var(--seed-container); color:var(--seed-ink);
+    font-weight:800; font-size:.85rem; padding:.45rem 1rem; border-radius:999px;
+  }
+  .hero-chip .dot{width:9px;height:9px;border-radius:50%;background:var(--seed-deep); animation:pulse 1.8s infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+  .hero h1{
+    margin:0; font-size:clamp(2.6rem,7.2vw,4.6rem); line-height:1.12; font-weight:900; letter-spacing:.005em;
+  }
+  .hero h1 .hl{color:var(--seed-deep); position:relative; white-space:nowrap}
+  .hero-sub{margin:0; font-size:clamp(1rem,2.4vw,1.2rem); line-height:1.85; color:var(--ink-2); font-weight:500; max-width:34em}
+  .hero-cta{display:flex; flex-wrap:wrap; gap:.7rem; align-items:center}
+  .split{display:inline-flex; gap:3px}
+  .split .btn-primary{border-radius:999px 14px 14px 999px; padding-right:1.2rem}
+  .split .btn-arrow{
+    background:var(--seed-deep); color:#fff; border-radius:14px 999px 999px 14px;
+    width:52px; display:grid; place-items:center; box-shadow:0 8px 22px rgba(194,67,126,.28);
+  }
+  html[data-theme="dark"] .split .btn-arrow{color:#2b0f1e}
+  .hero-stats{display:flex; gap:1.6rem; flex-wrap:wrap; margin-top:.4rem}
+  .hero-stats div b{display:block; font-size:1.55rem; font-weight:900; line-height:1.1}
+  .hero-stats div span{font-size:.82rem; color:var(--ink-2); font-weight:700}
+
+  /* phone collage */
+  .hero-art{
+    position:relative; min-height:480px; padding:2rem 1rem 0;
+    background:
+      radial-gradient(circle at 85% 12%, var(--seed-container) 0 90px, transparent 91px),
+      radial-gradient(circle at 8% 88%, var(--lav) 0 70px, transparent 71px),
+      var(--seed-soft);
+    overflow:hidden;
+  }
+  .shape{position:absolute; pointer-events:none}
+  .shape-flower{width:74px;height:74px; top:26px; left:6%; background:var(--seed); opacity:.85;
+    border-radius:50% 50% 50% 50% / 50% 50% 50% 50%;
+    -webkit-mask:radial-gradient(circle at 50% 0, transparent 34%, #000 35%),radial-gradient(circle at 50% 100%, transparent 34%, #000 35%),radial-gradient(circle at 0 50%, transparent 34%, #000 35%),radial-gradient(circle at 100% 50%, transparent 34%, #000 35%);
+            mask:radial-gradient(circle at 50% 0, transparent 34%, #000 35%),radial-gradient(circle at 50% 100%, transparent 34%, #000 35%),radial-gradient(circle at 0 50%, transparent 34%, #000 35%),radial-gradient(circle at 100% 50%, transparent 34%, #000 35%);
+    animation:spin 16s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .shape-blob{width:120px;height:100px; right:4%; bottom:110px; background:var(--peach); animation:morph 8s ease-in-out infinite}
+  .shape-squig{right:10%; top:36px; width:110px; color:var(--seed-deep)}
+  @keyframes morph{
+    0%,100%{border-radius:38% 62% 60% 40% / 45% 42% 58% 55%}
+    33%{border-radius:60% 40% 38% 62% / 52% 60% 40% 48%}
+    66%{border-radius:45% 55% 65% 35% / 40% 52% 48% 60%}
+  }
+  .phone{
+    position:relative; z-index:2; width:min(300px,82vw); margin:0 auto;
+    background:var(--surface); border-radius:44px; padding:.8rem .8rem 1.1rem;
+    box-shadow:0 24px 50px rgba(60,10,35,.22), inset 0 0 0 2px var(--line);
+    transform:rotate(-2deg);
+  }
+  .phone-head{display:flex; align-items:center; gap:.5rem; padding:.3rem .3rem .7rem}
+  .phone-head .pm{width:34px;height:34px;border-radius:12px;background:var(--seed);display:grid;place-items:center;color:#fff}
+  .phone-head .pm svg{width:19px;height:19px}
+  .phone-head b{font-size:.95rem}
+  .phone-head .bell{margin-left:auto; position:relative; color:var(--ink-2)}
+  .phone-head .bell i{position:absolute; top:-5px; right:-7px; background:#e8871e; color:#fff; font-style:normal; font-size:.6rem; font-weight:900; border-radius:999px; padding:.05rem .32rem}
+  .count-card{background:var(--plum); color:#ffeef7; border-radius:26px; padding:1rem 1.1rem; margin-bottom:.7rem}
+  .count-card small{font-weight:700; opacity:.75; font-size:.72rem; letter-spacing:.06em}
+  .count-card .big{font-size:1.9rem; font-weight:900; line-height:1.25}
+  .count-card .big span{color:var(--seed)}
+  .count-card p{margin:.15rem 0 0; font-size:.8rem; opacity:.85; font-weight:500}
+  .ev{background:var(--surface-2); border-radius:22px; padding:.8rem .9rem; margin-bottom:.55rem; position:relative; overflow:hidden}
+  .ev::before{content:""; position:absolute; left:0; top:0; bottom:0; width:6px; background:var(--c,#f472b6)}
+  .ev .t{font-weight:900; font-size:1.05rem}
+  .ev .n{font-weight:700; font-size:.85rem; line-height:1.5; margin:.15rem 0 .4rem}
+  .ev .tags{display:flex; gap:.35rem; flex-wrap:wrap}
+  .tag{font-size:.68rem; font-weight:800; padding:.22rem .6rem; border-radius:999px; background:var(--surface-3); color:var(--ink-2)}
+  .tag.hot{background:#fde3cf; color:#9a4a12}
+  html[data-theme="dark"] .tag.hot{background:#4a2c14; color:#ffc491}
+  .ev .heart{position:absolute; top:.6rem; right:.7rem; width:38px; height:38px; display:grid; place-items:center; border-radius:50%; color:var(--seed-deep)}
+  .ev .heart svg{width:21px;height:21px}
+  .ev .heart.on svg{fill:var(--seed-deep)}
+  .phone-nav{
+    margin-top:.8rem; background:var(--surface-3); border-radius:999px; padding:.35rem;
+    display:flex; gap:.25rem;
+  }
+  .phone-nav span{flex:1; text-align:center; font-size:.72rem; font-weight:800; padding:.5rem 0; border-radius:999px; color:var(--ink-2)}
+  .phone-nav span.sel{background:var(--seed); color:#40142a}
+
+  /* ============ Marquee ============ */
+  .marquee{overflow:hidden; padding:1.6rem 0 .4rem; -webkit-mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+  .marquee-track{display:flex; gap:.6rem; width:max-content; animation:scrollX 36s linear infinite}
+  @keyframes scrollX{to{transform:translateX(-50%)}}
+  .gchip{
+    display:inline-flex; align-items:center; gap:.5rem; white-space:nowrap;
+    background:var(--surface); border:2px solid var(--line); border-radius:999px;
+    padding:.55rem 1.1rem; font-weight:800; font-size:.92rem;
+  }
+  .gchip i{width:11px;height:11px;border-radius:50%;background:var(--c);flex:none}
+
+  /* ============ Sections & cards ============ */
+  section{margin-top:clamp(3.2rem,8vw,5.5rem)}
+  .sec-head{max-width:760px; margin-bottom:1.8rem}
+  .sec-head h2{margin:0 0 .8rem; font-size:clamp(1.9rem,5vw,3rem); font-weight:900; line-height:1.25}
+  .sec-head p{margin:0; color:var(--ink-2); font-size:clamp(.98rem,2.2vw,1.1rem); line-height:1.85; font-weight:500}
+  .sec-head p b{color:var(--ink)}
+  .cards{display:grid; gap:1rem; grid-template-columns:1fr}
+  @media(min-width:640px){.cards{grid-template-columns:1fr 1fr}}
+  @media(min-width:980px){.cards.c3{grid-template-columns:repeat(3,1fr)} .cards.c2{grid-template-columns:1fr 1fr}}
+  .card{background:var(--surface-2); border-radius:var(--r-lg); overflow:hidden; display:flex; flex-direction:column}
+  .card .viz{padding:1.6rem 1.4rem; min-height:170px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden}
+  .card .body{padding:1.3rem 1.5rem 1.6rem}
+  .card .body h3{margin:0 0 .5rem; font-size:1.28rem; font-weight:900}
+  .card .body p{margin:0; color:var(--ink-2); line-height:1.8; font-size:.95rem; font-weight:500}
+  .viz-pink{background:var(--seed-soft)} .viz-lav{background:var(--lav-soft)} .viz-mint{background:var(--mint-soft)}
+  .viz-peach{background:var(--peach-soft)} .viz-sky{background:var(--sky-soft)} .viz-plum{background:var(--plum)}
+  /* mini UI pieces inside cards */
+  .mini-list{width:100%; max-width:300px; display:grid; gap:.5rem}
+  .mini-row{display:flex; align-items:center; gap:.6rem; background:var(--surface); border-radius:16px; padding:.6rem .8rem; font-size:.82rem; font-weight:700; box-shadow:0 3px 10px rgba(0,0,0,.05)}
+  .mini-row i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+  .mini-row time{margin-left:auto; color:var(--ink-3); font-weight:800; font-size:.75rem}
+  .push-bubble{background:var(--surface); border-radius:20px 20px 20px 6px; padding:.85rem 1rem; max-width:300px; box-shadow:0 8px 20px rgba(0,0,0,.18); color:#2b1520}
+  .push-bubble b{font-size:.88rem; display:flex; gap:.45rem; align-items:center}
+  .push-bubble p{margin:.3rem 0 0; font-size:.8rem; color:#6d5560; line-height:1.6; font-weight:500}
+  .deadline{display:flex; align-items:center; gap:.8rem; background:var(--surface); border-radius:18px; padding:.8rem 1rem; max-width:310px; width:100%}
+  .deadline .clock{width:42px;height:42px;flex:none;border-radius:50%;background:#fde3cf;color:#9a4a12;display:grid;place-items:center}
+  .deadline b{font-size:.9rem} .deadline small{display:block;color:var(--ink-3);font-weight:700}
+  .sum-bars{display:flex; align-items:flex-end; gap:.55rem; height:110px}
+  .sum-bars i{flex:1; border-radius:12px 12px 6px 6px; background:var(--c); display:block}
+  .cal-mini{display:grid; grid-template-columns:repeat(7,1fr); gap:.35rem; width:100%; max-width:300px}
+  .cal-mini span{aspect-ratio:1; display:grid; place-items:center; font-size:.78rem; font-weight:800; border-radius:12px; background:var(--surface); color:var(--ink-2)}
+  .cal-mini span.has{background:var(--seed-container); color:var(--seed-ink)}
+  .cal-mini span.today{background:var(--seed-deep); color:#fff; border-radius:50%}
+  .map-dots{position:relative; width:100%; max-width:300px; height:130px}
+  .map-dots .pin{position:absolute; width:34px;height:34px;border-radius:50% 50% 50% 6px; transform:rotate(-45deg); background:var(--c); display:grid; place-items:center; box-shadow:0 6px 14px rgba(0,0,0,.2)}
+  .map-dots .pin::after{content:""; width:12px;height:12px;border-radius:50%;background:#fff}
+  .share-card{width:100%; max-width:290px; background:var(--plum); color:#ffeef7; border-radius:22px; padding:1.1rem 1.2rem; transform:rotate(-2deg)}
+  .share-card small{opacity:.7; font-weight:700; font-size:.72rem; letter-spacing:.08em}
+  .share-card .r{display:flex; justify-content:space-between; font-weight:800; font-size:.9rem; padding:.35rem 0; border-bottom:1px dashed rgba(255,255,255,.25)}
+  .share-card .r:last-child{border:none}
+
+  /* ============ Playground ============ */
+  .play{background:var(--plum); color:#fdf0f7; border-radius:var(--r-xl); padding:clamp(1.6rem,4.5vw,3rem); position:relative; overflow:hidden}
+  .play::before{content:""; position:absolute; width:340px;height:340px; right:-120px; top:-120px; background:var(--seed); opacity:.16; animation:morph 10s ease-in-out infinite}
+  .play h2{margin:0 0 .7rem; font-size:clamp(1.8rem,4.6vw,2.7rem); font-weight:900; line-height:1.3; position:relative}
+  .play>p{margin:0 0 2rem; color:#e8c9da; line-height:1.85; font-weight:500; max-width:40em; position:relative}
+  .play-grid{display:grid; gap:1rem; grid-template-columns:1fr; position:relative}
+  @media(min-width:860px){.play-grid{grid-template-columns:1fr 1fr}}
+  .play-box{background:rgba(255,255,255,.07); border:1.5px solid rgba(255,255,255,.14); border-radius:var(--r-lg); padding:1.4rem}
+  .play-box h3{margin:0 0 .4rem; font-size:1.05rem; font-weight:900}
+  .play-box p{margin:0 0 1.1rem; font-size:.88rem; color:#dfb9cf; line-height:1.7; font-weight:500}
+  /* button group that bumps */
+  .bgroup{display:flex; gap:4px; background:rgba(255,255,255,.1); padding:5px; border-radius:999px}
+  .bgroup button{
+    flex:1; border-radius:999px; padding:.7rem .4rem; font-weight:800; font-size:.92rem; color:#f3d7e6;
+    display:inline-flex; align-items:center; justify-content:center; gap:.35rem; min-height:3rem;
+  }
+  .bgroup button.sel{background:var(--seed); color:#40142a; flex:1.45}
+  .viewpane{margin-top:1.1rem; background:rgba(0,0,0,.22); border-radius:20px; padding:1rem; min-height:118px}
+  .viewpane .vp-row{display:flex; justify-content:space-between; align-items:center; padding:.42rem .2rem; font-size:.88rem; font-weight:700; border-bottom:1px dashed rgba(255,255,255,.14)}
+  .viewpane .vp-row:last-child{border:none}
+  .viewpane .vp-row span{min-width:0}
+  .viewpane .vp-row time{color:var(--seed); font-weight:900; white-space:nowrap; margin-left:.9rem; flex:none}
+  .vp-week{display:grid; grid-template-columns:repeat(7,1fr); gap:.35rem; text-align:center}
+  .vp-week div{background:rgba(255,255,255,.09); border-radius:14px; padding:.55rem 0; font-size:.75rem; font-weight:800}
+  .vp-week div b{display:block; font-size:1rem; margin-top:.15rem}
+  .vp-week div.hot{background:var(--seed); color:#40142a}
+  .vp-month{display:grid; grid-template-columns:repeat(7,1fr); gap:.3rem}
+  .vp-month span{aspect-ratio:1.25; display:grid; place-items:center; font-size:.72rem; font-weight:800; border-radius:9px; background:rgba(255,255,255,.07)}
+  .vp-month span.has{background:var(--seed); color:#40142a}
+  /* wavy progress */
+  .wave-wrap{margin-top:.4rem}
+  .wave-num{font-size:2rem; font-weight:900}
+  .wave-num small{font-size:.9rem; color:#dfb9cf; font-weight:700}
+  .wave-svg{width:100%; height:44px; display:block; margin-top:.5rem}
+  .wave-track{stroke:rgba(255,255,255,.18); stroke-width:7; fill:none; stroke-linecap:round}
+  .wave-fill{stroke:var(--seed); stroke-width:7; fill:none; stroke-linecap:round; stroke-dasharray:600; stroke-dashoffset:600; transition:stroke-dashoffset 1.2s var(--spring-soft)}
+  /* seed picker */
+  .seeds{display:flex; gap:.7rem; flex-wrap:wrap}
+  .seed-dot{width:52px;height:52px;border-radius:50%; background:var(--c); position:relative; flex:none; box-shadow:inset 0 0 0 3px rgba(255,255,255,.35)}
+  .seed-dot.sel{box-shadow:0 0 0 3px var(--plum),0 0 0 6px #fff}
+  .seed-dot:active{transform:scale(.9)}
+  .seed-name{font-size:.85rem; font-weight:800; color:#f3d7e6; margin-top:.8rem}
+  /* shape playground */
+  .shapes{display:flex; gap:1rem; align-items:center; flex-wrap:wrap}
+  .morph-shape{width:86px;height:86px; background:var(--seed); cursor:pointer; transition:border-radius .8s var(--spring),background .4s, transform .35s var(--spring); border:none; padding:0}
+  .morph-shape:active{transform:scale(.92)}
+  .shape-note{font-size:.85rem; color:#dfb9cf; font-weight:700}
+
+  /* ============ Dark feature band ============ */
+  .band{display:grid; gap:1rem; grid-template-columns:1fr}
+  @media(min-width:860px){.band{grid-template-columns:1.2fr .8fr}}
+  .band-main{background:var(--seed-soft); border-radius:var(--r-lg); padding:clamp(1.5rem,4vw,2.4rem)}
+  .band-main h3{margin:0 0 .7rem; font-size:clamp(1.4rem,3.4vw,1.9rem); font-weight:900; line-height:1.4}
+  .band-main p{margin:0; color:var(--ink-2); line-height:1.9; font-weight:500}
+  .band-side{background:var(--lemon); color:#4d3d00; border-radius:var(--r-lg); padding:clamp(1.5rem,4vw,2.4rem)}
+  html[data-theme="dark"] .band-side{background:#3d3410; color:#f5e3a1}
+  .band-side h3{margin:0 0 .7rem; font-size:1.35rem; font-weight:900}
+  .band-side p{margin:0; line-height:1.85; font-weight:500; opacity:.85}
+  .band-side .yen{font-size:2.2rem; font-weight:900; display:block; margin-top:.8rem}
+
+  /* ============ Steps ============ */
+  .steps{display:grid; gap:1rem; grid-template-columns:1fr}
+  @media(min-width:860px){.steps{grid-template-columns:repeat(3,1fr)}}
+  .step{background:var(--surface-2); border-radius:var(--r-lg); padding:1.6rem}
+  .step .num{
+    width:52px;height:52px; display:grid; place-items:center; font-weight:900; font-size:1.3rem; color:#fff;
+    background:var(--c); margin-bottom:1rem;
+  }
+  .step:nth-child(1) .num{border-radius:50%}
+  .step:nth-child(2) .num{border-radius:38% 62% 60% 40% / 45% 42% 58% 55%}
+  .step:nth-child(3) .num{border-radius:16px}
+  .step h3{margin:0 0 .5rem; font-size:1.15rem; font-weight:900}
+  .step p{margin:0; color:var(--ink-2); line-height:1.8; font-size:.93rem; font-weight:500}
+
+  /* ============ Final CTA + footer ============ */
+  .final{
+    margin-top:clamp(3.2rem,8vw,5.5rem); text-align:center; border-radius:var(--r-xl);
+    background:var(--seed-container); padding:clamp(2.4rem,6vw,4rem) 1.4rem; position:relative; overflow:hidden;
+  }
+  .final h2{margin:0 0 .8rem; font-size:clamp(2rem,6vw,3.4rem); font-weight:900; line-height:1.25; color:var(--seed-ink)}
+  .final p{margin:0 auto 1.8rem; max-width:36em; line-height:1.9; font-weight:500; color:var(--seed-ink); opacity:.85}
+  .final .btn-primary{background:var(--seed-ink); color:#fff; font-size:1.1rem; padding:1rem 2.4rem}
+  html[data-theme="dark"] .final .btn-primary{color:#2b0f1e; background:var(--seed)}
+  .final .blob{position:absolute; width:150px;height:150px; background:var(--seed); opacity:.35; animation:morph 9s ease-in-out infinite}
+  .wave-div{display:block; width:100%; height:26px; margin-top:3.4rem; color:var(--line)}
+  footer{max-width:1180px; margin:0 auto; padding:1.6rem clamp(.8rem,3vw,1.6rem) 3rem; display:flex; flex-wrap:wrap; gap:1rem 2rem; align-items:center; color:var(--ink-3); font-size:.88rem; font-weight:700}
+  footer nav{display:flex; gap:1.4rem; flex-wrap:wrap}
+  footer a{color:var(--ink-2); text-decoration:none; padding:.4rem 0}
+  footer a:hover{color:var(--seed-deep); text-decoration:underline}
+
+  /* Sections are always visible: no scroll-triggered hiding, so content
+     can never be trapped invisible by a missed intersection event. */
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
+    html{scroll-behavior:auto}
+    .reveal{opacity:1; transform:none}
+    .marquee-track{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="logo" href="#top" aria-label="Oshi-Cal トップへ">
+    <span class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="4"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8.5 15.2l2.3 2.3 4.2-4.4" stroke-width="2.4"/></svg>
+    </span>
+    <span class="logo-name">Oshi<em>-</em>Cal</span>
+  </a>
+  <nav class="topnav" aria-label="ページ内メニュー">
+    <a class="link" href="#features">できること</a>
+    <a class="link" href="#playground">触ってみる</a>
+    <a class="link" href="#views">4つの表示</a>
+    <a class="link" href="#start">はじめ方</a>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="ダーク／ライト切り替え">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+    </button>
+    <a class="btn btn-primary" style="min-height:2.75rem; padding:.6rem 1.3rem; font-size:.95rem" href="https://oshi-cal-info.github.io/my-idol-app/" target="_blank" rel="noopener">アプリを開く</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- ================= HERO ================= -->
+  <div class="hero">
+    <div class="hero-copy">
+      <span class="hero-chip"><span class="dot"></span> 167グループの予定を自動収集中</span>
+      <h1 class="display">推しの予定は、<br /><span class="hl">ぜんぶここ。</span></h1>
+      <p class="hero-sub">アイドルのライブ・イベント予定を、公式サイトや公開カレンダーから自動で集めてひとつのカレンダーに。新着はプッシュ通知、チケットの締切は前日と当日にリマインド。もう「気づいたら終わってた」は、なしにしよう。</p>
+      <div class="hero-cta">
+        <span class="split">
+          <a class="btn btn-primary" href="https://oshi-cal-info.github.io/my-idol-app/" target="_blank" rel="noopener">無料ではじめる</a>
+          <a class="btn-arrow" href="https://oshi-cal-info.github.io/my-idol-app/" target="_blank" rel="noopener" aria-label="アプリを開く">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </span>
+        <a class="btn btn-outline" href="#playground">まず触ってみる</a>
+      </div>
+      <div class="hero-stats">
+        <div><b>167</b><span>対応グループ</span></div>
+        <div><b>4つ</b><span>見やすい表示切替</span></div>
+        <div><b>¥0</b><span>ずっと無料・登録なし</span></div>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="shape shape-flower"></div>
+      <div class="shape shape-blob"></div>
+      <svg class="shape shape-squig" viewBox="0 0 110 24" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><path d="M3 12 Q 16 2, 29 12 T 55 12 T 81 12 T 107 12"/></svg>
+      <div class="phone">
+        <div class="phone-head">
+          <span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="4"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+          <b>Oshi-Cal</b>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 9a6 6 0 10-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9M10 20a2.2 2.2 0 004 0"/></svg><i>37</i></span>
+        </div>
+        <div class="count-card">
+          <small>次の推しライブまで</small>
+          <div class="big">あと <span id="heroCount">—</span> 日</div>
+          <p>12月24日（木）YON PIECE ＠ Zepp Shinjuku</p>
+        </div>
+        <div class="ev" style="--c:#10b981">
+          <div class="t">17:45</div>
+          <div class="n">YON PIECE そして冒険ははじまった ＠ Zepp Shinjuku（TOKYO）</div>
+          <div class="tags"><span class="tag">AKANECLUB</span><span class="tag">myojou</span><span class="tag">HzMe</span></div>
+          <button class="heart on" type="button" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 20.7C6 16.6 3 13.3 3 9.6 3 7 5 5 7.5 5c1.7 0 3.4 1 4.5 2.6C13.1 6 14.8 5 16.5 5 19 5 21 7 21 9.6c0 3.7-3 7-9 11.1z"/></svg></button>
+        </div>
+        <div class="ev" style="--c:#d946ef">
+          <div class="t">18:00 <span style="font-size:.72rem; color:var(--ink-3)">ほか</span></div>
+          <div class="n">『わーすた presents にゃんぽこらフェス！ vol.3』品川ステラボール</div>
+          <div class="tags"><span class="tag hot">20組出演</span><span class="tag">わーすた</span><span class="tag">Onephony</span></div>
+          <button class="heart" type="button" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 20.7C6 16.6 3 13.3 3 9.6 3 7 5 5 7.5 5c1.7 0 3.4 1 4.5 2.6C13.1 6 14.8 5 16.5 5 19 5 21 7 21 9.6c0 3.7-3 7-9 11.1z"/></svg></button>
+        </div>
+        <div class="phone-nav"><span>リスト</span><span class="sel">行く予定</span><span>週表示</span><span>月表示</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- marquee -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track" id="marqueeTrack"></div>
+  </div>
+
+  <!-- ================= FEATURES ================= -->
+  <section id="features">
+    <div class="sec-head reveal">
+      <h2 class="display">探す手間は、もう終わり。</h2>
+      <p>グループごとに公式サイトやSNSを巡回しなくて大丈夫。Oshi-Calが毎朝まとめて、変わったところは<b>プッシュでお知らせ</b>します。</p>
+    </div>
+    <div class="cards c3">
+      <article class="card reveal">
+        <div class="viz viz-pink">
+          <div class="mini-list">
+            <div class="mini-row"><i style="--c:#ec4899"></i>TENRIN『四天轟臨』<time>18:00</time></div>
+            <div class="mini-row"><i style="--c:#10b981"></i>Devil ANTHEM.<time>18:00</time></div>
+            <div class="mini-row"><i style="--c:#f59e0b"></i>yosugala<time>18:00</time></div>
+          </div>
+        </div>
+        <div class="body">
+          <h3>予定は自動で集まる</h3>
+          <p>公式サイト・Lit.Link・TimeTree・Googleカレンダーなど、グループごとに違う公開方法を横断して収集。167グループ分の予定が、開くだけで最新になっています。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="viz viz-plum">
+          <div class="push-bubble">
+            <b>🔔 新しいライブが追加されました</b>
+            <p>わーすた『わーしっぷ大感謝祭』<br />12月28日 ＠ 竹芝ニューピアホール</p>
+          </div>
+        </div>
+        <div class="body">
+          <h3>新着・変更をプッシュ通知</h3>
+          <p>新規ライブの追加や、日時・会場の変更があったら通知。グループごとに通知のオン／オフも切り替えられます。深夜は静かになる設計です。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="viz viz-peach">
+          <div class="deadline">
+            <span class="clock"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.8 2M9 2.5h6"/></svg></span>
+            <span><b>チケット入金締切</b><small>明日 23:59 まで ・ 前日＆当日に通知</small></span>
+          </div>
+        </div>
+        <div class="body">
+          <h3>締切を逃さない</h3>
+          <p>イベント情報からチケットの申込・入金締切を自動で拾って一覧化。締切の前日と当日にリマインドが届くから、払い忘れがなくなります。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="viz viz-lav">
+          <div class="cal-mini" id="calMini"></div>
+        </div>
+        <div class="body">
+          <h3>見方は4つ、気分で切替</h3>
+          <p>リスト／行く予定／週表示／月表示。週表示は日曜はじまりの帯で1週間の件数と誕生日・周年バッジが一目瞭然。詳しくは下の「触ってみる」で。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="viz viz-mint">
+          <div class="map-dots">
+            <span class="pin" style="--c:#ec4899; left:12%; top:16%"></span>
+            <span class="pin" style="--c:#6366f1; left:58%; top:6%; transform:rotate(-45deg) scale(.85)"></span>
+            <span class="pin" style="--c:#10b981; left:36%; top:52%; transform:rotate(-45deg) scale(.92)"></span>
+            <span class="pin" style="--c:#f59e0b; left:76%; top:48%; transform:rotate(-45deg) scale(.78)"></span>
+          </div>
+        </div>
+        <div class="body">
+          <h3>会場マップ＆乗換リンク</h3>
+          <p>よく行く会場を地図にピン表示して、今後のイベント件数まで。イベント詳細からは地図と電車の乗換検索へそのまま飛べます。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="viz viz-sky">
+          <div class="share-card">
+            <small>今月の推し活まとめ</small>
+            <div class="r"><span>参戦したライブ</span><span>4回</span></div>
+            <div class="r"><span>チェキ</span><span>12枚</span></div>
+            <div class="r"><span>いちばん会った推し</span><span>Onephony</span></div>
+          </div>
+        </div>
+        <div class="body">
+          <h3>推し活まとめを画像でシェア</h3>
+          <p>月ごと・年ごとの参戦回数やランキングを自動集計。チェキ枚数や使った金額の記録もつけて、そのまま画像でシェアできます。</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================= PLAYGROUND ================= -->
+  <section id="playground">
+    <div class="play reveal">
+      <h2 class="display">さわって、<br />ためしてみよう。</h2>
+      <p>色ひとつでページ全体の雰囲気が変わって、ボタンは押し合って、形はもにょっと変わる。Oshi-Calの「触ってて楽しい」感覚を、このページでもそのまま体験できます。</p>
+      <div class="play-grid">
+        <div class="play-box">
+          <h3>ボタン群は、押し合う</h3>
+          <p>選んだボタンがふわっと広がって、隣を押しのける。本物のアプリの表示切替と同じ動きです。</p>
+          <div class="bgroup" role="tablist" aria-label="表示切替デモ">
+            <button type="button" class="sel" data-view="list" role="tab" aria-selected="true">✓ リスト</button>
+            <button type="button" data-view="week" role="tab" aria-selected="false">週表示</button>
+            <button type="button" data-view="month" role="tab" aria-selected="false">月表示</button>
+          </div>
+          <div class="viewpane" id="viewpane"></div>
+        </div>
+        <div class="play-box">
+          <h3>波打つカウントダウン</h3>
+          <p>次の推しライブまでの進み具合は、波のプログレスで。ちょっと楽しい、残り時間の表示です。</p>
+          <div class="wave-wrap">
+            <div class="wave-num"><span id="waveDays">—</span> <small>日後にライブ ／ 12月24日 YON PIECE</small></div>
+            <svg class="wave-svg" viewBox="0 0 600 44" preserveAspectRatio="none" aria-hidden="true">
+              <path class="wave-track" d="M4 22 Q 40 6, 76 22 T 148 22 T 220 22 T 292 22 T 364 22 T 436 22 T 508 22 T 580 22 T 596 22"/>
+              <path class="wave-fill" id="waveFill" d="M4 22 Q 40 6, 76 22 T 148 22 T 220 22 T 292 22 T 364 22 T 436 22 T 508 22 T 580 22 T 596 22"/>
+            </svg>
+          </div>
+          <h3 style="margin-top:1.6rem">テーマカラーを変える</h3>
+          <p>色ひとつ選ぶだけで、ページ全体の色がその色に合わせて生まれ変わります。アプリの色の決まり方と、同じ仕組みです。</p>
+          <div class="seeds" id="seeds">
+            <button type="button" class="seed-dot sel" data-seed="pink" style="--c:#f9a8d4; background:#f9a8d4" aria-label="淡いピンク"></button>
+            <button type="button" class="seed-dot" data-seed="lav" style="--c:#b7a6f5; background:#b7a6f5" aria-label="ラベンダー"></button>
+            <button type="button" class="seed-dot" data-seed="mint" style="--c:#6fd3a7; background:#6fd3a7" aria-label="ミント"></button>
+            <button type="button" class="seed-dot" data-seed="peach" style="--c:#ffb877; background:#ffb877" aria-label="ピーチ"></button>
+            <button type="button" class="seed-dot" data-seed="sky" style="--c:#7cc0f2; background:#7cc0f2" aria-label="スカイ"></button>
+          </div>
+          <div class="seed-name" id="seedName">いまのテーマカラー：淡いピンク（アプリと同じ色）</div>
+        </div>
+        <div class="play-box">
+          <h3>形は、もにょっと変わる</h3>
+          <p>タップすると形がもにょっと変わります。カードもボタンも、ただ丸いだけじゃないところがポイントです。</p>
+          <div class="shapes">
+            <button type="button" class="morph-shape" id="morphShape" aria-label="形を変える"></button>
+            <span class="shape-note" id="shapeNote">いまの形：まんまる</span>
+          </div>
+        </div>
+        <div class="play-box">
+          <h3>ハートも、ぶわん。</h3>
+          <p>お気に入り（＝行く予定）のハート。控えめなスプリングで、全ボタン共通の押し心地になっています。</p>
+          <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap">
+            <button type="button" id="favBtn" aria-pressed="false" style="display:inline-flex; align-items:center; gap:.55rem; background:var(--seed); color:#40142a; font-weight:900; padding:.85rem 1.5rem; border-radius:999px; font-size:1rem; min-height:3.2rem">
+              <svg id="favHeart" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M12 20.7C6 16.6 3 13.3 3 9.6 3 7 5 5 7.5 5c1.7 0 3.4 1 4.5 2.6C13.1 6 14.8 5 16.5 5 19 5 21 7 21 9.6c0 3.7-3 7-9 11.1z"/></svg>
+              行く予定 <span id="favCount" style="background:rgba(255,255,255,.65); border-radius:999px; padding:.1rem .55rem; font-size:.85rem">0</span>
+            </button>
+            <span class="shape-note" id="favNote">タップしてみて</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= VIEWS ================= -->
+  <section id="views">
+    <div class="sec-head reveal">
+      <h2 class="display">4つの表示、ぜんぶ主役。</h2>
+      <p>予定の見方は人それぞれ。Oshi-Calは下部のフローティングバーから、いつでもワンタップで切り替えられます。</p>
+    </div>
+    <div class="cards c2">
+      <article class="card reveal">
+        <div class="viz viz-pink">
+          <div class="mini-list">
+            <div class="mini-row"><i style="--c:#10b981"></i>12/24 YON PIECE<time>17:45</time></div>
+            <div class="mini-row"><i style="--c:#d946ef"></i>12/26 SP 4MAN LIVE<time>未定</time></div>
+            <div class="mini-row"><i style="--c:#f59e0b"></i>12/28 わーすた大感謝祭<time>竹芝</time></div>
+          </div>
+        </div>
+        <div class="body">
+          <h3>リスト表示</h3>
+          <p>日付ごとに予定が並ぶ基本形。出演時間が分かればステージ時間バッジ、複数グループ出演なら全グループのチップと天気予報まで表示されます。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="viz viz-mint">
+          <div class="sum-bars" aria-hidden="true">
+            <i style="--c:#f9a8d4; height:55%"></i><i style="--c:#b7a6f5; height:80%"></i><i style="--c:#6fd3a7; height:38%"></i><i style="--c:#ffb877; height:95%"></i><i style="--c:#7cc0f2; height:62%"></i>
+          </div>
+        </div>
+        <div class="body">
+          <h3>行く予定 ＆ 推し活まとめ</h3>
+          <p>ハートを付けた予定だけを集めた「行く予定」は、ICS書き出しやGoogleカレンダー一括登録に対応。月間・年間の参戦記録はランキング付きで振り返れます。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="viz viz-lav">
+          <div class="vp-week" style="max-width:320px; width:100%">
+            <div>日<b>2</b></div><div>月<b>0</b></div><div>火<b>1</b></div><div class="hot" style="background:var(--lav-deep); color:#fff">水<b>3</b></div><div>木<b>1</b></div><div>金<b>4</b></div><div>土<b>5</b></div>
+          </div>
+        </div>
+        <div class="body">
+          <h3>週表示</h3>
+          <p>日曜はじまりの1週間ストリップ。日ごとの件数、推しの誕生日・周年バッジが見渡せて、「今週どこ行く？」がすぐ決まります。</p>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="viz viz-sky">
+          <div class="cal-mini" id="calMini2"></div>
+        </div>
+        <div class="body">
+          <h3>月表示</h3>
+          <p>1か月をざっくり眺める俯瞰ビュー。予定のある日に色が付くから、忙しい週と空いてる週のバランスがひと目で分かります。空いてる日は「ルーレット」で行き先を提案も。</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================= BAND ================= -->
+  <section>
+    <div class="band">
+      <div class="band-main reveal">
+        <h3 class="display">端末を変えても、<br />推し活はそのまま。</h3>
+        <p>ログインすれば、お気に入り・メモ・グループ設定が端末間で同期されます。予定には自分だけのメモや手動イベントも追加できて、Googleカレンダーへの購読（ICS）で新規ライブが自動で並ぶ使い方も。ブラウザで開くだけのPWAだから、インストールもアプリストアも要りません。</p>
+      </div>
+      <div class="band-side reveal">
+        <h3>家計にも、やさしく。</h3>
+        <p>参戦回数と使った金額を記録できるから、「今月あと何回行ける？」が見える化されます。</p>
+        <span class="yen">月4回まで、が目安。</span>
+        <p style="margin-top:.6rem">チェキ代も1イベントごとに記録OK。推し活は、計画的にもっと楽しく。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STEPS ================= -->
+  <section id="start">
+    <div class="sec-head reveal">
+      <h2 class="display">はじめ方は、3ステップ。</h2>
+      <p>アカウント登録なし、無料。スマホのブラウザで開いて、ホーム画面に追加すればアプリみたいに使えます。</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="num" style="--c:#e7549c">1</div>
+        <h3>サイトを開く</h3>
+        <p>下のボタンからOshi-Calを開くだけ。全グループの直近の予定が、もう並んでいます。</p>
+      </div>
+      <div class="step reveal">
+        <div class="num" style="--c:#7a63d8">2</div>
+        <h3>推しグループを選ぶ</h3>
+        <p>グループで絞り込んだり、通知をオンにしたり。チップをタップで表示オン／オフ、長押しで色や公式リンクの設定も。</p>
+      </div>
+      <div class="step reveal">
+        <div class="num" style="--c:#1f9d6c">3</div>
+        <h3>ハートで行く予定に</h3>
+        <p>行きたいライブにハートを付ければ「行く予定」に集約。締切リマインドと当日のお知らせで、当日まで安心です。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FINAL ================= -->
+  <div class="final reveal">
+    <div class="blob" style="left:-50px; top:-60px"></div>
+    <div class="blob" style="right:-40px; bottom:-70px; animation-delay:-4s"></div>
+    <h2 class="display">次のライブで、<br />会いましょう。</h2>
+    <p>推しの予定探しに使う時間は、推しを楽しむ時間に。Oshi-Calは無料で、今すぐ使えます。</p>
+    <a class="btn btn-primary" href="https://oshi-cal-info.github.io/my-idol-app/" target="_blank" rel="noopener">Oshi-Calを開く →</a>
+  </div>
+
+</main>
+
+<svg class="wave-div" viewBox="0 0 1200 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 13 Q 30 2, 60 13 T 120 13 T 180 13 T 240 13 T 300 13 T 360 13 T 420 13 T 480 13 T 540 13 T 600 13 T 660 13 T 720 13 T 780 13 T 840 13 T 900 13 T 960 13 T 1020 13 T 1080 13 T 1140 13 T 1200 13" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+<footer>
+  <span>© Oshi-Cal — アイドルのライブ予定まとめ</span>
+  <nav>
+    <a href="https://oshi-cal-info.github.io/my-idol-app/" target="_blank" rel="noopener">アプリ本体</a>
+    <a href="https://oshi-cal-info.github.io/my-idol-app/groups/" target="_blank" rel="noopener">グループ一覧ページ</a>
+  </nav>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var APP = "https://oshi-cal-info.github.io/my-idol-app/";
+
+  /* ---- marquee groups (real groups tracked by Oshi-Cal) ---- */
+  var groups = [
+    ["TENRIN","#e7549c"],["Devil ANTHEM.","#f59e0b"],["yosugala","#8b5cf6"],
+    ["わーすた","#ec4899"],["Onephony","#38bdf8"],["myojou","#a78bfa"],
+    ["HzMe","#34d399"],["AKANECLUB","#10b981"],["マリークラウン","#f472b6"],
+    ["UtaGe!","#d946ef"],["FULIT BOX","#10b981"],["こみっきゅおん！","#e879f9"],
+    ["タイトル未定","#60a5fa"],["AOAO","#fbbf24"],["Peel the Apple","#4ade80"],
+    ["JamsCollection","#f472b6"],["のんふぃく！","#93c5fd"],["フューチャーサイダー","#fda4af"]
+  ];
+  var track = document.getElementById("marqueeTrack");
+  var html = "";
+  for (var r=0;r<2;r++){
+    groups.forEach(function(g){
+      html += '<span class="gchip"><i style="--c:'+g[1]+';background:'+g[1]+'"></i>'+g[0]+'</span>';
+    });
+  }
+  track.innerHTML = html;
+
+  /* ---- mini calendars ---- */
+  function buildCal(id){
+    var el = document.getElementById(id); if(!el) return;
+    var has = {3:1,7:1,12:1,13:1,19:1,24:1,26:1,28:1};
+    var s = "";
+    for (var d=1; d<=28; d++){
+      var cls = d===24 ? "today" : (has[d] ? "has" : "");
+      s += '<span class="'+cls+'">'+d+'</span>';
+    }
+    el.innerHTML = s;
+  }
+  buildCal("calMini"); buildCal("calMini2");
+
+  /* ---- countdown to 2026-12-24 17:45 JST ---- */
+  var target = new Date("2026-12-24T17:45:00+09:00").getTime();
+  var startRef = new Date("2026-11-21T00:00:00+09:00").getTime();
+  function tick(){
+    var now = Date.now();
+    var days = Math.max(0, Math.ceil((target - now)/86400000));
+    var hc = document.getElementById("heroCount");
+    var wd = document.getElementById("waveDays");
+    if (hc) hc.textContent = days;
+    if (wd) wd.textContent = "あと " + days;
+    var p = Math.min(1, Math.max(0, (now - startRef)/(target - startRef)));
+    var fill = document.getElementById("waveFill");
+    if (fill) fill.style.strokeDashoffset = String(600 - 600*p);
+  }
+  tick(); setInterval(tick, 60000);
+
+  /* ---- button group demo ---- */
+  var panes = {
+    list:
+      '<div class="vp-row"><span>12/24 YON PIECE ＠ Zepp Shinjuku</span><time>17:45</time></div>' +
+      '<div class="vp-row"><span>12/26 SP 4MAN LIVE『TETRA!!』</span><time>ほか</time></div>' +
+      '<div class="vp-row"><span>12/28 わーすた大感謝祭 ＠ 竹芝</span><time>開演前</time></div>',
+    week:
+      '<div class="vp-week"><div>日<b>2</b></div><div>月<b>0</b></div><div>火<b>1</b></div><div class="hot">水<b>3</b></div><div>木<b>1</b></div><div>金<b>4</b></div><div>土<b>5</b></div></div>' +
+      '<p style="margin:.8rem 0 0; font-size:.82rem; color:#dfb9cf; font-weight:700">🎂 誕生日バッジ・周年バッジもここに出ます</p>',
+    month:
+      '<div class="vp-month">' + (function(){
+        var s="", has={3:1,7:1,12:1,13:1,19:1,24:1,26:1,28:1};
+        for (var d=1; d<=28; d++) s += '<span class="'+(has[d]?"has":"")+'">'+d+'</span>';
+        return s;
+      })() + '</div>'
+  };
+  var pane = document.getElementById("viewpane");
+  pane.innerHTML = panes.list;
+  var bgBtns = document.querySelectorAll(".bgroup button");
+  bgBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      bgBtns.forEach(function(b){
+        b.classList.remove("sel"); b.setAttribute("aria-selected","false");
+        b.textContent = b.textContent.replace("✓ ","");
+      });
+      btn.classList.add("sel"); btn.setAttribute("aria-selected","true");
+      btn.textContent = "✓ " + btn.textContent;
+      pane.innerHTML = panes[btn.getAttribute("data-view")];
+    });
+  });
+
+  /* ---- theme color picker ---- */
+  var seeds = {
+    pink:  {seed:"#f9a8d4", deep:"#c2437e", ink:"#7c1d4e", soft:"#fde7f1", softer:"#fdf2f7", cont:"#fbd3e6", name:"淡いピンク（アプリと同じ色）"},
+    lav:   {seed:"#b7a6f5", deep:"#6a54c9", ink:"#46348f", soft:"#ece7fd", softer:"#f4f1fe", cont:"#ddd2fb", name:"ラベンダー"},
+    mint:  {seed:"#6fd3a7", deep:"#1c8a5f", ink:"#0f5c3e", soft:"#ddf5e9", softer:"#edfaf3", cont:"#c2ecd7", name:"ミント"},
+    peach: {seed:"#ffb877", deep:"#c05f14", ink:"#7e3c08", soft:"#ffe9d6", softer:"#fff5ec", cont:"#ffd9b8", name:"ピーチ"},
+    sky:   {seed:"#7cc0f2", deep:"#2470ad", ink:"#174e7c", soft:"#e0f0fc", softer:"#eef7fd", cont:"#c6e3f9", name:"スカイ"}
+  };
+  var root = document.documentElement;
+  var seedName = document.getElementById("seedName");
+  document.querySelectorAll(".seed-dot").forEach(function(dot){
+    dot.addEventListener("click", function(){
+      document.querySelectorAll(".seed-dot").forEach(function(d){ d.classList.remove("sel"); });
+      dot.classList.add("sel");
+      var s = seeds[dot.getAttribute("data-seed")];
+      root.style.setProperty("--seed", s.seed);
+      root.style.setProperty("--seed-deep", s.deep);
+      root.style.setProperty("--seed-ink", s.ink);
+      root.style.setProperty("--seed-soft", s.soft);
+      root.style.setProperty("--seed-softer", s.softer);
+      root.style.setProperty("--seed-container", s.cont);
+      seedName.textContent = "いまのテーマカラー：" + s.name;
+    });
+  });
+
+  /* ---- shape morph playground ---- */
+  var shapes = [
+    {r:"50%", n:"まんまる"},
+    {r:"38% 62% 60% 40% / 45% 42% 58% 55%", n:"ぶらぶらした丸（アプリのロゴと同じ）"},
+    {r:"30% 70% 70% 30% / 30% 30% 70% 70%", n:"ゆがんだ雫"},
+    {r:"18px", n:"角丸スクエア"},
+    {r:"70% 30% 46% 54% / 60% 42% 58% 40%", n:"うねうねブロブ"},
+    {r:"50% 50% 18px 18px", n:"ドーム型"}
+  ];
+  var si = 0;
+  var ms = document.getElementById("morphShape");
+  var sn = document.getElementById("shapeNote");
+  ms.style.borderRadius = shapes[0].r;
+  ms.addEventListener("click", function(){
+    si = (si+1) % shapes.length;
+    ms.style.borderRadius = shapes[si].r;
+    sn.textContent = "いまの形：" + shapes[si].n;
+  });
+
+  /* ---- favorite demo ---- */
+  var favOn = false, favN = 0;
+  var favBtn = document.getElementById("favBtn");
+  var favHeart = document.getElementById("favHeart");
+  var favCount = document.getElementById("favCount");
+  var favNote = document.getElementById("favNote");
+  favBtn.addEventListener("click", function(){
+    favOn = !favOn;
+    favN = favOn ? favN+1 : Math.max(0, favN-1);
+    favBtn.setAttribute("aria-pressed", String(favOn));
+    favHeart.setAttribute("fill", favOn ? "currentColor" : "none");
+    favCount.textContent = favN;
+    favNote.textContent = favOn ? "行く予定に入ったよ" : "タップしてみて";
+    favBtn.animate(
+      [{transform:"scale(1)"},{transform:"scale(1.07)"},{transform:"scale(.98)"},{transform:"scale(1)"}],
+      {duration:420, easing:"cubic-bezier(.34,1.56,.44,1)"}
+    );
+  });
+
+  /* ---- theme toggle ---- */
+  var themeBtn = document.getElementById("themeBtn");
+  themeBtn.addEventListener("click", function(){
+    var cur = root.getAttribute("data-theme");
+    var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var isDark = cur ? cur==="dark" : prefersDark;
+    root.setAttribute("data-theme", isDark ? "light" : "dark");
+  });
+
+})();
+</script>
+</body>
+</html>
