@@ -1246,6 +1246,20 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 #theme-mode-seg { display: flex; }
 #theme-mode-seg .seg-btn { flex: 1 1 0; }
 #theme-mode-seg .seg-btn.on { flex-grow: 1.25; }
+
+/* --- animation polish: view fade, card stagger, sheet spring (2026-11-22) --- */
+@keyframes viewIn { from { opacity: 0; } to { opacity: 1; } }
+.view-in { animation: viewIn .18s ease-out; }
+@keyframes cardIn { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.card-in { animation: cardIn .36s cubic-bezier(.22,1,.36,1) both; }
+@keyframes sheetUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.ovl:not(.hidden) > .sheet-card { animation: sheetUp .4s cubic-bezier(.3,1.22,.64,1); }
+@keyframes ovlIn { from { opacity: 0; } to { opacity: 1; } }
+.ovl:not(.hidden) { animation: ovlIn .18s ease-out; }
+.drawer-panel { transition-duration: .38s !important; transition-timing-function: cubic-bezier(.3,1.08,.64,1) !important; }
+@media (prefers-reduced-motion: reduce) {
+  .view-in, .card-in, .ovl:not(.hidden), .ovl:not(.hidden) > .dlg-card, .ovl:not(.hidden) > .sheet-card, .detail-pop { animation: none !important; }
+}
 </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -7310,6 +7324,26 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 goingBtn.className = view === 'going' ? activeCls : inactiveCls;
                 monthBtn.className = view === 'month' ? activeCls : inactiveCls;
                 weekBtn.className = view === 'week' ? activeCls : inactiveCls;
+
+                // ビューのフェードイン＋カードのスタッガー出現（アニメーション磨き込み）
+                const target = view === 'list' ? listDiv : view === 'going' ? goingDiv : view === 'month' ? monthDiv : weekDiv;
+                target.classList.remove('view-in');
+                void target.offsetWidth;
+                target.classList.add('view-in');
+                if (view === 'list' || view === 'going') {
+                    const cards = target.querySelectorAll('.event-card');
+                    const n = Math.min(cards.length, 16);
+                    for (let i = 0; i < n; i++) {
+                        cards[i].classList.add('card-in');
+                        cards[i].style.animationDelay = (i * 22) + 'ms';
+                    }
+                    setTimeout(() => {
+                        for (let i = 0; i < n; i++) {
+                            cards[i].classList.remove('card-in');
+                            cards[i].style.animationDelay = '';
+                        }
+                    }, 1100);
+                }
             });
         }
 
