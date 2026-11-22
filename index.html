@@ -1615,7 +1615,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
     </div>
 
     <!-- グループ一覧モーダル -->
-    <div id="group-list-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center sm:p-4">
+    <div id="group-list-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center sm:p-4" onclick="if(event.target===this) closeModal('group-list-modal')">
         <div class="sheet-card w-full max-w-md h-[92vh] sm:h-auto sm:max-h-[85vh] flex flex-col p-5">
             <div class="flex justify-between items-center mb-3">
                 <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-list text-pink-500 mr-2"></i>推しグループ一覧<span id="group-list-count" class="ml-2 text-[11px] font-bold text-slate-400"></span></h3>
@@ -5474,6 +5474,8 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
         function openGroupList() {
             renderGroupList();
             document.getElementById('group-list-modal').classList.remove('hidden');
+            const rows = document.getElementById('group-list-rows');
+            if (rows) rows.scrollTop = 0;
         }
         function renderGroupList() {
             const container = document.getElementById('group-list-rows');
