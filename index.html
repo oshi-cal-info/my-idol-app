@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>(function(){try{var m=localStorage.getItem('oshiThemeMode')||'auto';if(m==='dark'||(m==='auto'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();</script>
+    <style>html{background:#fff8fb}html.dark{background:#171017}</style>
     <title>Oshi-Cal - 推し活スケジュール管理</title>
     <meta name="description" content="推しグループのライブ・イベント予定をひとつのカレンダーにまとめて見られる無料Webアプリ。100グループ以上対応、新着ライブやチケット締切はプッシュ通知でお知らせ。">
     <meta property="og:type" content="website">
@@ -898,7 +900,7 @@
    生成された変数（:rootへのインライン指定）が来たらそちらが優先される */
 :root{--background:#fff8fb;--surface:#fff8fb;--surface-container-lowest:#ffffff;--surface-container-low:#fef3f9;--surface-container:#fdeef6;--surface-container-high:#fae4f0;--on-background:#241a20;--on-surface:#241a20;--on-surface-variant:#554349;--outline:#847077;--outline-variant:#d7c1cb}
 body.dark{--background:#171017;--surface:#171017;--surface-container-lowest:#120c11;--surface-container-low:#1e141c;--surface-container:#241722;--surface-container-high:#2f1e2a;--on-background:#f3e4ec;--on-surface:#f3e4ec;--on-surface-variant:#cdb9c4;--outline:#9d8a94;--outline-variant:#524149}
-html{background:#fff8fb}html:has(body.dark){background:#171017}
+html{background:#fff8fb}html.dark{background:#171017}
 
 /* ===== Oshi-Cal MD3 (Beer CSS) + Expressive component layer ===== */
 html { -webkit-text-size-adjust: 100%; }
@@ -7292,21 +7294,23 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             const activeCls = "seg-btn on";
             const inactiveCls = "seg-btn";
 
-            listBtn.className = view === 'list' ? activeCls : inactiveCls;
-            goingBtn.className = view === 'going' ? activeCls : inactiveCls;
-            monthBtn.className = view === 'month' ? activeCls : inactiveCls;
-            weekBtn.className = view === 'week' ? activeCls : inactiveCls;
+            // 重い描画と表示切替を先に済ませ、バーの幅アニメーションは次のフレームから
+            // 始める（描画がアニメーションの途中に割り込むと一瞬カクつくため）
+            render();
+            if (view === 'going' && !fullDataLoaded) ensureFullData();
 
             listDiv.classList.toggle('hidden', view !== 'list');
             goingDiv.classList.toggle('hidden', view !== 'going');
             monthDiv.classList.toggle('hidden', view !== 'month');
             weekDiv.classList.toggle('hidden', view !== 'week');
 
-            // バーの幅アニメーションを先に始めてから描画する（同フレームで描画すると一瞬カクつく）
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                render();
-                if (view === 'going' && !fullDataLoaded) ensureFullData();
-            }));
+            void document.body.offsetWidth;
+            requestAnimationFrame(() => {
+                listBtn.className = view === 'list' ? activeCls : inactiveCls;
+                goingBtn.className = view === 'going' ? activeCls : inactiveCls;
+                monthBtn.className = view === 'month' ? activeCls : inactiveCls;
+                weekBtn.className = view === 'week' ? activeCls : inactiveCls;
+            });
         }
 
         function setMonthShowFavoritesOnly(value) {
