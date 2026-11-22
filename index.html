@@ -894,6 +894,11 @@
 .border-amber-300{border-color:#fcd34d}
 .border-purple-200{border-color:color-mix(in srgb, var(--tertiary) 30%, #fff)}
 .border-pink-300{border-color:color-mix(in srgb, var(--primary) 45%, #fff)}
+/* テーマ生成前の初期色: JSが種色から配色を作るまでの間、変数が空で白く点滅しないように。
+   生成された変数（:rootへのインライン指定）が来たらそちらが優先される */
+:root{--background:#fff8fb;--surface:#fff8fb;--surface-container-lowest:#ffffff;--surface-container-low:#fef3f9;--surface-container:#fdeef6;--surface-container-high:#fae4f0;--on-background:#241a20;--on-surface:#241a20;--on-surface-variant:#554349;--outline:#847077;--outline-variant:#d7c1cb}
+body.dark{--background:#171017;--surface:#171017;--surface-container-lowest:#120c11;--surface-container-low:#1e141c;--surface-container:#241722;--surface-container-high:#2f1e2a;--on-background:#f3e4ec;--on-surface:#f3e4ec;--on-surface-variant:#cdb9c4;--outline:#9d8a94;--outline-variant:#524149}
+html{background:#fff8fb}html:has(body.dark){background:#171017}
 
 /* ===== Oshi-Cal MD3 (Beer CSS) + Expressive component layer ===== */
 html { -webkit-text-size-adjust: 100%; }
@@ -955,7 +960,7 @@ img { max-width: 100%; }
   min-width: 0; overflow: hidden; text-overflow: ellipsis; gap: .3rem; padding: .5rem .25rem; border: none; background: transparent; cursor: pointer;
   border-radius: 9999px; font-size: .72rem; font-weight: 700; white-space: nowrap;
   color: var(--on-surface-variant);
-  transition: all .3s cubic-bezier(.34,1.3,.64,1);
+  transition: all .3s cubic-bezier(.3,1.15,.64,1);
 }
 .seg-btn.on {
   background: var(--primary); color: var(--on-primary);
@@ -1173,9 +1178,11 @@ button {
 }
 .seg-btn.on #going-count-badge { background: var(--on-primary); color: var(--primary); }
 /* Expressive spring on the bottom nav */
-.view-nav .seg-btn { transition: flex-grow .5s cubic-bezier(.34,1.3,.64,1), transform .3s cubic-bezier(.34,1.25,.64,1), background-color .3s, color .3s; }
+.view-nav .seg-btn { transition: flex-grow .42s cubic-bezier(.22,1,.36,1), transform .18s ease-out, background-color .25s, color .25s; }
 .view-nav .seg-btn:active { transform: scale(.96); }
 .seg-btn.on { animation: nav-pop .35s cubic-bezier(.34,1.25,.64,1); }
+/* 下部ナビでは幅アニメーションとポップを重ねるとカクつくので、ポップは止める */
+.view-nav .seg-btn.on { animation: none; }
 @keyframes nav-pop { 0% { transform: scale(.94); } 55% { transform: scale(1.025); } 100% { transform: scale(1); } }
 /* subtle spring press feedback on every button */
 button { transition: transform .3s cubic-bezier(.34,1.25,.64,1); }
@@ -1237,8 +1244,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 #theme-mode-seg { display: flex; }
 #theme-mode-seg .seg-btn { flex: 1 1 0; }
 #theme-mode-seg .seg-btn.on { flex-grow: 1.25; }
-
-    </style>
+</style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
     <script>
@@ -7296,8 +7302,11 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             monthDiv.classList.toggle('hidden', view !== 'month');
             weekDiv.classList.toggle('hidden', view !== 'week');
 
-            render();
-            if (view === 'going' && !fullDataLoaded) ensureFullData();
+            // バーの幅アニメーションを先に始めてから描画する（同フレームで描画すると一瞬カクつく）
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                render();
+                if (view === 'going' && !fullDataLoaded) ensureFullData();
+            }));
         }
 
         function setMonthShowFavoritesOnly(value) {
