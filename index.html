@@ -1260,6 +1260,52 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 @media (prefers-reduced-motion: reduce) {
   .view-in, .card-in, .ovl:not(.hidden), .ovl:not(.hidden) > .dlg-card, .ovl:not(.hidden) > .sheet-card, .detail-pop { animation: none !important; }
 }
+
+/* --- FAB menu / presets / group list / loading indicator (2026-11-23) --- */
+.fab-menu { display: flex; flex-direction: column; align-items: flex-end; gap: .55rem; margin-bottom: .65rem; }
+.fab-item {
+  display: flex; align-items: center; gap: .55rem; cursor: pointer;
+  border: 1px solid var(--outline-variant); background: var(--surface-container-high); color: var(--on-surface);
+  font-size: .72rem; font-weight: 700; padding: .42rem .5rem .42rem .9rem; border-radius: 9999px;
+  box-shadow: 0 6px 18px rgb(0 0 0/.16);
+  opacity: 0; transform: translateY(10px) scale(.85); pointer-events: none;
+  transition: opacity .2s ease, transform .32s cubic-bezier(.3,1.3,.64,1);
+}
+.fab-item i {
+  width: 1.7rem; height: 1.7rem; border-radius: 9999px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-container); color: var(--primary); font-size: .78rem;
+}
+.fab-stack.open .fab-item { opacity: 1; transform: none; pointer-events: auto; }
+.fab-stack.open .fab-item:nth-child(3) { transition-delay: .02s; }
+.fab-stack.open .fab-item:nth-child(2) { transition-delay: .07s; }
+.fab-stack.open .fab-item:nth-child(1) { transition-delay: .12s; }
+#fab-main-btn i { transition: transform .32s cubic-bezier(.3,1.3,.64,1); }
+.fab-stack.open #fab-main-btn i { transform: rotate(45deg); }
+.preset-chip {
+  border: 1px solid var(--outline-variant); background: var(--surface-container);
+  color: var(--on-surface); font-size: .68rem; font-weight: 700;
+  padding: .45rem .8rem; border-radius: 9999px; cursor: pointer;
+  -webkit-touch-callout: none; user-select: none;
+  transition: transform .2s cubic-bezier(.3,1.3,.64,1), background .2s;
+}
+.preset-chip:active { transform: scale(.94); }
+.preset-add { border-style: dashed; color: var(--primary); background: transparent; }
+.load-ind {
+  width: 42px; height: 42px; margin: 0 auto;
+  background: linear-gradient(135deg, var(--primary), var(--tertiary));
+  animation: loadMorph 1.9s cubic-bezier(.4, 0, .2, 1) infinite;
+}
+@keyframes loadMorph {
+  0%, 100% { border-radius: 50%; transform: rotate(0deg); }
+  20% { border-radius: 34% 66% 62% 38% / 46% 36% 64% 54%; transform: rotate(72deg); }
+  40% { border-radius: 24% 24% 24% 24% / 24% 24% 24% 24%; transform: rotate(144deg); }
+  60% { border-radius: 50% 50% 50% 50% / 64% 64% 36% 36%; transform: rotate(216deg); }
+  80% { border-radius: 64% 36% 30% 70% / 60% 30% 70% 40%; transform: rotate(288deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .load-ind, .fab-item, #fab-main-btn i { animation: none !important; transition: none !important; }
+}
 </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -1289,9 +1335,6 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             <button onclick="toggleDeadlineMenu()" title="チケット締切" class="icon-btn" style="color:#d97706">
                 <i class="fa-solid fa-clock"></i>
                 <span id="deadline-count-badge" class="bdg hidden"></span>
-            </button>
-            <button id="theme-mode-btn" onclick="cycleThemeMode()" title="テーマ（ライト／ダーク）" class="icon-btn" style="color:var(--primary)">
-                <i class="fa-solid fa-circle-half-stroke"></i>
             </button>
             <button onclick="toggleMenu()" title="メニュー" class="icon-btn" style="color:var(--primary)">
                 <i class="fa-solid fa-bars"></i>
@@ -1395,17 +1438,13 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
     </div>
 
     <!-- フローティング追加ボタン -->
-    <div class="fab-stack fixed bottom-6 right-6 z-20 flex flex-col items-center space-y-3">
-        <button onclick="openVenueMap()" title="会場マップ" class="fab-sub">
-            <i class="fa-solid fa-map-location-dot text-sm"></i>
-        </button>
-        <button onclick="openSearchModal()" title="予定を検索" class="fab-sub" style="color:var(--tertiary)">
-            <i class="fa-solid fa-magnifying-glass text-sm"></i>
-        </button>
-        <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" title="一番上へ戻る" class="fab-sub">
-            <i class="fa-solid fa-arrow-up text-sm"></i>
-        </button>
-        <button onclick="openAddModal()" title="自分だけの予定を追加" class="fab-main">
+    <div class="fab-stack fixed bottom-6 right-6 z-20 flex flex-col items-end" id="fab-stack">
+        <div class="fab-menu">
+            <button class="fab-item" onclick="fabGo('map')"><span>会場マップ</span><i class="fa-solid fa-map-location-dot"></i></button>
+            <button class="fab-item" onclick="fabGo('top')"><span>一番上へ</span><i class="fa-solid fa-arrow-up"></i></button>
+            <button class="fab-item" onclick="fabGo('add')"><span>予定を追加</span><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <button id="fab-main-btn" onclick="toggleFabMenu()" title="メニュー" class="fab-main">
             <i class="fa-solid fa-plus"></i>
         </button>
     </div>
@@ -1448,6 +1487,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
                 <input id="group-search" type="text" placeholder="グループ名で検索" oninput="renderGroupManagementList()" class="fld" style="padding-left:2.3rem">
             </div>
+            <button onclick="openGroupList()" class="w-full py-2.5 mb-2 bg-pink-50 text-pink-600 font-bold rounded-xl border border-pink-100 text-[11px] flex items-center justify-center gap-2"><i class="fa-solid fa-list"></i>グループを一覧で見る</button>
             <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="group-management-list"></div>
             <p class="mt-3 text-[10px] text-slate-400 leading-relaxed px-1">
                 グループはライブスケジュールから自動で追加されます。チップをタップすると表示オン/オフ、長押しすると通知・色・公式リンクなどの設定が開きます。
@@ -1561,11 +1601,32 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 <button onclick="clearFilter()" class="flex-1 py-2 bg-pink-50 text-pink-600 font-bold rounded-xl border border-pink-100 text-[11px]">すべて選択（絞り込み解除）</button>
                 <button onclick="selectNoneFilters()" class="flex-1 py-2 bg-slate-50 text-slate-500 font-bold rounded-xl border border-slate-100 text-[11px]">すべて解除</button>
             </div>
+            <div id="filter-presets" class="mb-3"></div>
+            <div id="preset-save-row" class="hidden mb-3 flex space-x-2">
+                <input id="preset-name-input" type="text" placeholder="プリセット名（例：YONPIECE）" class="fld flex-1">
+                <button onclick="saveFilterPreset()" class="btn-primary" style="width:auto;padding:.6rem 1.1rem">保存</button>
+            </div>
             <div class="relative mb-3">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
                 <input id="filter-search" type="text" placeholder="グループ名で検索" oninput="renderFilterGroupList()" class="fld" style="padding-left:2.3rem">
             </div>
             <div id="filter-group-list" class="flex-1 overflow-y-auto space-y-1.5 pr-1"></div>
+        </div>
+    </div>
+
+    <!-- グループ一覧モーダル -->
+    <div id="group-list-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center sm:p-4">
+        <div class="sheet-card w-full max-w-md h-[92vh] sm:h-auto sm:max-h-[85vh] flex flex-col p-5">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-list text-pink-500 mr-2"></i>推しグループ一覧<span id="group-list-count" class="ml-2 text-[11px] font-bold text-slate-400"></span></h3>
+                <button onclick="closeModal('group-list-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="relative mb-2">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
+                <input id="group-list-search" type="text" placeholder="グループ名で検索" oninput="renderGroupList()" class="fld" style="padding-left:2.3rem">
+            </div>
+            <p class="text-[10px] text-slate-400 px-1 mb-2">タップで表示オン/オフ・長押しで通知や色などの設定が開きます</p>
+            <div id="group-list-rows" class="flex-1 overflow-y-auto space-y-1.5 pr-1"></div>
         </div>
     </div>
 
@@ -1837,6 +1898,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 if (doc.exists) {
                     const data = doc.data();
                     if (data.groups) groups = data.groups;
+                    if (Array.isArray(data.filterPresets)) filterPresets = data.filterPresets;
                     if (data.favorites) favorites = new Set(data.favorites.map(migrateId));
                     if (data.personalMemos) personalMemos = migrateIdKeyedObject(data.personalMemos);
                     if (data.attendLogs) attendLogs = migrateIdKeyedObject(data.attendLogs);
@@ -1867,6 +1929,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             cloudSaveTimer = setTimeout(() => {
                 db.collection('users').doc(currentUser.uid).set({
                     groups: groups,
+                    filterPresets: filterPresets,
                     favorites: [...favorites],
                     personalMemos: personalMemos,
                     attendLogs: attendLogs,
@@ -1876,7 +1939,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 }, {
                     // 指定した項目は「丸ごと置き換え」にする（merge:trueだと消したメモや修正がクラウドに残って復活してしまうため）
                     // 通知用のfcmTokensなど、ここに無い項目はそのまま残る
-                    mergeFields: ['groups', 'favorites', 'personalMemos', 'attendLogs', 'eventOverrides', 'manualEvents', 'updatedAt']
+                    mergeFields: ['groups', 'filterPresets', 'favorites', 'personalMemos', 'attendLogs', 'eventOverrides', 'manualEvents', 'updatedAt']
                 }).catch(e => console.log('クラウド保存に失敗:', e));
             }, 800);
         }
@@ -3745,6 +3808,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
         let events = [];
         let favorites = new Set();
         let activeFilters = new Set(); // 空 & !filtersExplicit = すべてのグループを表示
+        let filterPresets = []; // 絞り込みプリセット [{name, groups:[...]}]
         let filtersExplicit = false; // true になると activeFilters の中身がそのまま「選択中のグループ」を表す（空なら0件表示）
         let personalMemos = {}; // { eventId: memoText } 自分だけのメモ（ローカル保存）
         let attendLogs = {}; // { eventId: { cheki: 枚数, spend: 円 } } 参戦記録（チェキ枚数・使った金額）
@@ -3758,6 +3822,8 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
         let currentWeek = startOfWeekSunday(dayjs());
 
         function loadUserData() {
+            const savedPresets = localStorage.getItem('oshi_cal_filter_presets');
+            if (savedPresets) { try { const p = JSON.parse(savedPresets); if (Array.isArray(p)) filterPresets = p; } catch (e) {} }
             const savedGroups = localStorage.getItem('oshi_cal_groups');
             if (savedGroups) { try { groups = JSON.parse(savedGroups); } catch(e) {} }
             const savedEvents = localStorage.getItem('oshi_cal_manual_events');
@@ -3781,6 +3847,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 
         function saveUserData() {
             localStorage.setItem('oshi_cal_groups', JSON.stringify(groups));
+            localStorage.setItem('oshi_cal_filter_presets', JSON.stringify(filterPresets));
             // 手入力の予定だけを保存する（スプレッドシート由来の予定は毎回読み込み直すので保存不要）
             localStorage.setItem('oshi_cal_manual_events', JSON.stringify(events.filter(e => !e.isSheet)));
             saveCloudData();
@@ -5161,6 +5228,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
         }
 
         function openFilterModal() {
+            renderFilterPresets();
             renderFilterGroupList();
             document.getElementById('filter-modal').classList.remove('hidden');
         }
@@ -5255,6 +5323,69 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             hydrateWeather();
         }
 
+        // ==== 絞り込みプリセット ====
+        function renderFilterPresets() {
+            const box = document.getElementById('filter-presets');
+            if (!box) return;
+            let html = '<p class="fld-label" style="margin-bottom:.4rem">プリセット</p><div class="flex flex-wrap gap-1.5">';
+            filterPresets.forEach((p, i) => {
+                html += `<button class="preset-chip" onpointerdown="presetPointerDown(${i})" onpointerup="presetPointerEnd()" onpointerleave="presetPointerEnd()" onpointercancel="presetPointerEnd()" oncontextmenu="return false" onclick="presetClick(${i})">${escapeHtml(p.name)}<span class="opacity-50 font-semibold ml-1">${p.groups.length}</span></button>`;
+            });
+            html += `<button class="preset-chip preset-add" onclick="togglePresetSaveRow()"><i class="fa-solid fa-plus mr-1"></i>現在の選択を保存</button></div>`;
+            if (filterPresets.length) html += '<p class="text-[10px] text-slate-400 mt-1.5">タップで適用・長押しで削除</p>';
+            box.innerHTML = html;
+        }
+
+        let presetPressTimer = null;
+        let presetLongPressed = false;
+        function presetPointerDown(i) {
+            presetLongPressed = false;
+            clearTimeout(presetPressTimer);
+            presetPressTimer = setTimeout(() => {
+                presetLongPressed = true;
+                const p = filterPresets[i];
+                if (p && confirm(`プリセット「${p.name}」を削除しますか？`)) {
+                    filterPresets.splice(i, 1);
+                    saveUserData();
+                    renderFilterPresets();
+                }
+            }, 450);
+        }
+        function presetPointerEnd() { clearTimeout(presetPressTimer); }
+        function presetClick(i) {
+            if (presetLongPressed) { presetLongPressed = false; return; }
+            applyFilterPreset(i);
+        }
+        function applyFilterPreset(i) {
+            const p = filterPresets[i];
+            if (!p) return;
+            filtersExplicit = true;
+            activeFilters = new Set(p.groups);
+            renderFilterGroupList();
+            updateFilterSummaryLabel();
+            render();
+        }
+        function togglePresetSaveRow() {
+            const row = document.getElementById('preset-save-row');
+            row.classList.toggle('hidden');
+            if (!row.classList.contains('hidden')) document.getElementById('preset-name-input').focus();
+        }
+        function saveFilterPreset() {
+            const input = document.getElementById('preset-name-input');
+            const name = input.value.trim();
+            if (!name) return;
+            const sel = !filtersExplicit
+                ? groups.filter(g => g.visible !== false).map(g => g.name)
+                : [...activeFilters];
+            const rec = { name, groups: sel };
+            const ex = filterPresets.findIndex(p => p.name === name);
+            if (ex >= 0) filterPresets[ex] = rec; else filterPresets.push(rec);
+            saveUserData();
+            input.value = '';
+            document.getElementById('preset-save-row').classList.add('hidden');
+            renderFilterPresets();
+        }
+
         function isGroupVisible(name) {
             const g = groups.find(g => g.name === name);
             return !g || g.visible !== false;
@@ -5337,6 +5468,58 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 html = `<p class="text-xs text-slate-400 text-center py-6">「${escapeHtml(mgmtQuery)}」に一致するグループがありません</p>`;
             }
             container.innerHTML = html;
+        }
+
+        // ==== グループ一覧（単独リスト） ====
+        function openGroupList() {
+            renderGroupList();
+            document.getElementById('group-list-modal').classList.remove('hidden');
+        }
+        function renderGroupList() {
+            const container = document.getElementById('group-list-rows');
+            if (!container) return;
+            const q = (document.getElementById('group-list-search')?.value || '').trim().toLowerCase();
+            const todayStr = dayjs().format('YYYY-MM-DD');
+            const futureCounts = {};
+            events.forEach(e => { if (e.group && e.date >= todayStr) futureCounts[e.group] = (futureCounts[e.group] || 0) + 1; });
+            const order = groups.map((g, index) => ({ g, index })).sort((a, b) => {
+                const ah = a.g.visible === false ? 1 : 0;
+                const bh = b.g.visible === false ? 1 : 0;
+                if (ah !== bh) return ah - bh;
+                return a.g.name.localeCompare(b.g.name, 'ja');
+            });
+            let shown = 0;
+            let rows = '';
+            order.forEach(({ g, index }) => {
+                if (q && !g.name.toLowerCase().includes(q)) return;
+                shown++;
+                const isHidden = g.visible === false;
+                const notifyOff = g.notify === false;
+                const img = (typeof GROUP_IMAGES !== 'undefined' && GROUP_IMAGES[g.name]) ? GROUP_IMAGES[g.name] : '';
+                rows += `
+                    <div class="flex items-center gap-3 p-2.5 rounded-2xl border shadow-sm cursor-pointer select-none min-w-0 ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}10;border-color:${g.color}40;`}"
+                        onpointerdown="chipPointerDown(${index})" onpointerup="chipPointerEnd()" onpointerleave="chipPointerEnd()" onpointercancel="chipPointerEnd()" oncontextmenu="return false" onclick="glRowClick(${index})">
+                        <span class="relative w-10 h-10 flex-shrink-0">
+                            <span class="block w-10 h-10 rounded-xl overflow-hidden shadow-sm relative" style="background-color:${g.color}">
+                                <span class="absolute inset-0 flex items-center justify-center text-white text-base font-black">${escapeHtml(groupInitial(g.name))}</span>
+                                ${img ? `<img src="${img}" alt="" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover" onerror="this.remove()">` : ''}
+                            </span>
+                        </span>
+                        <span class="flex-1 min-w-0">
+                            <span class="block text-[13px] font-bold ${isHidden ? 'text-slate-400' : 'text-slate-800'} truncate">${escapeHtml(g.name)}</span>
+                            <span class="block text-[10px] text-slate-400">未来のライブ ${futureCounts[g.name] || 0}件${notifyOff ? ' ・ 通知オフ' : ''}</span>
+                        </span>
+                        ${isHidden ? '<i class="fa-regular fa-circle text-slate-300"></i>' : `<i class="fa-solid fa-circle-check" style="color:${g.color}"></i>`}
+                    </div>`;
+            });
+            container.innerHTML = rows || `<p class="text-xs text-slate-400 text-center py-6">「${escapeHtml(q)}」に一致するグループがありません</p>`;
+            const cnt = document.getElementById('group-list-count');
+            if (cnt) cnt.textContent = `全${groups.length}グループ`;
+        }
+        function glRowClick(index) {
+            if (chipLongPressed) { chipLongPressed = false; renderGroupList(); return; }
+            toggleGroupVisible(index);
+            renderGroupList();
         }
 
         // ==== グループ管理チップ（タップで表示切替・長押しで操作シート） ====
@@ -6097,6 +6280,21 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             venueMapData = [...map.entries()]
                 .map(([name, count]) => ({ name, count, geo: VENUE_GEO[venueKey(name)] || null }))
                 .sort((a, b) => b.count - a.count);
+        }
+
+        // ==== FABメニュー ====
+        function toggleFabMenu() {
+            document.getElementById('fab-stack').classList.toggle('open');
+        }
+        function closeFabMenu() {
+            const s = document.getElementById('fab-stack');
+            if (s) s.classList.remove('open');
+        }
+        function fabGo(kind) {
+            closeFabMenu();
+            if (kind === 'map') openVenueMap();
+            else if (kind === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });
+            else if (kind === 'add') openAddModal();
         }
 
         function openVenueMap() {
@@ -6985,7 +7183,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     </div>
                 ` : `
                     <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
-                        <div class="morph-blob mx-auto mb-4"><i class="fa-solid fa-music"></i></div><div class="wave-progress ind mx-auto" style="max-width:180px"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path class="wp-track" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/><path class="wp-fill" pathLength="100" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/></svg></div>
+                        <div class="load-ind mb-4"></div>
                         <p class="text-xs text-slate-400 font-medium mt-3">読み込み中…</p>
                     </div>
                 `;
@@ -7017,7 +7215,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 if (!sheetDataReady && favorites.size > 0) {
                     container.innerHTML = `
                         <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
-                            <div class="morph-blob mx-auto mb-4"><i class="fa-solid fa-music"></i></div><div class="wave-progress ind mx-auto" style="max-width:180px"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path class="wp-track" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/><path class="wp-fill" pathLength="100" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/></svg></div>
+                            <div class="load-ind mb-4"></div>
                             <p class="text-xs text-slate-400 font-medium mt-3">読み込み中…</p>
                         </div>
                     `;
@@ -7065,7 +7263,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 if (rep.date !== lastDate) {
                     html += `
                         <div data-date="${rep.date}" class="scroll-mt-[140px] flex items-center space-x-2 pt-3 pb-1 px-1">
-                            <h3 class="font-bold text-slate-700 text-xs">${dateFormatted}</h3>
+                            <h3 class="font-extrabold text-slate-700 text-sm">${dateFormatted}</h3>
                             ${isToday ? '<span class="px-2 py-0.5 bg-pink-500 text-white text-[10px] font-bold rounded-full shadow-sm shadow-pink-500/30">今日</span>' : ''}
                         </div>
                     `;
@@ -7295,6 +7493,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
         }
 
         function switchView(view) {
+            closeFabMenu();
             currentView = view;
             const listBtn = document.getElementById('tab-list');
             const goingBtn = document.getElementById('tab-going');
