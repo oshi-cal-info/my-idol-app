@@ -1306,6 +1306,15 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 @media (prefers-reduced-motion: reduce) {
   .load-ind, .fab-item, #fab-main-btn i { animation: none !important; transition: none !important; }
 }
+
+/* --- group list panel sizing (compat.cssに無い任意値クラスを使わないための専用定義) --- */
+.group-list-panel { height: 92vh; }
+@media (min-width: 640px) {
+  #group-list-modal { padding: 1rem; }
+  .group-list-panel { height: auto; max-height: 85vh; }
+}
+#group-list-rows { min-height: 0; }
+.font-extrabold { font-weight: 800; }
 </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -1616,7 +1625,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 
     <!-- グループ一覧モーダル -->
     <div id="group-list-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center sm:p-4" onclick="if(event.target===this) closeModal('group-list-modal')">
-        <div class="sheet-card w-full max-w-md h-[92vh] sm:h-auto sm:max-h-[85vh] flex flex-col p-5">
+        <div class="sheet-card group-list-panel w-full max-w-md flex flex-col p-5">
             <div class="flex justify-between items-center mb-3">
                 <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-list text-pink-500 mr-2"></i>推しグループ一覧<span id="group-list-count" class="ml-2 text-[11px] font-bold text-slate-400"></span></h3>
                 <button onclick="closeModal('group-list-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
