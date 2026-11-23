@@ -1345,6 +1345,10 @@ html.dark.tod-yoru .app-header {
 @media (prefers-reduced-motion: reduce) {
   .cd-card.wx-fx-rain::before, .cd-card.wx-fx-snow::before { animation: none; }
 }
+
+/* --- ドロワー再設計: チップ一覧が潰れないように（2026-11-23） --- */
+.drawer-panel { overflow-y: auto; }
+#group-management-list { min-height: 160px; }
 </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -1531,29 +1535,31 @@ html.dark.tod-yoru .app-header {
             <p class="mt-3 text-[10px] text-slate-400 leading-relaxed px-1">
                 グループはライブスケジュールから自動で追加されます。チップをタップすると表示オン/オフ、長押しすると通知・色・公式リンクなどの設定が開きます。
             </p>
-            <button onclick="resetGroupsToDefault()" class="mt-2 w-full py-2.5 bg-white text-slate-400 font-bold rounded-2xl hover:bg-slate-50 transition text-[11px] border border-slate-100">
-                <i class="fa-solid fa-rotate-left mr-1.5"></i> グループ一覧をリセットする
-            </button>
-            <button id="notify-toggle-btn" onclick="requestNotificationPermission()" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
+            <button id="notify-toggle-btn" onclick="requestNotificationPermission()" class="mt-3 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
                 <i class="fa-solid fa-bell mr-1.5"></i> <span id="notify-toggle-label">新着ライブの通知を受け取る</span>
             </button>
-            <button onclick="toggleMenu(); toggleSummary();" class="mt-2 w-full py-3 bg-gradient-to-r from-pink-50 to-purple-50 text-pink-600 font-bold rounded-2xl hover:from-pink-100 hover:to-purple-100 transition text-xs border border-pink-100 flex items-center justify-center">
-                <i class="fa-solid fa-chart-simple mr-1.5"></i> 推し活まとめを見る
-            </button>
-            <button onclick="shareSite()" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100 flex items-center justify-center">
-                <i class="fa-solid fa-share-nodes mr-1.5"></i> サイトをシェアする
-            </button>
-            <button onclick="toggleMenu(); openOnboarding();" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100 flex items-center justify-center">
-                <i class="fa-solid fa-heart mr-1.5"></i> はじめてガイド
-            </button>
-            <button onclick="toggleMenu(); openFeedback();" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100 flex items-center justify-center">
-                <i class="fa-solid fa-comment-dots mr-1.5"></i> 不具合報告・要望
+            <div class="grid grid-cols-2 gap-2 mt-2">
+                <button onclick="toggleMenu(); toggleSummary();" class="py-2.5 bg-gradient-to-r from-pink-50 to-purple-50 text-pink-600 font-bold rounded-2xl hover:from-pink-100 hover:to-purple-100 transition text-[11px] border border-pink-100 flex items-center justify-center">
+                    <i class="fa-solid fa-chart-simple mr-1"></i> 推し活まとめ
+                </button>
+                <button onclick="shareSite()" class="py-2.5 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-[11px] border border-slate-100 flex items-center justify-center">
+                    <i class="fa-solid fa-share-nodes mr-1"></i> サイトをシェア
+                </button>
+                <button onclick="toggleMenu(); openOnboarding();" class="py-2.5 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-[11px] border border-slate-100 flex items-center justify-center">
+                    <i class="fa-solid fa-heart mr-1"></i> はじめてガイド
+                </button>
+                <button onclick="toggleMenu(); openFeedback();" class="py-2.5 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-[11px] border border-slate-100 flex items-center justify-center">
+                    <i class="fa-solid fa-comment-dots mr-1"></i> 不具合報告・要望
+                </button>
+            </div>
+            <button onclick="resetGroupsToDefault()" class="mt-2 w-full py-1.5 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">
+                <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
         </div>
     </div>
 
     <!-- はじめてガイド -->
-    <div id="onboarding-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-[85] hidden flex items-center justify-center p-4">
+    <div id="onboarding-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
         <div class="dlg-card w-full max-w-sm p-6 space-y-4 max-h-[85vh] overflow-y-auto">
             <div class="flex justify-between items-center">
                 <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-heart text-pink-500 mr-2"></i>ようこそ Oshi-Cal へ</h3>
@@ -1574,7 +1580,7 @@ html.dark.tod-yoru .app-header {
     </div>
 
     <!-- フィードバック -->
-    <div id="feedback-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-[85] hidden flex items-center justify-center p-4">
+    <div id="feedback-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
         <div class="dlg-card w-full max-w-sm p-6 space-y-4 max-h-[85vh] overflow-y-auto">
             <div class="flex justify-between items-center">
                 <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-comment-dots text-pink-500 mr-2"></i>不具合報告・要望</h3>
