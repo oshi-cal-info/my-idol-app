@@ -4445,7 +4445,9 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             if (daysLeft < 0 || daysLeft > 1) return false;
             const timeUnknown = !e.time || e.time === '00:00';
             const placeholder = /予定\s*$/.test(String(e.title || '').trim());
-            return timeUnknown || placeholder;
+            // 詳細（特典・メモ欄）が空 = タイトルしか情報がない予定も未確定扱い（2026-11-23 岩崎要望）
+            const noDetail = !String(e.regulation || '').replace(/<[^>]*>/g, '').trim();
+            return timeUnknown || placeholder || noDetail;
         }
 
         function officialXUrl(e) {
