@@ -5834,6 +5834,41 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             } catch (e) { /* オフライン時はキャッシュ表示 */ }
         }
 
+        // ==== AI構造化（「_ai」タブを読み、出演時間の補完と詳細の特典会・料金行に表示） ====
+        const AI_CSV_URL = "https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/export?format=csv&gid=563903791";
+        let aiById = {};
+
+        function applyAiCsv_(csvText) {
+            const rows = parseCSVRows(csvText);
+            const map = {};
+            rows.slice(1).forEach(r => {
+                if (r[0] && (r[2] || r[4] || r[6])) map[r[0]] = { stageStart: r[2] || '', stageEnd: r[3] || '', tokutenStart: r[4] || '', tokutenEnd: r[5] || '', price: r[6] || '' };
+            });
+            if (Object.keys(map).length > 0) aiById = map;
+        }
+
+        async function loadAiData() {
+            const cached = localStorage.getItem('oshi_cal_ai_cache');
+            if (cached) { try { applyAiCsv_(cached); } catch (e) {} }
+            try {
+                const res = await fetch(AI_CSV_URL);
+                if (!res.ok) return;
+                const text = await res.text();
+                localStorage.setItem('oshi_cal_ai_cache', text);
+                applyAiCsv_(text);
+            } catch (e) { /* オフライン時はキャッシュ表示 */ }
+        }
+
+        // 詳細モーダル用：AIが抽出した特典会時間・料金の行（あれば）
+        function aiInfoHtml(e) {
+            const ai = aiById[e.id];
+            if (!ai) return '';
+            let rows = '';
+            if (ai.tokutenStart) rows += `<div class="flex items-center space-x-2 bg-sky-50/70 text-sky-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-camera"></i><span>特典会 ${ai.tokutenStart}${ai.tokutenEnd ? '–' + ai.tokutenEnd : ''}</span></div>`;
+            if (ai.price) rows += `<div class="flex items-center space-x-2 bg-amber-50/70 text-amber-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-ticket"></i><span>料金 ${escapeHtml(ai.price)}</span></div>`;
+            return rows;
+        }
+
         function tokutenCardHtml(groupName) {
             const t = tokutenByGroup[groupName];
             if (!t) return '';
@@ -6354,6 +6389,8 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     return start;
                 }
             }
+            const ai = aiById[e.id];
+            if (ai && ai.stageStart) return ai.stageStart + (ai.stageEnd ? '–' + ai.stageEnd : '');
             return '';
         }
 
@@ -6694,6 +6731,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                         ` : ''}
                         ${venueLinksHtml(e, true)}
                         ${stageTimeHtml(e)}
+                        ${aiInfoHtml(e)}
                         ${unconfirmedNoteHtml(e)}
                         ${venueScheduleHtml(e)}
                         ${renderRegulationHtml(e)}
@@ -8195,6 +8233,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             registerServiceWorker();
             initFirebase();
             loadTokutenData(); // 特典データは軽いので本体データと並行して先に読み始める
+            loadAiData(); // AI構造化データも並行して読み始める
             await fetchSheetData();
 
             // アプリを開いたままにしている間も、一定間隔で新着をチェックする
