@@ -5676,7 +5676,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 </div>
                 <button onclick="groupActionLinks()" class="${rowCls}">
                     <i class="fa-solid fa-link text-purple-500 w-5 text-center flex-shrink-0"></i>
-                    <span class="text-xs font-bold text-slate-700">${tokutenByGroup[g.name] ? '公式リンク・新規特典を見る' : '公式リンクを見る'}${linkCount > 0 ? `（${linkCount}件）` : '（未登録）'}</span>
+                    <span class="text-xs font-bold text-slate-700">${(tokutenByGroup[g.name] || tokutenFlagEvent_(g.name)) ? '公式リンク・新規特典を見る' : '公式リンクを見る'}${linkCount > 0 ? `（${linkCount}件）` : '（未登録）'}</span>
                 </button>
                 <button onclick="groupActionToggleVisible()" class="${rowCls}">
                     <i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'} text-slate-400 w-5 text-center flex-shrink-0"></i>
@@ -5788,6 +5788,35 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             `;
         }
 
+        // 常設ページがない組向け：直近の公演告知（メモ欄）に新規特典の実施が書かれていればフラグ表示する
+        const TOKUTEN_FLAG_RE = /新規特典|ご新規様無料|新規無料|ご新規様特典|新規様特典|ご新規様ファストパス/;
+        function tokutenFlagEvent_(groupName) {
+            const today = dayjs().format('YYYY-MM-DD');
+            let best = null;
+            for (const e of events) {
+                if (!e.isSheet || e.group !== groupName || e.date < today) continue;
+                const text = (e.regulation || '').replace(/<[^>]*>/g, ' ');
+                const hit = text.split(/[。\n]/).some(f => TOKUTEN_FLAG_RE.test(f) && !/ございません|ありません|実施なし/.test(f));
+                if (hit && (!best || e.date < best.date)) best = e;
+            }
+            return best;
+        }
+
+        function tokutenFlagHtml(groupName) {
+            const e = tokutenFlagEvent_(groupName);
+            if (!e) return '';
+            const parts = e.date.split('-');
+            const m = Number(parts[1]), d = Number(parts[2]);
+            const x = (OFFICIAL_GROUP_LINKS[groupName] || {}).x || '';
+            return `
+                <div class="p-3.5 bg-pink-50/50 border border-dashed border-pink-300 rounded-2xl mb-2">
+                    <p class="text-xs font-black text-pink-600 mb-1.5"><i class="fa-solid fa-gift mr-1"></i>新規特典あり</p>
+                    <p class="text-[11px] leading-relaxed text-slate-600">${m}月${d}日の公演告知で、新規特典の実施が案内されています。内容は公演ページや公式Xで確認してください。</p>
+                    ${x ? `<div class="mt-2"><a href="${x}" target="_blank" class="text-[10px] font-bold text-purple-500">公式Xで確認 <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i></a></div>` : ''}
+                </div>
+            `;
+        }
+
         function openGroupLinksModal(groupName) {
             if (Object.keys(tokutenByGroup).length === 0) loadTokutenData();
             const groupObj = groups.find(g => g.name === groupName);
@@ -5811,7 +5840,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     `;
                 });
 
-            const tokutenHtml = tokutenCardHtml(groupName);
+            const tokutenHtml = tokutenCardHtml(groupName) || tokutenFlagHtml(groupName);
             container.innerHTML = tokutenHtml + (rows.length > 0
                 ? rows.join('')
                 : (tokutenHtml ? '' : `<p class="text-xs text-slate-400 text-center py-6">公式リンクはまだ登録されていません</p>`));
