@@ -5001,12 +5001,45 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             return kept;
         }
 
-        function shareImageOfFavorites() {
+
+        const SHARE_FONT = '"M PLUS Rounded 1c", sans-serif';
+        // シェア画像共通の柔らかい装飾（淡い円2つ＋小さなドット）
+        function softBlobs_(ctx, W, H) {
+            ctx.save();
+            ctx.globalAlpha = 0.30;
+            ctx.fillStyle = '#f9a8d4';
+            ctx.beginPath(); ctx.arc(W - 40, 30, 190, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 0.28;
+            ctx.fillStyle = '#ddd6fe';
+            ctx.beginPath(); ctx.arc(30, H - 30, 160, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = '#f9a8d4';
+            [[W - 270, 130, 7], [120, 215, 6], [W - 150, H - 200, 6], [70, H - 330, 5]].forEach(function (p) { ctx.beginPath(); ctx.arc(p[0], p[1], p[2], 0, Math.PI * 2); ctx.fill(); });
+            ctx.restore();
+        }
+        // シェア画像共通のワードマーク（グラデーションのピルに白文字）
+        function shareWordmark_(ctx, W, y, pad) {
+            const label = 'Oshi-Cal';
+            ctx.font = '800 27px ' + SHARE_FONT;
+            const tw = ctx.measureText(label).width;
+            const pw = tw + 44, ph = 52, px = W - pad - pw, py = y - 38;
+            const g = ctx.createLinearGradient(px, py, px + pw, py + ph);
+            g.addColorStop(0, '#f9a8d4');
+            g.addColorStop(1, '#d8b4fe');
+            ctx.fillStyle = g;
+            drawRoundRect(ctx, px, py, pw, ph, ph / 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(label, px + 22, y);
+        }
+
+        async function shareImageOfFavorites() {
             const lives = getFavoriteLives();
             if (lives.length === 0) {
                 alert('お気に入りのライブがまだありません');
                 return;
             }
+            try { await Promise.all([document.fonts.load('800 60px "M PLUS Rounded 1c"'), document.fonts.load('700 30px "M PLUS Rounded 1c"')]); } catch (e) {}
 
             const MAX_ITEMS = 40; // 画像に入れる最大件数
             const GRID_THRESHOLD = 6; // これより多いと2列（横並び）表示に切り替える
@@ -5023,11 +5056,11 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             const CARD_PAD = useGrid ? 26 : 32;
             const CHIP_H = useGrid ? 42 : 52;
             const CHIP_GAP = 10;
-            const CHIP_FONT = useGrid ? '700 22px sans-serif' : '700 26px sans-serif';
+            const CHIP_FONT = useGrid ? '700 22px "M PLUS Rounded 1c", sans-serif' : '700 26px "M PLUS Rounded 1c", sans-serif';
             const CHIP_TEXT_PAD = useGrid ? 16 : 20;
-            const DATE_FONT = useGrid ? '700 26px sans-serif' : '700 32px sans-serif';
+            const DATE_FONT = useGrid ? '700 26px "M PLUS Rounded 1c", sans-serif' : '700 32px "M PLUS Rounded 1c", sans-serif';
             const DATE_H = useGrid ? 34 : 46;
-            const TITLE_FONT = useGrid ? '700 30px sans-serif' : '700 38px sans-serif';
+            const TITLE_FONT = useGrid ? '700 30px "M PLUS Rounded 1c", sans-serif' : '700 38px "M PLUS Rounded 1c", sans-serif';
             const TITLE_LINE_H = useGrid ? 38 : 46;
             const TITLE_MAX_LINES = useGrid ? 2 : 1;
             const cardW = (WIDTH - PAD * 2 - COL_GAP * (COLS - 1)) / COLS;
@@ -5076,21 +5109,32 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             canvas.height = HEIGHT;
 
             const bg = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-            bg.addColorStop(0, '#fdf2f8');
-            bg.addColorStop(1, '#f5f3ff');
+            bg.addColorStop(0, '#fff8fb');
+            bg.addColorStop(1, '#fdeef7');
             ctx.fillStyle = bg;
             ctx.fillRect(0, 0, WIDTH, HEIGHT);
+            softBlobs_(ctx, WIDTH, HEIGHT);
 
-            ctx.fillStyle = '#ec4899';
-            ctx.font = '700 60px sans-serif';
-            ctx.fillText('推し活スケジュール', PAD, 128);
+            // ヘッダー：グラデーションの角丸バッジ＋タイトル（アプリの淡ピンク基調）
+            const badgeG = ctx.createLinearGradient(PAD, 52, PAD + 92, 144);
+            badgeG.addColorStop(0, '#f9a8d4');
+            badgeG.addColorStop(1, '#d8b4fe');
+            ctx.fillStyle = badgeG;
+            drawRoundRect(ctx, PAD, 52, 92, 92, 26);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 50px ' + SHARE_FONT;
+            ctx.textAlign = 'center';
+            ctx.fillText('推', PAD + 46, 118);
+            ctx.textAlign = 'left';
 
-            ctx.fillStyle = '#a855f7';
-            ctx.font = '600 28px sans-serif';
-            ctx.fillText(`MY LIVE SCHEDULE  ${lives.length}件`, PAD, 172);
+            ctx.fillStyle = '#402b3d';
+            ctx.font = '800 58px ' + SHARE_FONT;
+            ctx.fillText('推し活スケジュール', PAD + 118, 112);
 
-            ctx.font = '60px sans-serif';
-            ctx.fillText('🎫', WIDTH - PAD - 70, 128);
+            ctx.fillStyle = '#96748c';
+            ctx.font = '700 27px ' + SHARE_FONT;
+            ctx.fillText(`MY LIVE SCHEDULE ・ 全${lives.length}件`, PAD + 118, 158);
 
             let y = HEADER_H;
             rows.forEach(row => {
@@ -5100,29 +5144,33 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     const h = row.height;
 
                     ctx.fillStyle = '#ffffff';
-                    ctx.shadowColor = 'rgba(236, 72, 153, 0.18)';
+                    ctx.shadowColor = 'rgba(221, 91, 157, 0.13)';
                     ctx.shadowBlur = 24;
-                    ctx.shadowOffsetY = 10;
+                    ctx.shadowOffsetY = 8;
                     drawRoundRect(ctx, x, y, cardW, h, useGrid ? 28 : 36);
                     ctx.fill();
                     ctx.shadowColor = 'transparent';
                     ctx.shadowBlur = 0;
                     ctx.shadowOffsetY = 0;
+                    ctx.strokeStyle = 'rgba(233, 150, 195, 0.45)';
+                    ctx.lineWidth = 2;
+                    drawRoundRect(ctx, x, y, cardW, h, useGrid ? 28 : 36);
+                    ctx.stroke();
 
                     // 左端にグループ色のライン
                     const firstGroup = groups.find(g => g.name === rep.group);
-                    ctx.fillStyle = firstGroup ? firstGroup.color : '#ec4899';
+                    ctx.fillStyle = firstGroup ? firstGroup.color : '#dd5b9d';
                     drawRoundRect(ctx, x + 10, y + 22, 6, h - 44, 3);
                     ctx.fill();
 
                     let cy = y + CARD_PAD;
                     const dateFormatted = dayjs(rep.date).isValid() ? dayjs(rep.date).format('M/D(dd)') : rep.date;
-                    ctx.fillStyle = '#64748b';
+                    ctx.fillStyle = '#96748c';
                     ctx.font = DATE_FONT;
                     ctx.fillText(`${dateFormatted}  ${rep.time}`, x + CARD_PAD, cy + DATE_H - 10);
                     cy += DATE_H + 12;
 
-                    ctx.fillStyle = '#1e293b';
+                    ctx.fillStyle = '#402b3d';
                     ctx.font = TITLE_FONT;
                     titleLines.forEach(line => {
                         ctx.fillText(line, x + CARD_PAD, cy + TITLE_LINE_H - 10);
@@ -5134,11 +5182,11 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                         let cx = x + CARD_PAD;
                         chipRow.forEach(({ ev, label, chipW }) => {
                             const groupObj = groups.find(g => g.name === ev.group);
-                            const color = groupObj ? groupObj.color : '#ec4899';
-                            ctx.fillStyle = color;
+                            const color = groupObj ? groupObj.color : '#dd5b9d';
+                            ctx.fillStyle = /^#[0-9a-fA-F]{6}$/.test(color) ? color + '26' : color;
                             drawRoundRect(ctx, cx, cy, chipW, CHIP_H, CHIP_H / 2);
                             ctx.fill();
-                            ctx.fillStyle = '#ffffff';
+                            ctx.fillStyle = color;
                             ctx.font = CHIP_FONT;
                             ctx.fillText(label, cx + CHIP_TEXT_PAD, cy + CHIP_H / 2 + (useGrid ? 8 : 9));
                             cx += chipW + CHIP_GAP;
@@ -5150,17 +5198,16 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             });
 
             if (extra > 0) {
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = '600 28px sans-serif';
+                ctx.fillStyle = '#96748c';
+                ctx.font = '600 28px "M PLUS Rounded 1c", sans-serif';
                 ctx.fillText(`ほか ${extra} 件`, PAD, y + 36);
                 y += extraNoteH;
             }
 
-            ctx.fillStyle = '#c084fc';
-            ctx.font = '700 30px sans-serif';
-            ctx.textAlign = 'right';
-            ctx.fillText('🩷 Oshi-Cal', WIDTH - PAD, y + 56);
-            ctx.textAlign = 'left';
+            ctx.fillStyle = '#96748c';
+            ctx.font = '700 26px ' + SHARE_FONT;
+            ctx.fillText('#推し活 #OshiCal', PAD, y + 56);
+            shareWordmark_(ctx, WIDTH, y + 56, PAD);
 
             canvas.toBlob(async (blob) => {
                 if (!blob) { alert('画像の作成に失敗しました'); return; }
@@ -6969,9 +7016,10 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             alert(text);
         }
 
-        function shareSummaryImage() {
+        async function shareSummaryImage() {
             const s = computeSummary(summaryPeriod);
             if (s.liveCount === 0) { alert('まだ記録がありません'); return; }
+            try { await Promise.all([document.fonts.load('800 60px "M PLUS Rounded 1c"'), document.fonts.load('700 30px "M PLUS Rounded 1c"')]); } catch (e) {}
 
             const WIDTH = 1080;
             const PAD = 70;
@@ -6994,28 +7042,32 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             canvas.width = WIDTH;
             canvas.height = HEIGHT;
 
-            // 背景グラデーション
-            const bg = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
-            bg.addColorStop(0, '#ec4899');
-            bg.addColorStop(1, '#a855f7');
+            // 背景：アプリのテーマに合わせた淡ピンクのグラデーション＋柔らかい装飾
+            const bg = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+            bg.addColorStop(0, '#fff8fb');
+            bg.addColorStop(1, '#fdeef7');
             ctx.fillStyle = bg;
             ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-            // 装飾の丸（ふんわり）
-            ctx.globalAlpha = 0.15;
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath(); ctx.arc(WIDTH - 60, 60, 160, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(40, HEIGHT - 80, 130, 0, Math.PI * 2); ctx.fill();
-            ctx.globalAlpha = 1;
+            softBlobs_(ctx, WIDTH, HEIGHT);
 
             // ヘッダー
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '700 30px sans-serif';
+            ctx.fillStyle = '#96748c';
+            ctx.font = '700 29px ' + SHARE_FONT;
             ctx.fillText('MY 推し活まとめ', PAD, 100);
-            ctx.font = '900 66px sans-serif';
-            ctx.fillText(s.label, PAD, 175);
-            ctx.font = '64px sans-serif';
-            ctx.fillText('🎫', WIDTH - PAD - 70, 110);
+            ctx.fillStyle = '#402b3d';
+            ctx.font = '800 66px ' + SHARE_FONT;
+            ctx.fillText(s.label, PAD, 178);
+            const badgeG2 = ctx.createLinearGradient(WIDTH - PAD - 92, 52, WIDTH - PAD, 144);
+            badgeG2.addColorStop(0, '#f9a8d4');
+            badgeG2.addColorStop(1, '#d8b4fe');
+            ctx.fillStyle = badgeG2;
+            drawRoundRect(ctx, WIDTH - PAD - 92, 52, 92, 92, 26);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 50px ' + SHARE_FONT;
+            ctx.textAlign = 'center';
+            ctx.fillText('推', WIDTH - PAD - 46, 118);
+            ctx.textAlign = 'left';
 
             let y = HEADER_H;
 
@@ -7036,22 +7088,33 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             statRows.forEach((row, ri) => {
                 row.forEach((stat, i) => {
                     const x = PAD + i * (statW + 24);
-                    ctx.fillStyle = 'rgba(255,255,255,0.95)';
-                    drawRoundRect(ctx, x, y, statW, STAT_H, 28);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowColor = 'rgba(221, 91, 157, 0.13)';
+                    ctx.shadowBlur = 24;
+                    ctx.shadowOffsetY = 8;
+                    drawRoundRect(ctx, x, y, statW, STAT_H, 32);
                     ctx.fill();
-                    ctx.fillStyle = '#94a3b8';
-                    ctx.font = '700 26px sans-serif';
+                    ctx.shadowColor = 'transparent';
+                    ctx.shadowBlur = 0;
+                    ctx.shadowOffsetY = 0;
+                    ctx.strokeStyle = 'rgba(233, 150, 195, 0.45)';
+                    ctx.lineWidth = 2;
+                    drawRoundRect(ctx, x, y, statW, STAT_H, 32);
+                    ctx.stroke();
+                    ctx.fillStyle = '#96748c';
+                    ctx.font = '700 26px "M PLUS Rounded 1c", sans-serif';
                     ctx.fillText(stat.label, x + 28, y + 50);
-                    ctx.fillStyle = '#1e293b';
+                    ctx.fillStyle = '#402b3d';
                     let vfs = 72;
-                    ctx.font = `900 ${vfs}px sans-serif`;
+                    ctx.font = `800 ${vfs}px "M PLUS Rounded 1c", sans-serif`;
                     while (ctx.measureText(stat.value).width > statW - 80 && vfs > 28) {
                         vfs -= 6;
-                        ctx.font = `900 ${vfs}px sans-serif`;
+                        ctx.font = `800 ${vfs}px "M PLUS Rounded 1c", sans-serif`;
                     }
                     ctx.fillText(stat.value, x + 28, y + 130);
                     const vw = ctx.measureText(stat.value).width;
-                    ctx.font = '700 30px sans-serif';
+                    ctx.font = '700 30px ' + SHARE_FONT;
+                    ctx.fillStyle = '#dd5b9d';
                     ctx.fillText(stat.unit, x + 28 + vw + 12, y + 130);
                 });
                 y += STAT_H + (ri < statRows.length - 1 ? 24 : SECTION_GAP);
@@ -7060,31 +7123,38 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             const contentW = WIDTH - PAD * 2;
 
             function drawRankSection(title, items, dotColorFn) {
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '900 32px sans-serif';
-                ctx.fillText(title, PAD, y + 40);
+                ctx.fillStyle = '#dd5b9d';
+                drawRoundRect(ctx, PAD, y + 12, 9, 34, 4);
+                ctx.fill();
+                ctx.fillStyle = '#402b3d';
+                ctx.font = '800 32px ' + SHARE_FONT;
+                ctx.fillText(title, PAD + 24, y + 40);
                 y += 70;
                 items.forEach(([name, count], i) => {
-                    ctx.fillStyle = 'rgba(255,255,255,0.95)';
-                    drawRoundRect(ctx, PAD, y, contentW, ROW_H - 16, 22);
+                    ctx.fillStyle = '#ffffff';
+                    drawRoundRect(ctx, PAD, y, contentW, ROW_H - 16, 24);
                     ctx.fill();
+                    ctx.strokeStyle = 'rgba(233, 150, 195, 0.45)';
+                    ctx.lineWidth = 2;
+                    drawRoundRect(ctx, PAD, y, contentW, ROW_H - 16, 24);
+                    ctx.stroke();
 
                     const badgeR = 22;
                     const cy = y + (ROW_H - 16) / 2;
                     ctx.fillStyle = dotColorFn(name);
                     ctx.beginPath(); ctx.arc(PAD + 40, cy, badgeR, 0, Math.PI * 2); ctx.fill();
                     ctx.fillStyle = '#ffffff';
-                    ctx.font = '900 24px sans-serif';
+                    ctx.font = '800 24px "M PLUS Rounded 1c", sans-serif';
                     ctx.textAlign = 'center';
                     ctx.fillText(String(i + 1), PAD + 40, cy + 8);
                     ctx.textAlign = 'left';
 
-                    ctx.fillStyle = '#1e293b';
-                    ctx.font = '700 32px sans-serif';
+                    ctx.fillStyle = '#402b3d';
+                    ctx.font = '700 32px "M PLUS Rounded 1c", sans-serif';
                     ctx.fillText(truncateText(ctx, name, contentW - 220), PAD + 84, cy + 11);
 
                     ctx.fillStyle = '#94a3b8';
-                    ctx.font = '900 30px sans-serif';
+                    ctx.font = '800 30px "M PLUS Rounded 1c", sans-serif';
                     ctx.textAlign = 'right';
                     ctx.fillText(String(count), PAD + contentW - 24, cy + 10);
                     ctx.textAlign = 'left';
@@ -7096,29 +7166,24 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             if (topGroups.length) {
                 drawRankSection('よく観たグループ', topGroups, (name) => {
                     const go = groups.find(g => g.name === name);
-                    return go ? go.color : '#ec4899';
+                    return go ? go.color : '#dd5b9d';
                 });
                 y += SECTION_GAP;
             }
 
             if (topVenues.length) {
-                drawRankSection('よく行った会場', topVenues, () => '#a855f7');
+                drawRankSection('よく行った会場', topVenues, () => '#a78bfa');
                 y += SECTION_GAP;
             }
 
-            // フッター：ハッシュタグ + URL
-            ctx.fillStyle = 'rgba(255,255,255,0.9)';
-            ctx.font = '700 28px sans-serif';
+            // フッター：ハッシュタグ + URL + ワードマーク
+            ctx.fillStyle = '#96748c';
+            ctx.font = '700 27px ' + SHARE_FONT;
             ctx.fillText('#推し活 #OshiCal', PAD, y + 40);
-            ctx.font = '600 24px sans-serif';
-            ctx.fillStyle = 'rgba(255,255,255,0.75)';
-            ctx.fillText(SITE_URL, PAD, y + 78);
-
-            ctx.textAlign = 'right';
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '900 30px sans-serif';
-            ctx.fillText('🩷 Oshi-Cal', WIDTH - PAD, y + 60);
-            ctx.textAlign = 'left';
+            ctx.font = '500 23px ' + SHARE_FONT;
+            ctx.fillStyle = '#b08ea6';
+            ctx.fillText(SITE_URL, PAD, y + 76);
+            shareWordmark_(ctx, WIDTH, y + 62, PAD);
 
             canvas.toBlob(async (blob) => {
                 if (!blob) { alert('画像の作成に失敗しました'); return; }
