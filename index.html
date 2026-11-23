@@ -4437,6 +4437,40 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             return `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-sm"><i class="fa-solid fa-trophy mr-1 text-[9px]"></i>${label}${when}</span>`;
         }
 
+        // 取得元の予定が更新されないまま当日・前日を迎えた予定の判定（時刻未定 or タイトルが「〜予定」のまま）
+        // 元データは変えず、使う人が公式Xで最新情報を確認できるようにする表示専用の仕組み
+        function needsConfirm(e) {
+            if (!e || !e.isSheet || !e.date) return false;
+            const daysLeft = dayjs(e.date).diff(dayjs().startOf('day'), 'day');
+            if (daysLeft < 0 || daysLeft > 1) return false;
+            const timeUnknown = !e.time || e.time === '00:00';
+            const placeholder = /予定\s*$/.test(String(e.title || '').trim());
+            return timeUnknown || placeholder;
+        }
+
+        function officialXUrl(e) {
+            return (OFFICIAL_GROUP_LINKS[e.group] || {}).x || '';
+        }
+
+        // カード上の「要確認」バッジ（公式XがあればタップでXへ）
+        function unconfirmedBadgeHtml(e) {
+            if (!needsConfirm(e)) return '';
+            const x = officialXUrl(e);
+            const label = dayjs(e.date).diff(dayjs().startOf('day'), 'day') === 0 ? '本日・要確認' : '明日・要確認';
+            const inner = `<i class="fa-solid fa-triangle-exclamation mr-1 text-[9px]"></i>${label}`;
+            const cls = 'inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 shadow-sm';
+            return x
+                ? `<a href="${x}" target="_blank" onclick="event.stopPropagation()" class="${cls}">${inner}</a>`
+                : `<span class="${cls}">${inner}</span>`;
+        }
+
+        // 詳細モーダル内の注意書き行
+        function unconfirmedNoteHtml(e) {
+            if (!needsConfirm(e)) return '';
+            const x = officialXUrl(e);
+            return `<div class="flex items-center space-x-2 bg-amber-50 text-amber-700 text-[11px] font-semibold px-3 py-2.5 rounded-2xl"><i class="fa-solid fa-triangle-exclamation"></i><span>時刻・詳細が未定のままです</span>${x ? `<a href="${x}" target="_blank" onclick="event.stopPropagation()" class="underline font-bold">公式Xで確認</a>` : ''}</div>`;
+        }
+
         // スプレッドシート側に<p>や<br>などのHTMLタグが文字として入っていることがあるため、
         // 表示前に読みやすいテキスト（改行）へ変換する
         function stripRegulationHtml(str) {
@@ -6477,6 +6511,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                         ` : ''}
                         ${venueLinksHtml(e, true)}
                         ${stageTimeHtml(e)}
+                        ${unconfirmedNoteHtml(e)}
                         ${venueScheduleHtml(e)}
                         ${renderRegulationHtml(e)}
                         ${renderMemoHtml(e)}
@@ -6696,6 +6731,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                                     ${deadlineBadgeHtml(e)}
                                 </div>
                                 ${venueLinksHtml(e, false)}
+                                ${unconfirmedNoteHtml(e)}
                                 ${weatherBadgeHtml(e)}
                                 ${renderRegulationHtml(e)}
                                 ${memo ? `<div class="bg-amber-50 rounded-2xl px-3 py-2.5 space-y-1">${memo.split('\n').map(l => `<p class="text-[11px] font-semibold text-amber-700">${escapeHtml(l)}</p>`).join('')}</div>` : ''}
@@ -7331,6 +7367,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                                 ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
                                 ${specialBadgeHtml(rep)}
                                 ${deadlineBadgeHtml(rep)}
+                                ${unconfirmedBadgeHtml(rep)}
                                 ${weatherBadgeHtml(rep)}
                                 ${multiVenueBadgeHtml(rep)}
                                 ${!isMulti ? stageBadgeHtml(rep) : ''}
