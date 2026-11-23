@@ -5676,7 +5676,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 </div>
                 <button onclick="groupActionLinks()" class="${rowCls}">
                     <i class="fa-solid fa-link text-purple-500 w-5 text-center flex-shrink-0"></i>
-                    <span class="text-xs font-bold text-slate-700">公式リンクを見る${linkCount > 0 ? `（${linkCount}件）` : '（未登録）'}</span>
+                    <span class="text-xs font-bold text-slate-700">${tokutenByGroup[g.name] ? '公式リンク・新規特典を見る' : '公式リンクを見る'}${linkCount > 0 ? `（${linkCount}件）` : '（未登録）'}</span>
                 </button>
                 <button onclick="groupActionToggleVisible()" class="${rowCls}">
                     <i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'} text-slate-400 w-5 text-center flex-shrink-0"></i>
@@ -5747,6 +5747,47 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             fetchSheetData();
         }
 
+        // ==== 新規特典（「特典レギュレーション」タブを読み、公式リンク画面に表示） ====
+        const TOKUTEN_CSV_URL = "https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/export?format=csv&gid=1138658948";
+        let tokutenByGroup = {};
+
+        function applyTokutenCsv_(csvText) {
+            const rows = parseCSVRows(csvText);
+            const map = {};
+            rows.slice(1).forEach(r => {
+                if (r[0] && r[1]) map[r[0]] = { text: r[1], url: r[2] || '', updated: r[4] || '' };
+            });
+            if (Object.keys(map).length > 0) tokutenByGroup = map;
+        }
+
+        async function loadTokutenData() {
+            const cached = localStorage.getItem('oshi_cal_tokuten_cache');
+            if (cached) { try { applyTokutenCsv_(cached); } catch (e) {} }
+            try {
+                const res = await fetch(TOKUTEN_CSV_URL);
+                if (!res.ok) return;
+                const text = await res.text();
+                localStorage.setItem('oshi_cal_tokuten_cache', text);
+                applyTokutenCsv_(text);
+            } catch (e) { /* オフライン時はキャッシュ表示 */ }
+        }
+
+        function tokutenCardHtml(groupName) {
+            const t = tokutenByGroup[groupName];
+            if (!t) return '';
+            const body = escapeHtml(t.text).replace(/\n/g, '<br>');
+            return `
+                <div class="p-3.5 bg-gradient-to-br from-pink-50 to-purple-50/60 border border-pink-200/70 rounded-2xl mb-2">
+                    <p class="text-xs font-black text-pink-600 mb-1.5"><i class="fa-solid fa-gift mr-1"></i>新規特典</p>
+                    <p class="text-[11px] leading-relaxed text-slate-700">${body}</p>
+                    <div class="flex items-center justify-between mt-2">
+                        ${t.url ? `<a href="${t.url}" target="_blank" class="text-[10px] font-bold text-purple-500">出典：公式レギュレーション <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i></a>` : '<span></span>'}
+                        ${t.updated ? `<span class="text-[9px] text-slate-400">${escapeHtml(t.updated)} 更新</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
         function openGroupLinksModal(groupName) {
             const groupObj = groups.find(g => g.name === groupName);
             const color = groupObj ? groupObj.color : '#ec4899';
@@ -5769,9 +5810,10 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     `;
                 });
 
-            container.innerHTML = rows.length > 0
+            const tokutenHtml = tokutenCardHtml(groupName);
+            container.innerHTML = tokutenHtml + (rows.length > 0
                 ? rows.join('')
-                : `<p class="text-xs text-slate-400 text-center py-6">公式リンクはまだ登録されていません</p>`;
+                : (tokutenHtml ? '' : `<p class="text-xs text-slate-400 text-center py-6">公式リンクはまだ登録されていません</p>`));
 
             document.getElementById('group-links-modal').classList.remove('hidden');
         }
@@ -8061,6 +8103,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             registerServiceWorker();
             initFirebase();
             await fetchSheetData();
+            loadTokutenData();
 
             // アプリを開いたままにしている間も、一定間隔で新着をチェックする
             setInterval(fetchSheetData, 15 * 60 * 1000);
