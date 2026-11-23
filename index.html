@@ -5789,6 +5789,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
         }
 
         function openGroupLinksModal(groupName) {
+            if (Object.keys(tokutenByGroup).length === 0) loadTokutenData();
             const groupObj = groups.find(g => g.name === groupName);
             const color = groupObj ? groupObj.color : '#ec4899';
             document.getElementById('group-links-title').innerHTML = `<span class="w-3 h-3 rounded-full inline-block mr-2" style="background-color:${color}"></span>${groupName}`;
@@ -8102,8 +8103,8 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             updateNotifyToggleUI();
             registerServiceWorker();
             initFirebase();
+            loadTokutenData(); // 特典データは軽いので本体データと並行して先に読み始める
             await fetchSheetData();
-            loadTokutenData();
 
             // アプリを開いたままにしている間も、一定間隔で新着をチェックする
             setInterval(fetchSheetData, 15 * 60 * 1000);
