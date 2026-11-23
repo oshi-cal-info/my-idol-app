@@ -7212,6 +7212,43 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             }).join('');
         }
 
+        // ==== リスト段階描画（案1: 初期表示は直近ぶんだけ描き、スクロールで足す） ====
+        const LIST_CHUNK_CARDS = 80;
+        let listSegments = null;
+        let listSegIdx = 0;
+        let listObserver = null;
+
+        function teardownListObserver_() {
+            if (listObserver) { listObserver.disconnect(); listObserver = null; }
+        }
+
+        function takeListSegments_(budget) {
+            let html = '';
+            let used = 0;
+            while (listSegments && listSegIdx < listSegments.length) {
+                const seg = listSegments[listSegIdx];
+                if (used > 0 && used + seg.count > budget) break;
+                html += seg.html;
+                used += seg.count;
+                listSegIdx++;
+                if (used >= budget) break;
+            }
+            return html;
+        }
+
+        function appendListChunks_(all) {
+            const sentinel = document.getElementById('list-sentinel');
+            if (!sentinel || !listSegments) return;
+            let html = takeListSegments_(LIST_CHUNK_CARDS);
+            if (all) { let more = takeListSegments_(LIST_CHUNK_CARDS); while (more) { html += more; more = takeListSegments_(LIST_CHUNK_CARDS); } }
+            if (html) sentinel.insertAdjacentHTML('beforebegin', html);
+            if (listSegIdx >= listSegments.length) {
+                teardownListObserver_();
+                sentinel.remove();
+            }
+            hydrateWeather();
+        }
+
         function renderListView() {
             const container = document.getElementById('view-list');
 
@@ -7225,6 +7262,9 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             }
 
             if (filtered.length === 0) {
+                teardownListObserver_();
+                listSegments = null;
+                listSegIdx = 0;
                 const emptyBox = sheetDataReady ? `
                     <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
                         <div class="morph-blob mx-auto mb-4"><i class="fa-regular fa-calendar-xmark"></i></div>
@@ -7242,7 +7282,24 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 return;
             }
 
-            container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + buildEventCardsHtml(filtered);
+            teardownListObserver_();
+            listSegments = buildEventCardSegments(filtered);
+            listSegIdx = 0;
+            const firstHtml = takeListSegments_(LIST_CHUNK_CARDS);
+            const hasMore = listSegIdx < listSegments.length;
+            container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + firstHtml
+                + (hasMore ? '<div id="list-sentinel" class="py-5 text-center text-[11px] text-slate-300"><i class="fa-solid fa-ellipsis"></i></div>' : '');
+            if (hasMore) {
+                const sentinel = document.getElementById('list-sentinel');
+                if ('IntersectionObserver' in window) {
+                    listObserver = new IntersectionObserver(entries => {
+                        if (entries.some(en => en.isIntersecting)) appendListChunks_(false);
+                    }, { rootMargin: '1200px 0px' });
+                    listObserver.observe(sentinel);
+                } else {
+                    appendListChunks_(true);
+                }
+            }
             fixTodayBannerOffset();
             hydrateWeather();
         }
@@ -7287,7 +7344,8 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
         }
 
         // リスト用カードのHTMLを組み立てる共通処理（フィルタ済みの予定配列を受け取る）
-        function buildEventCardsHtml(filtered, isGoingView) {
+        // 日付ごとのセグメント配列 [{html, count}] を返す。リスト表示の段階描画（案1）が使う。
+        function buildEventCardSegments(filtered, isGoingView) {
             // 同じ日・同じタイトルのライブは1枚のカードにまとめる
             const liveMap = new Map();
             filtered.forEach(e => {
@@ -7300,7 +7358,9 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 (a, b) => new Date(a[0].date + ' ' + a[0].time) - new Date(b[0].date + ' ' + b[0].time)
             );
 
-            let html = '';
+            const segments = [];
+            let segHtml = '';
+            let segCount = 0;
             let lastDate = '';
 
             lives.forEach(list => {
@@ -7310,7 +7370,8 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 const isToday = dayjs(rep.date).isToday();
 
                 if (rep.date !== lastDate) {
-                    html += `
+                    if (segHtml) { segments.push({ html: segHtml, count: segCount }); segHtml = ''; segCount = 0; }
+                    segHtml += `
                         <div data-date="${rep.date}" class="scroll-mt-[140px] flex items-center space-x-2 pt-3 pb-1 px-1">
                             <h3 class="font-extrabold text-slate-700 text-sm">${dateFormatted}</h3>
                             ${isToday ? '<span class="px-2 py-0.5 bg-pink-500 text-white text-[10px] font-bold rounded-full shadow-sm shadow-pink-500/30">今日</span>' : ''}
@@ -7353,7 +7414,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     : `<span class="text-2xl font-black text-slate-800 tracking-tight">${times[0]}<span class="text-xs font-bold text-slate-400 ml-1">ほか</span></span>`;
 
 
-                html += `
+                segHtml += `
                     <div data-livekey="${cardKey}" class="event-card bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${specialFrameCls}">
                         ${barHtml}
                         <div class="flex-1 p-4 cursor-pointer" onclick="openEventDetail('${rep.id}')">
@@ -7378,8 +7439,15 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                         </div>
                     </div>
                 `;
+                segCount++;
             });
-            return html;
+            if (segHtml) segments.push({ html: segHtml, count: segCount });
+            return segments;
+        }
+
+        // 従来の呼び出し用：全セグメントを連結したHTMLを返す
+        function buildEventCardsHtml(filtered, isGoingView) {
+            return buildEventCardSegments(filtered, isGoingView).map(s => s.html).join('');
         }
 
         function renderMonthView() {
