@@ -5881,7 +5881,10 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 if (!res.ok) return;
                 const text = await res.text();
                 localStorage.setItem('oshi_cal_highlight_cache', text);
+                const had = !!hlData;
                 applyHlCsv_(text);
+                // 初回取得でカードが出せるようになったら、再読み込みなしで一覧に反映する
+                if (!had && hlData && events.length) render();
             } catch (e) { /* オフライン時はキャッシュ表示 */ }
         }
 
