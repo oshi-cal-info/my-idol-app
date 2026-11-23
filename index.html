@@ -1535,7 +1535,7 @@ html.dark.tod-yoru .app-header {
             <p class="mt-3 text-[10px] text-slate-400 leading-relaxed px-1">
                 グループはライブスケジュールから自動で追加されます。チップをタップすると表示オン/オフ、長押しすると通知・色・公式リンクなどの設定が開きます。
             </p>
-            <button id="notify-toggle-btn" onclick="requestNotificationPermission()" class="mt-3 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
+            <button id="notify-toggle-btn" onclick="toggleNotifySetting()" class="mt-3 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
                 <i class="fa-solid fa-bell mr-1.5"></i> <span id="notify-toggle-label">新着ライブの通知を受け取る</span>
             </button>
             <div class="grid grid-cols-2 gap-2 mt-2">
@@ -1936,6 +1936,7 @@ html.dark.tod-yoru .app-header {
 
         // 通知トークンを取得して、自分のクラウドデータに保存する
         async function registerPushToken() {
+            if (!notifyEnabled()) return;
             if (!currentUser || !db || !messaging) return;
             try {
                 const registration = await navigator.serviceWorker.ready;
@@ -8454,38 +8455,77 @@ html.dark.tod-yoru .app-header {
         }
 
         // ==== 通知まわり ====
+        // 全体の通知オン/オフ（この端末の設定。オフにするとこの端末のプッシュ用トークンを
+        // クラウドから外し、端末内通知も止める。他の端末の通知には影響しない）
+        function notifyEnabled() {
+            return localStorage.getItem('oshi_cal_notify_enabled') !== '0';
+        }
+
         function updateNotifyToggleUI() {
             const label = document.getElementById('notify-toggle-label');
+            const btn = document.getElementById('notify-toggle-btn');
             if (!label || !('Notification' in window)) {
                 if (label) label.textContent = 'このブラウザは通知に対応していません';
                 return;
             }
             if (Notification.permission === 'granted') {
-                label.textContent = '新着ライブの通知：オン';
+                label.textContent = notifyEnabled() ? '新着ライブの通知：オン' : '新着ライブの通知：オフ';
             } else if (Notification.permission === 'denied') {
                 label.textContent = '通知がブロックされています（ブラウザ設定から許可してね）';
             } else {
                 label.textContent = '新着ライブの通知を受け取る';
             }
+            if (btn) btn.style.opacity = (Notification.permission === 'granted' && !notifyEnabled()) ? '0.55' : '';
         }
 
-        async function requestNotificationPermission() {
+        // この端末のプッシュ用トークンをクラウドから外す（オフ用）
+        async function unregisterPushToken() {
+            if (!currentUser || !db || !messaging) return;
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
+                if (token) {
+                    await db.collection('users').doc(currentUser.uid).set({
+                        fcmTokens: firebase.firestore.FieldValue.arrayRemove(token)
+                    }, { merge: true });
+                }
+            } catch (e) {
+                console.log('通知トークンの解除に失敗:', e);
+            }
+        }
+
+        async function toggleNotifySetting() {
             if (!('Notification' in window)) {
                 alert('このブラウザは通知に対応していません');
                 return;
             }
+            if (Notification.permission === 'denied') {
+                alert('通知がブロックされています。ブラウザのサイト設定から「通知」を許可にしてね。');
+                return;
+            }
             if (Notification.permission === 'default') {
                 await Notification.requestPermission();
-            } else if (Notification.permission === 'denied') {
-                alert('通知がブロックされています。ブラウザのサイト設定から「通知」を許可にしてね。');
+                if (Notification.permission === 'granted') {
+                    localStorage.setItem('oshi_cal_notify_enabled', '1');
+                    registerPushToken();
+                }
+                updateNotifyToggleUI();
+                return;
             }
-            updateNotifyToggleUI();
-            if (Notification.permission === 'granted') {
+            // granted: オン⇔オフを切り替える
+            if (notifyEnabled()) {
+                localStorage.setItem('oshi_cal_notify_enabled', '0');
+                updateNotifyToggleUI();
+                await unregisterPushToken();
+            } else {
+                localStorage.setItem('oshi_cal_notify_enabled', '1');
+                updateNotifyToggleUI();
                 registerPushToken();
             }
         }
 
         async function showLocalNotification(title, body) {
+            if (!notifyEnabled()) return;
             if (!('Notification' in window) || Notification.permission !== 'granted') return;
             try {
                 if ('serviceWorker' in navigator) {
