@@ -4344,7 +4344,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             return `
                 <div onclick="toggleDeadlineMenu(); openEventDetail('${d.event.id}')" class="rounded-2xl p-3.5 border cursor-pointer hover:shadow-md transition ${urgent ? 'bg-red-50 border-red-200' : 'bg-amber-50/60 border-amber-100'}">
                     <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${d.event.group || '個人の予定'}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${escapeHtml(d.event.group || '個人の予定')}</span>
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${urgent ? 'bg-red-500 text-white' : 'bg-amber-400 text-white'}">${dayLabel}</span>
                     </div>
                     <p class="text-xs font-bold text-slate-800 mb-1 leading-snug">${escapeHtml(d.event.title)}</p>
@@ -4497,7 +4497,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 
             // メモ全体がURLだけの場合は「詳細ページを見る」ボタンとして表示する
             if (/^https?:\/\/\S+$/.test(raw)) {
-                return `<a href="${raw}" target="_blank" onclick="event.stopPropagation()" class="flex items-center justify-center space-x-1.5 w-full bg-purple-50 text-purple-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-circle-info"></i><span>会場・時間などの詳細を見る</span><i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-60"></i></a>`;
+                return `<a href="${escapeHtml(raw)}" target="_blank" onclick="event.stopPropagation()" class="flex items-center justify-center space-x-1.5 w-full bg-purple-50 text-purple-600 text-[11px] font-semibold px-3 py-2.5 rounded-2xl hover:bg-purple-100 transition"><i class="fa-solid fa-circle-info"></i><span>会場・時間などの詳細を見る</span><i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-60"></i></a>`;
             }
 
             // 本文中のURLはリンクに変換する
@@ -4954,7 +4954,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     return `
                         <div class="flex items-center justify-between bg-white/80 rounded-xl px-2.5 py-1.5">
                             <div class="flex items-center space-x-1.5">
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color: ${color}18; color: ${color};">${ev.group}</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color: ${color}18; color: ${color};">${escapeHtml(ev.group)}</span>
                                 ${ev.time !== rep.time ? `<span class="text-[10px] text-slate-400 font-semibold">${ev.time}</span>` : ''}
                             </div>
                             <div class="flex items-center space-x-1">
@@ -4971,7 +4971,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     <div class="bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3.5">
                         <p class="text-[11px] font-bold text-slate-500 mb-0.5">${dateFormatted} ${rep.time}</p>
                         ${specialBadge || weatherBadgeHtml(rep) || multiVenueBadgeHtml(rep) ? `<div class="mb-1.5 flex flex-wrap gap-1.5">${specialBadge}${weatherBadgeHtml(rep)}${multiVenueBadgeHtml(rep)}</div>` : ''}
-                        <p class="text-xs font-bold text-slate-800 mb-2 leading-snug">${displayTitleFor(list)}</p>
+                        <p class="text-xs font-bold text-slate-800 mb-2 leading-snug">${escapeHtml(displayTitleFor(list))}</p>
                         ${isMulti ? `<p class="text-[10px] font-bold text-purple-400 mb-1.5 flex items-center"><i class="fa-solid fa-people-group mr-1.5"></i>${list.length}グループが出演</p>` : ''}
                         <div class="space-y-1.5">${groupRows}</div>
                     </div>
@@ -5420,7 +5420,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     <label class="frow">
                         <span class="flex items-center space-x-2">
                             <span class="w-3 h-3 rounded-full" style="background-color:${g.color}"></span>
-                            <span class="text-xs font-bold text-slate-700">${g.name}</span>
+                            <span class="text-xs font-bold text-slate-700">${escapeHtml(g.name)}</span>
                         </span>
                         <input type="checkbox" onchange="toggleFilterGroup('${g.name.replace(/'/g, "\\'")}')" ${checked ? 'checked' : ''} class="w-4 h-4 accent-pink-500">
                     </label>
@@ -5843,7 +5843,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     <p class="text-xs font-black text-pink-600 mb-1.5"><i class="fa-solid fa-gift mr-1"></i>新規特典</p>
                     <p class="text-[11px] leading-relaxed text-slate-700">${body}</p>
                     <div class="flex items-center justify-between mt-2">
-                        ${t.url ? `<a href="${t.url}" target="_blank" class="text-[10px] font-bold text-purple-500">出典：公式レギュレーション <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i></a>` : '<span></span>'}
+                        ${t.url ? `<a href="${escapeHtml(t.url)}" target="_blank" class="text-[10px] font-bold text-purple-500">出典：公式レギュレーション <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i></a>` : '<span></span>'}
                         ${t.updated ? `<span class="text-[9px] text-slate-400">${escapeHtml(t.updated)} 更新</span>` : ''}
                     </div>
                 </div>
@@ -5883,7 +5883,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             if (Object.keys(tokutenByGroup).length === 0) loadTokutenData();
             const groupObj = groups.find(g => g.name === groupName);
             const color = groupObj ? groupObj.color : '#ec4899';
-            document.getElementById('group-links-title').innerHTML = `<span class="w-3 h-3 rounded-full inline-block mr-2" style="background-color:${color}"></span>${groupName}`;
+            document.getElementById('group-links-title').innerHTML = `<span class="w-3 h-3 rounded-full inline-block mr-2" style="background-color:${color}"></span>${escapeHtml(groupName)}`;
 
             const links = OFFICIAL_GROUP_LINKS[groupName];
             const container = document.getElementById('group-links-list');
@@ -6321,7 +6321,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-1.5 mb-1">
-                            ${e.group ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group}</span>` : ''}
+                            ${e.group ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${escapeHtml(e.group)}</span>` : ''}
                             ${specialBadgeHtml(e)}
                             ${weatherBadgeHtml(e)}
                             ${multiVenueBadgeHtml(e)}
@@ -6674,7 +6674,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 ? list.map(e => {
                     const go = groups.find(g => g.name === e.group);
                     const c = go ? go.color : '#ec4899';
-                    return `<span onclick="event.stopPropagation(); openGroupLinksModal('${e.group.replace(/'/g, "\\'")}')" class="text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer" style="background-color: ${c}18; color: ${c};">${e.group}</span>`;
+                    return `<span onclick="event.stopPropagation(); openGroupLinksModal('${e.group.replace(/'/g, "\\'")}')" class="text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer" style="background-color: ${c}18; color: ${c};">${escapeHtml(e.group)}</span>`;
                   }).join('')
                 : `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-user text-[9px] mr-1"></i>個人の予定</span>`;
             const detailsHtml = list.map(e => {
@@ -6686,7 +6686,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                         ${isMulti ? `
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group}</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${escapeHtml(e.group)}</span>
                                     <span class="text-[11px] font-bold text-slate-400">${e.time}</span>
                                 </div>
                                 <button onclick="event.stopPropagation(); modalFav('${e.id}')" class="w-6 h-6 flex items-center justify-center transition ${isFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart text-[11px]"></i></button>
@@ -6716,7 +6716,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                         <span class="text-3xl font-black text-slate-800 tracking-tight">${timeHtml}</span>
                         ${!isMulti ? `<button onclick="modalFav('${rep.id}')" class="w-9 h-9 rounded-full flex items-center justify-center transition ${anyFav ? 'text-pink-500' : 'text-slate-300 hover:text-pink-400'}"><i class="fa-solid fa-heart"></i></button>` : ''}
                     </div>
-                    <h3 class="font-bold text-slate-800 text-base leading-snug mb-3">${displayTitleFor(list)}</h3>
+                    <h3 class="font-bold text-slate-800 text-base leading-snug mb-3">${escapeHtml(displayTitleFor(list))}</h3>
                     <div class="flex flex-wrap items-center gap-1.5 mb-4">
                         ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
                         ${specialBadgeHtml(rep)}
@@ -6910,7 +6910,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                         return `
                             <div class="${isMulti ? 'border-t border-pink-100 pt-2 mt-2 first:border-t-0 first:pt-0 first:mt-0' : ''} space-y-1.5">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${e.group || '個人の予定'}${e.time !== '00:00' ? ' ' + e.time : ''}</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${escapeHtml(e.group || '個人の予定')}${e.time !== '00:00' ? ' ' + escapeHtml(e.time) : ''}</span>
                                     ${deadlineBadgeHtml(e)}
                                 </div>
                                 ${venueLinksHtml(e, false)}
@@ -7066,7 +7066,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     <div class="flex items-center justify-between bg-white/90 rounded-2xl px-3 py-2.5">
                         <div class="flex items-center space-x-2.5 min-w-0">
                             <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style="background-color:${c}">${i + 1}</span>
-                            <span class="text-xs font-bold text-slate-800 truncate">${name}</span>
+                            <span class="text-xs font-bold text-slate-800 truncate">${escapeHtml(name)}</span>
                         </div>
                         <span class="text-xs font-black text-slate-400 flex-shrink-0">${n}</span>
                     </div>
@@ -7077,7 +7077,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     <div class="flex items-center justify-between bg-white/90 rounded-2xl px-3 py-2.5">
                         <div class="flex items-center space-x-2.5 min-w-0">
                             <span class="w-5 h-5 rounded-full bg-purple-400 flex items-center justify-center text-[10px] font-black text-white flex-shrink-0">${i + 1}</span>
-                            <span class="text-xs font-bold text-slate-800 truncate">${name}</span>
+                            <span class="text-xs font-bold text-slate-800 truncate">${escapeHtml(name)}</span>
                         </div>
                         <span class="text-xs font-black text-slate-400 flex-shrink-0">${n}</span>
                     </div>
@@ -7399,7 +7399,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     <div class="flex items-center justify-between bg-pink-50/40 border border-pink-100/70 rounded-2xl p-3 cursor-pointer" onclick="closeSearchModal(); jumpToEvent('${e.id}')">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center space-x-2 mb-1">
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style="background-color:${c}18;color:${c};">${e.group || '個人の予定'}</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style="background-color:${c}18;color:${c};">${escapeHtml(e.group || '個人の予定')}</span>
                                 <span class="text-[10px] font-semibold text-slate-400 flex-shrink-0">${dateFormatted} ${e.time}</span>
                             </div>
                             <p class="text-xs font-bold text-slate-800 truncate">${escapeHtml(e.title)}</p>
@@ -7571,7 +7571,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                 if (rep.date !== lastDate) {
                     if (segHtml) { segments.push({ html: segHtml, count: segCount }); segHtml = ''; segCount = 0; }
                     segHtml += `
-                        <div data-date="${rep.date}" class="scroll-mt-[140px] flex items-center space-x-2 pt-3 pb-1 px-1">
+                        <div data-date="${escapeHtml(rep.date)}" class="scroll-mt-[140px] flex items-center space-x-2 pt-3 pb-1 px-1">
                             <h3 class="font-extrabold text-slate-700 text-sm">${dateFormatted}</h3>
                             ${isToday ? '<span class="px-2 py-0.5 bg-pink-500 text-white text-[10px] font-bold rounded-full shadow-sm shadow-pink-500/30">今日</span>' : ''}
                         </div>
@@ -7602,15 +7602,15 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                     ? list.map(e => {
                         const go = groups.find(g => g.name === e.group);
                         const c = go ? go.color : '#ec4899';
-                        return `<span onclick="event.stopPropagation(); openGroupLinksModal('${e.group.replace(/'/g, "\\'")}')" class="text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer" style="background-color: ${c}18; color: ${c};">${e.group}</span>`;
+                        return `<span onclick="event.stopPropagation(); openGroupLinksModal('${e.group.replace(/'/g, "\\'")}')" class="text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer" style="background-color: ${c}18; color: ${c};">${escapeHtml(e.group)}</span>`;
                       }).join('')
                     : `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-user text-[9px] mr-1"></i>個人の予定</span>`;
 
                 // 時間：グループごとに違う場合はまとめて1つに表示できないので代表の時間を出す
                 const times = [...new Set(list.map(e => e.time))];
                 const timeHtml = times.length === 1
-                    ? `<span class="text-2xl font-black text-slate-800 tracking-tight">${times[0]}</span>`
-                    : `<span class="text-2xl font-black text-slate-800 tracking-tight">${times[0]}<span class="text-xs font-bold text-slate-400 ml-1">ほか</span></span>`;
+                    ? `<span class="text-2xl font-black text-slate-800 tracking-tight">${escapeHtml(times[0])}</span>`
+                    : `<span class="text-2xl font-black text-slate-800 tracking-tight">${escapeHtml(times[0])}<span class="text-xs font-bold text-slate-400 ml-1">ほか</span></span>`;
 
 
                 segHtml += `
@@ -7624,7 +7624,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                                     <span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-chevron-right text-[10px]"></i></span>
                                 </div>
                             </div>
-                            <h4 class="font-bold text-slate-800 text-sm leading-snug mb-2">${displayTitleFor(list)}</h4>
+                            <h4 class="font-bold text-slate-800 text-sm leading-snug mb-2">${escapeHtml(displayTitleFor(list))}</h4>
                             <div class="flex flex-wrap items-center gap-1.5">
                                 ${isMulti ? `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm"><i class="fa-solid fa-people-group mr-1 text-[9px]"></i>${list.length}組出演</span>` : ''}
                                 ${specialBadgeHtml(rep)}
