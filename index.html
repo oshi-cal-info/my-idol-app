@@ -4671,23 +4671,54 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
         // DAY1/DAY2・1日目/2日目は別イベントとして区別するためキーに残す。
         function normalizeEventTitle(title) {
             let t = String(title || '');
-            const dayMatch = t.match(/DAY\s*([12])|([12])\s*日目/i);
+            // ソース側でHTMLエスケープされたままの文字を戻す（&#x27; など）
+            t = t.replace(/&#x27;|&#39;|&apos;/gi, "'").replace(/&quot;/gi, '"').replace(/&amp;/gi, '&');
+            // 会場が前に来て題名が『』で後ろに付く形（「@ 会場 『タイトル』」「会場 / 会場 『タイトル』」）は題名部分を本体にする
+            const invM = t.match(/^[^『]*『([^』]+)』/);
+            if (invM && invM[1].replace(/\s+/g, '').length >= 6 && /^[^『]*[/／]/.test(t)) t = invM[1];
+            const dayMatch = t.match(/DAY\s*[._．]?\s*([12])|([12])\s*日目/i);
             const daySuffix = dayMatch ? '__day' + (dayMatch[1] || dayMatch[2]) : '';
-            if (dayMatch) t = t.replace(/DAY\s*[12]|[12]\s*日目/gi, ' ');
-            t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{203C}]/gu, '');
+            if (dayMatch) t = t.replace(/DAY\s*[._．]?\s*[12]|[12]\s*日目/gi, ' ');
+            // 数字+キーマーク（2⃣など）は丸ごと落とす（数字だけ残ると別Volと誤って合体するため）
+            t = t.replace(/[0-9]\u{20E3}/gu, '');
+            // 絵文字・記号類を落とす（囲み数字・幾何学模様・ZWJ・異体字セレクタ・ブラille空白も含む）
+            t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2460}-\u{27BF}\u{2800}-\u{2BFF}\u{200C}\u{200D}\u{FE0E}\u{FE0F}\u{203C}]/gu, '');
+            t = t.normalize('NFKC');
             t = t.replace(/\s+/g, ' ');
             t = t.replace(/^(\s*[【\[][^】\]]*[】\]]\s*)+/, '');
-            t = t.replace(/^.*?\bpresents\s+/i, '');
+            t = t.replace(/^[\s『「（(]*(超重要|重要|緊急|速報|主催)\s*/, '');
+            t = t.replace(/^.*?\bpresents?\b[.\s]*/i, '');
+            t = t.replace(/\bVo\.(?=\d)/g, 'Vol.');
+            t = t.replace(/主催公演/g, '主催');
+            t = t.replace(/\bSP\b/gi, 'Special');
             t = t.replace(/supported\s*by[\s\S]*$/i, '');
             t = t.split(/\s+in\s+/i)[0];
             t = t.split(/\s+at\s+/i)[0];
-            t = t.replace(/[「」『』]/g, '');
+            // 地域ラベルが題名の前に付いた形（「名古屋『…』」「神田「…」」）はラベルを落とす
+            t = t.replace(/^(東京|名古屋|大阪|福岡|札幌|仙台|広島|沖縄|千葉|埼玉|神奈川|愛知|宮城|京都|兵庫|静岡|新潟|北海道|群馬|栃木|茨城|長野|岐阜|三重|奈良|和歌山|岡山|山口|香川|愛媛|高知|佐賀|長崎|熊本|大分|宮崎|鹿児島|渋谷|新宿|西新宿|池袋|秋葉原|品川|神田|中野|原宿|恵比寿|五反田|立川|吉祥寺|下北沢|宇都宮|大宮|川崎|横浜|幕張|豊洲|舞浜|お台場|羽田|高円寺|町田|八王子)(?=[『「【（(])/, '');
+            t = t.replace(/[「」『』〝〟《》【】]/g, '');
+            // 「東京｜タイトル」の地域ラベルを落とし、残りの｜は繋ぐ（末尾の会場は stripVenueSuffix が処理する）
+            t = t.replace(/^[^|]{1,6}\|\s*/, '');
+            t = t.replace(/\|/g, '');
+            // 装飾だけの文字は落とす（引用符・波線・感嘆符・中点・シャープ・ハイフン類）
+            t = t.replace(/['\u2018\u2019\u02BC\u0060\u00B4]/g, '');
+            t = t.replace(/[~〜]/g, '');
+            t = t.replace(/[!?]/g, '');
+            t = t.replace(/[・·•]/g, '');
+            t = t.replace(/#/g, '');
+            t = t.replace(/[-‐–—]/g, '');
+            t = t.replace(/(?<![0-9])\./g, '');
             const atIdx = t.search(/[＠@]/);
             if (atIdx > 0) t = t.slice(0, atIdx);
             t = t.replace(/＠/g, '@');
             t = t.replace(/\s+/g, ' ').trim();
             t = t.replace(/^@\s+/, '@');
             t = t.replace(/^[-〜~・.。\s]+/, '').replace(/[-〜~・.。\s]+$/, '');
+            // 末尾の地域名（ツアーの地域表記など）は本体ではないので落とす
+            const cityM = t.match(/(?:\s+|\bin)(東京|名古屋|大阪|福岡|札幌|仙台|広島|沖縄|TOKYO|NAGOYA|OSAKA|FUKUOKA|SAPPORO|SENDAI|HIROSHIMA|OKINAWA|KYOTO|KOBE)$/i);
+            if (cityM && t.length - cityM[0].length >= 5) t = t.slice(0, t.length - cityM[0].length).trim();
+            // 末尾の「発売日」「（仮）」「 仮」は落とす（発売日は媒体発売の目印、仮は仮タイトルの印）
+            t = t.replace(/発売日?$/, '').replace(/[（(]仮[）)]$/, '').replace(/\s+仮$/, '').trim();
             return t + daySuffix;
         }
 
@@ -4695,7 +4726,9 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
         // 予定なので合体させない（同じ日に複数グループ分あっても1枚にしない）
         function isPlaceholderTitle(normalized) {
             const t = normalized.replace(/[（(][^）)]*[）)]/g, '').replace(/\s+/g, '');
-            return t.length <= 9 && /予定$/.test(t);
+            if (t.length <= 9 && /予定$/.test(t)) return true;
+            // 「ライブ」「主催ライブ」だけの汎用タイトルも仮タイトル同然（無関係なグループ同士を合体させない）
+            return t === 'ライブ' || t === '主催ライブ';
         }
 
         // 語順の揺れを吸収する照合キー：タイトルを「使う文字の集合」に変換する。
@@ -4704,7 +4737,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
         // 短いタイトルは偶然の一致が起きやすいので、そのまま使う。
         function eventMatchKey(body) {
             const b = String(body || '').replace(/\s+/g, '').toLowerCase();
-            if (b.length < 8) return body;
+            if (b.length < 8) return b;
             return [...new Set(b)].sort().join('');
         }
 
@@ -4716,7 +4749,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
         function venueCompactList() {
             if (venueCompactCache) return venueCompactCache;
             venueCompactCache = venueDict()
-                .map(v => String(v || '').replace(/\s+/g, ''))
+                .map(v => String(v || '').normalize('NFKC').replace(/[\s・·•#~〜!?'’\-‐–—]/g, ''))
                 .filter(v => v.length >= 4)
                 .sort((a, b) => b.length - a.length);
             return venueCompactCache;
@@ -4726,17 +4759,42 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             const compact = String(body || '').replace(/\s+/g, '');
             if (compact.length < 8) return body;
             // 会場を落としたことで末尾に残る「.」などは、通常の正規化と同じく取り除く
-            const cut = (suffixLen) => compact.slice(0, -suffixLen).replace(/[-〜~・.。\s]+$/, '');
+            const cut = (suffixLen) => compact.slice(0, -suffixLen).replace(/[-〜~・.。\s@]+$/, '');
             // 辞書の会場名と、その行自身の会場（メモ欄から拾えた分。市名まで含む形がある）の
             // 両方を試し、より長く一致した方を落とす（短い方を先に落とすと市名などが残って合体しない）
             let best = 0;
             for (const vc of venueCompactList()) {
                 if (compact.length > vc.length && compact.endsWith(vc)) { best = vc.length; break; }
             }
-            const own = String(effectiveLocation(e) || '').replace(/\s+/g, '');
+            const own = String(effectiveLocation(e) || '').normalize('NFKC').replace(/[\s・·•#~〜!?'’\-‐–—]/g, '');
             if (own.length >= 4 && own.length > best && compact.length > own.length && compact.endsWith(own)) best = own.length;
             if (best) return cut(best);
             return body;
+        }
+
+        // タイトルの頭に会場名がくっついた行（「Kanadevia Hall / ラクーアガーデンステージ『SPARK…』」のような形）は、
+        // 会場の後ろに区切りが続く場合だけ会場部分を落とす。通常の題名が会場名で始まるだけの行は落とさない。
+        function stripVenuePrefix(body) {
+            let compact = String(body || '').replace(/\s+/g, '');
+            if (compact.length < 10) return body;
+            let changed = false;
+            for (let n = 0; n < 3; n++) {
+                compact = compact.replace(/^[@/・、他]+/, '');
+                let hit = 0;
+                for (const vc of venueCompactList()) {
+                    if (compact.length > vc.length + 3 && compact.startsWith(vc)) {
+                        const rest = compact.slice(vc.length);
+                        // 1件目は区切りが必須。区切り付きで落とした続きなら、題名に直結した会場も落とす
+                        if (/^[@/・、他『「【]/.test(rest) || (changed && /^[A-Za-z0-9]/.test(rest))) { hit = vc.length; break; }
+                    }
+                }
+                if (!hit) break;
+                compact = compact.slice(hit);
+                changed = true;
+            }
+            if (!changed) return body;
+            const out = compact.replace(/^[@/・、他]+/, '').replace(/^[-〜~・.。\s]+/, '');
+            return out.length >= 4 ? out : body;
         }
 
         function favGroupParts(e) {
@@ -4747,6 +4805,10 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             const day = m ? m[0] : '';
             let body = m ? n.slice(0, -day.length) : n;
             body = stripVenueSuffix(body, e);
+            body = stripVenuePrefix(body);
+            // タイトルが会場名だけの行（イベント名が書かれていない行）は合体させない
+            const bc = body.replace(/\s+/g, '');
+            if (bc.length >= 4 && venueCompactList().includes(bc)) return { solo: `${e.date}__solo__${e.id}` };
             return { stem: `${e.date}__${eventMatchKey(body)}`, day };
         }
 
