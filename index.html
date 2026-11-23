@@ -5859,6 +5859,50 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             } catch (e) { /* オフライン時はキャッシュ表示 */ }
         }
 
+        // ==== 週間ハイライト（GASがGeminiで生成し _highlight タブに保存） ====
+        const HL_CSV_URL = "https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/export?format=csv&gid=864423644";
+        let hlData = null; // { from, to, title, bullets[] }
+
+        function applyHlCsv_(csvText) {
+            const rows = parseCSVRows(csvText);
+            if (!rows || rows.length < 2) return;
+            const r = rows[1];
+            let bullets = [];
+            try { bullets = JSON.parse(r[3] || '[]'); } catch (e) { bullets = []; }
+            if (!Array.isArray(bullets) || bullets.length === 0) return;
+            hlData = { from: (r[0] || '').trim(), to: (r[1] || '').trim(), title: (r[2] || '今週のハイライト').trim(), bullets: bullets.map(b => String(b)) };
+        }
+
+        async function loadHighlightData() {
+            const cached = localStorage.getItem('oshi_cal_highlight_cache');
+            if (cached) { try { applyHlCsv_(cached); } catch (e) {} }
+            try {
+                const res = await fetch(HL_CSV_URL);
+                if (!res.ok) return;
+                const text = await res.text();
+                localStorage.setItem('oshi_cal_highlight_cache', text);
+                applyHlCsv_(text);
+            } catch (e) { /* オフライン時はキャッシュ表示 */ }
+        }
+
+        function highlightCardHtml() {
+            if (!hlData || !hlData.bullets.length) return '';
+            const today = dayjs().format('YYYY-MM-DD');
+            if (hlData.from && today < hlData.from) return '';
+            if (hlData.to && today > hlData.to) return '';
+            const items = hlData.bullets.map(b => `<div class="flex items-start space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0"></span><p class="text-[11px] font-semibold text-slate-600 leading-relaxed">${escapeHtml(b)}</p></div>`).join('');
+            return `
+                <div class="bg-gradient-to-r from-amber-50 to-pink-50 border border-amber-100 rounded-3xl px-4 py-3.5 shadow-sm">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <span class="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-fire text-[10px]"></i></span>
+                        <p class="text-xs font-black text-slate-800">${escapeHtml(hlData.title)}</p>
+                    </div>
+                    <div class="space-y-1.5">${items}</div>
+                    <p class="text-[9px] text-slate-300 font-semibold mt-2">AIが今週の公演から自動で選出</p>
+                </div>
+            `;
+        }
+
         // 詳細モーダル用：AIが抽出した特典会時間・料金の行（あれば）
         function aiInfoHtml(e) {
             const ai = aiById[e.id];
@@ -6793,6 +6837,114 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             openEventDetail(eventId);
         }
 
+        // ==== おすすめライブ ====
+        // 向こう2週間の「空き日」（行く予定が1件もない日）にあるライブを、推し・参戦記録・共演関係で
+        // スコア付けして上位3件を出す。ルーレット（ランダム）と違い、理由つきで毎回同じ顔ぶれになる。
+        function recoCandidates() {
+            const today = dayjs().startOf('day');
+            const until = today.add(13, 'day');
+            const busyDates = new Set(events.filter(e => favorites.has(e.id)).map(e => e.date));
+            const favGroups = new Set(events.filter(e => favorites.has(e.id) && e.group).map(e => e.group));
+            const favLiveKeys = new Set(events.filter(e => favorites.has(e.id)).map(favGroupKey));
+
+            // 参戦記録があるグループ
+            const attendedGroups = new Set();
+            Object.keys(attendLogs).forEach(id => {
+                const e = events.find(x => x.id === id) || eventHistory[id];
+                if (e && e.group) attendedGroups.add(e.group);
+            });
+
+            // 推しと共演したことのあるグループ
+            const liveGroups = {};
+            events.forEach(e => {
+                if (!e.group) return;
+                const k = favGroupKey(e);
+                (liveGroups[k] = liveGroups[k] || new Set()).add(e.group);
+            });
+            const relatedGroups = new Set();
+            Object.values(liveGroups).forEach(set => {
+                if ([...set].some(g => favGroups.has(g))) set.forEach(g => relatedGroups.add(g));
+            });
+
+            const byLive = new Map();
+            events.forEach(e => {
+                if (!e.group) return;
+                const d = dayjs(e.date);
+                if (!d.isValid() || d.isBefore(today) || d.isAfter(until)) return;
+                if (busyDates.has(e.date)) return;
+                if (!matchesActiveFilters(e.group)) return;
+                const k = favGroupKey(e);
+                if (!byLive.has(k)) byLive.set(k, []);
+                byLive.get(k).push(e);
+            });
+
+            const perkCache = {};
+            const hasPerk = g => {
+                if (!(g in perkCache)) perkCache[g] = !!(tokutenByGroup[g] || tokutenFlagEvent_(g));
+                return perkCache[g];
+            };
+
+            const out = [];
+            byLive.forEach((list, k) => {
+                if (favLiveKeys.has(k)) return;
+                const gs = [...new Set(list.map(e => e.group))];
+                let score = 0;
+                const reasons = [];
+                const favHit = gs.filter(g => favGroups.has(g));
+                if (favHit.length) { score += 4; reasons.push({ w: 4, text: '推しの' + favHit[0] + 'が出演' }); }
+                const attHit = gs.filter(g => attendedGroups.has(g) && !favGroups.has(g));
+                if (attHit.length) { score += 3; reasons.push({ w: 3, text: '前に会いに行った' + attHit[0] + 'が出演' }); }
+                const relHit = gs.filter(g => relatedGroups.has(g) && !favGroups.has(g) && !attendedGroups.has(g));
+                if (relHit.length) { score += 2; reasons.push({ w: 2, text: '推しと共演した' + relHit[0] + 'が出演' }); }
+                const perkHit = gs.find(g => hasPerk(g));
+                if (perkHit) { score += 1; reasons.push({ w: 1, text: perkHit + 'は新規特典あり' }); }
+                if (gs.length >= 5) score += 1;
+                if (score < 3) return;
+                list.sort((a, b) => a.time.localeCompare(b.time));
+                reasons.sort((a, b) => b.w - a.w);
+                out.push({ list, rep: list[0], score, reason: reasons.length ? reasons[0].text : '', groups: gs });
+            });
+            out.sort((a, b) => (b.score - a.score) || (a.rep.date < b.rep.date ? -1 : 1));
+            return out.slice(0, 3);
+        }
+
+        function recoCardHtml() {
+            const recos = recoCandidates();
+            if (!recos.length) return '';
+            const rows = recos.map((r, i) => {
+                const rep = r.rep;
+                const dateLabel = dayjs(rep.date).isValid() ? dayjs(rep.date).format('M月D日(dd)') : rep.date;
+                const chips = r.groups.slice(0, 3).map(n => {
+                    const go = groups.find(g => g.name === n);
+                    const c = go ? go.color : '#ec4899';
+                    return `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background-color:${c}18;color:${c};">${escapeHtml(n)}</span>`;
+                }).join('') + (r.groups.length > 3 ? `<span class="text-[10px] font-bold text-slate-400">ほか${r.groups.length - 3}組</span>` : '');
+                return `
+                    <div onclick="jumpToEvent('${rep.id}')" class="cursor-pointer py-2.5" ${i ? 'style="border-top:1px solid rgba(249,168,212,.35);"' : ''}>
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-[10px] font-black text-pink-500">${dateLabel}</p>
+                            ${r.reason ? `<p class="text-[10px] font-bold text-purple-500"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>${escapeHtml(r.reason)}</p>` : ''}
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5 mb-1">${chips}</div>
+                        <p class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(displayTitleFor(r.list))}</p>
+                        <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${rep.time && rep.time !== '00:00' ? rep.time + ' ' : ''}${effectiveLocation(rep) ? escapeHtml(effectiveLocation(rep)) : ''}</p>
+                    </div>
+                `;
+            }).join('');
+            return `
+                <div class="bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-thumbs-up text-[10px]"></i></span>
+                        <div>
+                            <p class="text-xs font-black text-slate-800">おすすめライブ</p>
+                            <p class="text-[10px] text-slate-400 font-semibold">空き日に行けそうな、向こう2週間のライブ</p>
+                        </div>
+                    </div>
+                    ${rows}
+                </div>
+            `;
+        }
+
         // ==== 暇な日ルーレット ====
         // 今日から1週間のうち、まだ行く予定に入れていないライブから1本ランダムで勧める。
         // 推しと同じライブに出たことのあるグループ（共演）が出るライブは「発見枠」として当たりやすくする。
@@ -7513,7 +7665,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
                         <p class="text-xs text-slate-400 font-medium mt-3">読み込み中…</p>
                     </div>
                 `;
-                container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + emptyBox;
+                container.innerHTML = countdownCardHtml() + recoCardHtml() + rouletteCardHtml() + highlightCardHtml() + todayLiveCardHtml() + emptyBox;
                 fixTodayBannerOffset();
                 hydrateWeather();
                 return;
@@ -7524,7 +7676,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             listSegIdx = 0;
             const firstHtml = takeListSegments_(LIST_CHUNK_CARDS);
             const hasMore = listSegIdx < listSegments.length;
-            container.innerHTML = countdownCardHtml() + rouletteCardHtml() + todayLiveCardHtml() + firstHtml
+            container.innerHTML = countdownCardHtml() + recoCardHtml() + rouletteCardHtml() + highlightCardHtml() + todayLiveCardHtml() + firstHtml
                 + (hasMore ? '<div id="list-sentinel" class="py-5 text-center text-[11px] text-slate-300"><i class="fa-solid fa-ellipsis"></i></div>' : '');
             if (hasMore) {
                 const sentinel = document.getElementById('list-sentinel');
@@ -8234,6 +8386,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
             initFirebase();
             loadTokutenData(); // 特典データは軽いので本体データと並行して先に読み始める
             loadAiData(); // AI構造化データも並行して読み始める
+            loadHighlightData(); // 週間ハイライトも並行して読み始める
             await fetchSheetData();
 
             // アプリを開いたままにしている間も、一定間隔で新着をチェックする
