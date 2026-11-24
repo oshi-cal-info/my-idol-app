@@ -1261,6 +1261,25 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 body.dark .buppan-card { background: linear-gradient(135deg, rgba(8,47,73,.85), rgba(19,78,94,.55)); border-color: rgba(56,189,248,.35); }
 .buppan-card .buppan-head { color: #0284c7; }
 body.dark .buppan-card .buppan-head { color: #38bdf8; }
+/* --- boot splash / skeleton / refresh wave (2026-11-25) --- */
+#boot-splash { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: linear-gradient(160deg, #fff8fb, #fdeef7); transition: opacity .38s ease; }
+#boot-splash.done { opacity: 0; pointer-events: none; }
+body.dark #boot-splash { background: linear-gradient(160deg, #2a1a26, #171019); }
+#boot-splash .bs-icon { width: 88px; height: 88px; border-radius: 26px; box-shadow: 0 12px 32px rgba(221,91,157,.35); animation: bsBreathe 2.2s ease-in-out infinite; }
+@keyframes bsBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.055); } }
+#boot-splash .bs-name { font-size: 26px; font-weight: 900; letter-spacing: .02em; color: #402b3d; }
+body.dark #boot-splash .bs-name { color: #f6e3ef; }
+#boot-splash .bs-wave { width: 148px; }
+#boot-splash .bs-cap { font-size: 11px; color: #a06a8d; font-weight: 700; }
+body.dark #boot-splash .bs-cap { color: #c39bb6; }
+#refresh-wave { position: absolute; left: 18px; right: 18px; bottom: 5px; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
+#refresh-wave.on { opacity: 1; }
+.skel-card { border-radius: 1.5rem; padding: 14px 16px; background: #fff; border: 1px solid rgba(249,168,212,.35); display: flex; gap: 12px; }
+body.dark .skel-card { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.07); }
+.skel-blk { border-radius: 10px; background: linear-gradient(100deg, #f6e0ee 40%, #fbeff7 50%, #f6e0ee 60%); background-size: 200% 100%; animation: skelShimmer 1.4s linear infinite; }
+body.dark .skel-blk { background: linear-gradient(100deg, rgba(255,255,255,.06) 40%, rgba(255,255,255,.13) 50%, rgba(255,255,255,.06) 60%); background-size: 200% 100%; }
+@keyframes skelShimmer { from { background-position: 120% 0; } to { background-position: -80% 0; } }
+@media (prefers-reduced-motion: reduce) { #boot-splash .bs-icon, .skel-blk { animation: none !important; } }
 @media (prefers-reduced-motion: reduce) {
   .view-in, .card-in, .ovl:not(.hidden), .ovl:not(.hidden) > .dlg-card, .ovl:not(.hidden) > .sheet-card, .detail-pop { animation: none !important; }
 }
@@ -1376,6 +1395,13 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 </head>
 <body>
     <script>(function(){try{var m=localStorage.getItem('oshiThemeMode')||'auto';if(m==='dark'||(m==='auto'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.body.classList.add('dark');}}catch(e){}})();</script>
+    <div id="boot-splash" aria-hidden="true">
+        <img class="bs-icon" src="icon-192.png" alt="">
+        <div class="bs-name">Oshi-Cal</div>
+        <div class="wave-progress ind bs-wave"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path class="wp-track" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/><path class="wp-fill" pathLength="100" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/></svg></div>
+        <div class="bs-cap">読み込み中…</div>
+    </div>
+    <script>setTimeout(function(){var s=document.getElementById('boot-splash');if(s){s.classList.add('done');setTimeout(function(){s.remove();},450);}},4000);</script>
 
     <!-- ヘッダー -->
     <header class="app-header">
@@ -1399,6 +1425,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             </button>
         </div>
         </div>
+            <div id="refresh-wave" class="wave-progress ind"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path class="wp-track" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/><path class="wp-fill" pathLength="100" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/></svg></div>
     </header>
 
     <!-- メインコンテンツ -->
@@ -5103,8 +5130,29 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         const SHEET_CSV_CACHE_KEY = 'oshi_cal_sheet_csv_cache';
         let sheetDataReady = false; // キャッシュ or 初回取得でシート予定が入ったら true
 
+        const bootSplashStart_ = performance.now();
+        function hideBootSplash_() {
+            const s = document.getElementById('boot-splash');
+            if (!s || s.classList.contains('done')) return;
+            const wait = Math.max(0, 450 - (performance.now() - bootSplashStart_));
+            setTimeout(() => { s.classList.add('done'); setTimeout(() => s.remove(), 420); }, wait);
+        }
+        function setRefreshing_(on) {
+            const w = document.getElementById('refresh-wave');
+            if (w) w.classList.toggle('on', !!on);
+        }
+        function skeletonCardsHtml_(n) {
+            let cards = '';
+            for (let i = 0; i < (n || 3); i++) {
+                cards += `<div class="skel-card mb-3"><div class="skel-blk" style="width:52px;height:58px;flex:none"></div><div style="flex:1;min-width:0"><div class="skel-blk" style="height:14px;width:72%;margin-bottom:9px"></div><div class="skel-blk" style="height:11px;width:46%;margin-bottom:11px"></div><div class="skel-blk" style="height:18px;width:88px;border-radius:999px"></div></div></div>`;
+            }
+            return `<div class="py-2">${cards}</div>`;
+        }
+
         async function fetchSheetData() {
             if (!AUTO_SYNC_CSV_URL) return;
+            const bg = sheetDataReady;
+            if (bg) setRefreshing_(true);
             try {
                 const response = await fetch(AUTO_SYNC_CSV_URL);
                 if (!response.ok) return;
@@ -5113,6 +5161,8 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 parseCSV(csvText);
             } catch (e) {
                 console.log("Auto sync failed:", e);
+            } finally {
+                if (bg) setRefreshing_(false);
             }
         }
 
@@ -5765,6 +5815,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         }
 
         function render() {
+            if (sheetDataReady) hideBootSplash_();
             sortGroups();
             renderGroupDropdowns();
             renderGroupManagementList();
@@ -9291,12 +9342,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                         <div class="morph-blob mx-auto mb-4"><i class="fa-regular fa-calendar-xmark"></i></div>
                         <p class="text-xs text-slate-400 font-medium">予定がありません</p>
                     </div>
-                ` : `
-                    <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
-                        <div class="load-ind mb-4"></div>
-                        <p class="text-xs text-slate-400 font-medium mt-3">読み込み中…</p>
-                    </div>
-                `;
+                ` : skeletonCardsHtml_(3);
                 container.innerHTML = countdownCardHtml() + recoCardHtml() + rouletteCardHtml() + highlightCardHtml() + todayLiveCardHtml() + emptyBox;
                 fixTodayBannerOffset();
                 hydrateWeather();
@@ -9340,12 +9386,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
             if (filtered.length === 0) {
                 if (!sheetDataReady && favorites.size > 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
-                            <div class="load-ind mb-4"></div>
-                            <p class="text-xs text-slate-400 font-medium mt-3">読み込み中…</p>
-                        </div>
-                    `;
+                    container.innerHTML = skeletonCardsHtml_(3);
                     hydrateWeather();
                     return;
                 }
