@@ -5007,6 +5007,20 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 if (typeof g.notify === 'undefined') g.notify = true;
             });
             migrateLegacyIds();
+            ensureLinkGroups_();
+        }
+
+        // 公式リンク登録済みグループは、予定が1件もなくてもグループ一覧に出す（リンク・特典・物販カードを見られるように）
+        function ensureLinkGroups_() {
+            if (typeof OFFICIAL_GROUP_LINKS === 'undefined') return;
+            let added = false;
+            Object.keys(OFFICIAL_GROUP_LINKS).forEach(name => {
+                if (!groups.find(g => g.name === name)) {
+                    groups.push({ name, color: getRandomColor(), visible: true, notify: true });
+                    added = true;
+                }
+            });
+            if (added) saveUserData();
         }
 
         function saveUserData() {
@@ -5287,6 +5301,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 }
             }
 
+            ensureLinkGroups_();
             if (newGroupsFound) saveUserData();
 
             // 履歴に保存（ソース側から後で消えても、参戦した記録を残せるように）
