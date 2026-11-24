@@ -1538,6 +1538,9 @@ html.dark.tod-yoru .app-header {
             <button id="notify-toggle-btn" onclick="toggleNotifySetting()" class="mt-3 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
                 <i class="fa-solid fa-bell mr-1.5"></i> <span id="notify-toggle-label">新着ライブの通知を受け取る</span>
             </button>
+            <button id="cal-link-btn" onclick="toggleCalLink()" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
+                <i class="fa-solid fa-calendar-days mr-1.5"></i> <span id="cal-link-label">Googleカレンダー連携：オフ（おすすめ用）</span>
+            </button>
             <div class="grid grid-cols-2 gap-2 mt-2">
                 <button onclick="toggleMenu(); toggleSummary();" class="py-2.5 bg-gradient-to-r from-pink-50 to-purple-50 text-pink-600 font-bold rounded-2xl hover:from-pink-100 hover:to-purple-100 transition text-[11px] border border-pink-100 flex items-center justify-center">
                     <i class="fa-solid fa-chart-simple mr-1"></i> 推し活まとめ
@@ -6926,6 +6929,183 @@ html.dark.tod-yoru .app-header {
         // ==== おすすめライブ ====
         // 向こう2週間の「空き日」（行く予定が1件もない日）にあるライブを、推し・参戦記録・共演関係で
         // スコア付けして上位3件を出す。ルーレット（ランダム）と違い、理由つきで毎回同じ顔ぶれになる。
+        // ==== Googleカレンダー連携（freebusy・端末内だけで判定） ====
+        // 権限は「埋まっている時間帯だけ」を返す calendar.freebusy のみ。予定のタイトルや
+        // 内容は一切取得しない。取得した時間帯はこの端末の localStorage にだけ保存し、
+        // おすすめライブの空き日判定に使う（各自の端末で動くので他のユーザーに影響しない）。
+        const CAL_FREEBUSY_CLIENT_ID = '896634384335-ceq2igitem2usb6290he9fkk37ggcb0u.apps.googleusercontent.com';
+        const CAL_BUSY_KEY = 'oshi_cal_busy_cache';
+        const CAL_LINK_KEY = 'oshi_cal_cal_link';
+        let calToken_ = null;
+        let calTokenClient_ = null;
+        let calGisPromise_ = null;
+
+        function calLinkEnabled() {
+            return localStorage.getItem(CAL_LINK_KEY) === '1';
+        }
+
+        function calBusyCache_() {
+            try {
+                const raw = localStorage.getItem(CAL_BUSY_KEY);
+                if (!raw) return null;
+                const c = JSON.parse(raw);
+                return (c && c.days) ? c : null;
+            } catch (e) { return null; }
+        }
+
+        // freeBusy の busy 配列（ISO文字列の start/end）を日別の [開始分, 終了分] に割る純粋関数
+        function splitBusyToDays_(busyArr) {
+            const days = {};
+            (busyArr || []).forEach(b => {
+                const s = new Date(b.start), e = new Date(b.end);
+                if (isNaN(s.getTime()) || isNaN(e.getTime()) || e <= s) return;
+                let cur = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+                while (cur < e) {
+                    const dayEnd = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 1);
+                    const segS = new Date(Math.max(s.getTime(), cur.getTime()));
+                    const segE = new Date(Math.min(e.getTime(), dayEnd.getTime()));
+                    const key = dayjs(cur).format('YYYY-MM-DD');
+                    const sm = segS.getHours() * 60 + segS.getMinutes();
+                    const em = segE.getTime() >= dayEnd.getTime() ? 1439 : segE.getHours() * 60 + segE.getMinutes();
+                    (days[key] = days[key] || []).push([sm, em]);
+                    cur = dayEnd;
+                }
+            });
+            Object.keys(days).forEach(k => {
+                days[k].sort((a, b) => a[0] - b[0]);
+                const merged = [];
+                days[k].forEach(r => {
+                    const last = merged[merged.length - 1];
+                    if (last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1]);
+                    else merged.push([r[0], r[1]]);
+                });
+                days[k] = merged;
+            });
+            return days;
+        }
+
+        // 1日の埋まり具合を判定する純粋関数: free / partial（endMin までに終わる）/ busy
+        function classifyCalRanges_(ranges) {
+            if (!ranges || !ranges.length) return { type: 'free' };
+            let lastEnd = 0;
+            for (const r of ranges) {
+                if (r[0] <= 0 && r[1] >= 1439) return { type: 'busy' };
+                lastEnd = Math.max(lastEnd, r[1]);
+            }
+            if (lastEnd > 17 * 60) return { type: 'busy' };
+            return { type: 'partial', endMin: lastEnd, endLabel: Math.floor(lastEnd / 60) + ':' + String(lastEnd % 60).padStart(2, '0') };
+        }
+
+        function calDayClass(dateStr) {
+            if (!calLinkEnabled()) return { type: 'free' };
+            const c = calBusyCache_();
+            if (!c) return { type: 'free' };
+            if (c.until && dateStr > c.until) return { type: 'free' };
+            return classifyCalRanges_(c.days[dateStr] || []);
+        }
+
+        function loadGis_() {
+            if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+            if (calGisPromise_) return calGisPromise_;
+            calGisPromise_ = new Promise((resolve, reject) => {
+                const sc = document.createElement('script');
+                sc.src = 'https://accounts.google.com/gsi/client';
+                sc.async = true;
+                sc.onload = () => resolve();
+                sc.onerror = () => reject(new Error('gis load failed'));
+                document.head.appendChild(sc);
+            });
+            return calGisPromise_;
+        }
+
+        function requestCalToken_(interactive) {
+            return loadGis_().then(() => new Promise((resolve, reject) => {
+                if (!calTokenClient_) {
+                    calTokenClient_ = google.accounts.oauth2.initTokenClient({
+                        client_id: CAL_FREEBUSY_CLIENT_ID,
+                        scope: 'https://www.googleapis.com/auth/calendar.freebusy',
+                        callback: (resp) => {
+                            if (resp && resp.access_token) { calToken_ = resp.access_token; resolve(resp.access_token); }
+                            else reject(new Error('no token'));
+                        },
+                        error_callback: (err) => reject(err || new Error('token error'))
+                    });
+                }
+                const opts = { prompt: interactive ? 'consent' : '' };
+                if (typeof currentUser !== 'undefined' && currentUser && currentUser.email) opts.hint = currentUser.email;
+                calTokenClient_.requestAccessToken(opts);
+            }));
+        }
+
+        async function refreshCalBusy_(interactive) {
+            try {
+                const token = await requestCalToken_(interactive);
+                const now = new Date();
+                const tmin = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const tmax = new Date(tmin.getTime() + 15 * 24 * 60 * 60 * 1000);
+                const res = await fetch('https://www.googleapis.com/calendar/v3/freeBusy', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ timeMin: tmin.toISOString(), timeMax: tmax.toISOString(), items: [{ id: 'primary' }] })
+                });
+                if (!res.ok) throw new Error('freeBusy ' + res.status);
+                const json = await res.json();
+                const busy = (json.calendars && json.calendars.primary && json.calendars.primary.busy) || [];
+                localStorage.setItem(CAL_BUSY_KEY, JSON.stringify({
+                    fetchedAt: Date.now(),
+                    until: dayjs(tmin).add(14, 'day').format('YYYY-MM-DD'),
+                    days: splitBusyToDays_(busy)
+                }));
+                updateCalLinkUI();
+                if (typeof render === 'function') render();
+                return true;
+            } catch (e) {
+                console.log('カレンダー連携の更新に失敗:', e);
+                return false;
+            }
+        }
+
+        async function toggleCalLink() {
+            if (calLinkEnabled()) {
+                localStorage.setItem(CAL_LINK_KEY, '0');
+                localStorage.removeItem(CAL_BUSY_KEY);
+                if (calToken_ && window.google && google.accounts && google.accounts.oauth2) {
+                    try { google.accounts.oauth2.revoke(calToken_, () => {}); } catch (e) {}
+                }
+                calToken_ = null;
+                updateCalLinkUI();
+                render();
+                return;
+            }
+            localStorage.setItem(CAL_LINK_KEY, '1');
+            updateCalLinkUI();
+            const ok = await refreshCalBusy_(true);
+            if (!ok) {
+                localStorage.setItem(CAL_LINK_KEY, '0');
+                alert('Googleカレンダーと連携できませんでした。通信環境を確認して、もう一度試してね');
+            }
+            updateCalLinkUI();
+        }
+
+        function updateCalLinkUI() {
+            const label = document.getElementById('cal-link-label');
+            if (!label) return;
+            if (!calLinkEnabled()) {
+                label.textContent = 'Googleカレンダー連携：オフ（おすすめ用）';
+                return;
+            }
+            const c = calBusyCache_();
+            label.textContent = 'Googleカレンダー連携：オン' + (c && c.fetchedAt ? '（' + dayjs(c.fetchedAt).format('M/D') + '更新）' : '');
+        }
+
+        // 起動時：連携済みでキャッシュが6時間以上古ければ、静かに更新を試みる
+        function maybeRefreshCalBusy_() {
+            if (!calLinkEnabled()) return;
+            const c = calBusyCache_();
+            if (c && c.fetchedAt && Date.now() - c.fetchedAt < 6 * 60 * 60 * 1000) return;
+            refreshCalBusy_(false);
+        }
+
         function recoCandidates() {
             const today = dayjs().startOf('day');
             const until = today.add(13, 'day');
@@ -6953,13 +7133,17 @@ html.dark.tod-yoru .app-header {
             });
 
             const byLive = new Map();
+            const dayClassByKey = {};
             events.forEach(e => {
                 if (!e.group) return;
                 const d = dayjs(e.date);
                 if (!d.isValid() || d.isBefore(today) || d.isAfter(until)) return;
                 if (busyDates.has(e.date)) return;
+                const dc = calDayClass(e.date);
+                if (dc.type === 'busy') return;
                 if (!matchesActiveFilters(e.group)) return;
                 const k = favGroupKey(e);
+                dayClassByKey[k] = dc;
                 if (!byLive.has(k)) byLive.set(k, []);
                 byLive.get(k).push(e);
             });
@@ -6985,10 +7169,20 @@ html.dark.tod-yoru .app-header {
                 const perkHit = gs.find(g => hasPerk(g));
                 if (perkHit) { score += 1; reasons.push({ w: 1, text: perkHit + 'は新規特典あり' }); }
                 if (gs.length >= 5) score += 1;
+                let calNote = '';
+                const dc = dayClassByKey[k];
+                if (dc && dc.type === 'partial') {
+                    const known = list.map(e => e.time).filter(t => t && t !== '00:00').sort();
+                    if (!known.length) return;
+                    const startMin = parseInt(known[0].slice(0, 2), 10) * 60 + parseInt(known[0].slice(3, 5), 10);
+                    if (startMin < dc.endMin + 60) return;
+                    score -= 1;
+                    calNote = '予定は' + dc.endLabel + 'まで';
+                }
                 if (score < 3) return;
                 list.sort((a, b) => a.time.localeCompare(b.time));
                 reasons.sort((a, b) => b.w - a.w);
-                out.push({ list, rep: list[0], score, reason: reasons.length ? reasons[0].text : '', groups: gs });
+                out.push({ list, rep: list[0], score, reason: reasons.length ? reasons[0].text : '', groups: gs, calNote });
             });
             out.sort((a, b) => (b.score - a.score) || (a.rep.date < b.rep.date ? -1 : 1));
             return out.slice(0, 3);
@@ -7008,7 +7202,7 @@ html.dark.tod-yoru .app-header {
                 return `
                     <div onclick="jumpToEvent('${rep.id}')" class="cursor-pointer py-2.5" ${i ? 'style="border-top:1px solid rgba(249,168,212,.35);"' : ''}>
                         <div class="flex items-center justify-between mb-1">
-                            <p class="text-[10px] font-black text-pink-500">${dateLabel}</p>
+                            <p class="text-[10px] font-black text-pink-500">${dateLabel}${r.calNote ? ' ・ ' + escapeHtml(r.calNote) : ''}</p>
                             ${r.reason ? `<p class="text-[10px] font-bold text-purple-500"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>${escapeHtml(r.reason)}</p>` : ''}
                         </div>
                         <div class="flex flex-wrap items-center gap-1.5 mb-1">${chips}</div>
@@ -8653,6 +8847,8 @@ html.dark.tod-yoru .app-header {
             loadTokutenData(); // 特典データは軽いので本体データと並行して先に読み始める
             loadAiData(); // AI構造化データも並行して読み始める
             loadHighlightData(); // 週間ハイライトも並行して読み始める
+            updateCalLinkUI();
+            maybeRefreshCalBusy_(); // カレンダー連携済みなら古いキャッシュを静かに更新
             await fetchSheetData();
 
             // アプリを開いたままにしている間も、一定間隔で新着をチェックする
