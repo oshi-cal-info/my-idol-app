@@ -1280,6 +1280,18 @@ body.dark .skel-card { background: rgba(255,255,255,.04); border-color: rgba(255
 body.dark .skel-blk { background: linear-gradient(100deg, rgba(255,255,255,.06) 40%, rgba(255,255,255,.13) 50%, rgba(255,255,255,.06) 60%); background-size: 200% 100%; }
 @keyframes skelShimmer { from { background-position: 120% 0; } to { background-position: -80% 0; } }
 @media (prefers-reduced-motion: reduce) { #boot-splash .bs-icon, .skel-blk { animation: none !important; } }
+/* --- expressive micro-interactions: press morph / toggle shape swap / emphasized type (2026-11-25) --- */
+.gchip { transition: all .3s cubic-bezier(.34,1.45,.64,1); }
+.gchip.on { border-radius: 12px; }
+.gchip:active { border-radius: 10px; }
+.preset-chip { transition: all .3s cubic-bezier(.34,1.45,.64,1); }
+.preset-chip:active { border-radius: 10px; }
+.btn-primary { transition: all .25s cubic-bezier(.34,1.45,.64,1); }
+.btn-primary:active { border-radius: 14px; }
+.view-nav .seg-btn { transition: all .3s cubic-bezier(.34,1.45,.64,1); }
+.view-nav .seg-btn:active { border-radius: 18px; }
+.cd-big { font-size: 46px; font-weight: 900; letter-spacing: -.03em; line-height: 1; }
+.cd-today { font-size: 30px; font-weight: 900; letter-spacing: -.02em; line-height: 1.05; }
 @media (prefers-reduced-motion: reduce) {
   .view-in, .card-in, .ovl:not(.hidden), .ovl:not(.hidden) > .dlg-card, .ovl:not(.hidden) > .sheet-card, .detail-pop { animation: none !important; }
 }
@@ -7656,8 +7668,8 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const c = go ? go.color : '#ec4899';
             const dateLabel = dayjs(e.date).isValid() ? dayjs(e.date).format('M月D日(dd)') : e.date;
             const big = t.daysLeft === 0
-                ? `<span class="text-[26px] font-black text-pink-500 tracking-tight">今日！</span>`
-                : `<span class="inline-flex items-baseline text-pink-500"><span class="text-[11px] font-black mr-0.5">あと</span><span class="text-4xl font-black tracking-tight">${t.daysLeft}</span><span class="text-xs font-black ml-0.5">日</span></span>`;
+                ? `<span class="cd-today text-pink-500">今日！</span>`
+                : `<span class="inline-flex items-baseline text-pink-500"><span class="text-[11px] font-black mr-0.5">あと</span><span class="cd-big">${t.daysLeft}</span><span class="text-xs font-black ml-0.5">日</span></span>`;
             const wp = t.daysLeft === 0 ? 1 : Math.max(.06, Math.min(1, 1 - t.daysLeft / 30));
             return `
                 <div onclick="jumpToEvent('${e.id}')" class="cd-card cursor-pointer bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm">
