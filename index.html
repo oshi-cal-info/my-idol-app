@@ -7820,17 +7820,28 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         // ==== カウントダウン（次の推しライブまで あと○日） ====
         // 対象は「行く予定（お気に入り）」の中で一番近い未来の予定。
         // 行く予定が無い場合は、表示中グループの直近のライブで代替する。
+        // ※お気に入りの探索に matchesActiveFilters を使うと、非表示グループの行で
+        //   お気に入りしたライブが候補から落ち、「行く予定」と食い違う（2026-11-25修正）。
+        //   お気に入りは行く予定と同じクラスタ単位（getFavoriteLives）で探す。
         function nextCountdownTarget() {
             const todayStr = dayjs().format('YYYY-MM-DD');
+            const favLives = getFavoriteLives().filter(list => list[0] && list[0].date >= todayStr);
+            if (favLives.length > 0) {
+                const target = favLives[0][0];
+                return {
+                    event: target,
+                    isFav: true,
+                    daysLeft: dayjs(target.date).diff(dayjs().startOf('day'), 'day')
+                };
+            }
             const future = events
                 .filter(e => e.date >= todayStr && matchesActiveFilters(e.group))
                 .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
             if (future.length === 0) return null;
-            const fav = future.find(e => favorites.has(e.id));
-            const target = fav || future[0];
+            const target = future[0];
             return {
                 event: target,
-                isFav: !!fav,
+                isFav: false,
                 daysLeft: dayjs(target.date).diff(dayjs().startOf('day'), 'day')
             };
         }
