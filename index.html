@@ -1257,6 +1257,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 @keyframes ovlIn { from { opacity: 0; } to { opacity: 1; } }
 .ovl:not(.hidden) { animation: ovlIn .18s ease-out; }
 .drawer-panel { transition-duration: .38s !important; transition-timing-function: cubic-bezier(.3,1.08,.64,1) !important; }
+.buppan-card { background: linear-gradient(135deg, #f0f9ff, rgba(204,251,241,.45)); border: 1px solid rgba(125,211,252,.45); }
 @media (prefers-reduced-motion: reduce) {
   .view-in, .card-in, .ovl:not(.hidden), .ovl:not(.hidden) > .dlg-card, .ovl:not(.hidden) > .sheet-card, .detail-pop { animation: none !important; }
 }
@@ -6985,6 +6986,31 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             } catch (e) { /* オフライン時はキャッシュ表示 */ }
         }
 
+        // ==== 物販レギュレーション（「物販レギュレーション」タブを読み、公式リンク画面に表示） ====
+        const BUPPAN_CSV_URL = "https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/export?format=csv&gid=1675177657";
+        let buppanByGroup = {};
+
+        function applyBuppanCsv_(csvText) {
+            const rows = parseCSVRows(csvText);
+            const map = {};
+            rows.slice(1).forEach(r => {
+                if (r[0] && r[1]) map[r[0]] = { text: r[1], url: r[2] || '', updated: r[4] || '' };
+            });
+            if (Object.keys(map).length > 0) buppanByGroup = map;
+        }
+
+        async function loadBuppanData() {
+            const cached = localStorage.getItem('oshi_cal_buppan_cache');
+            if (cached) { try { applyBuppanCsv_(cached); } catch (e) {} }
+            try {
+                const res = await fetch(BUPPAN_CSV_URL);
+                if (!res.ok) return;
+                const text = await res.text();
+                localStorage.setItem('oshi_cal_buppan_cache', text);
+                applyBuppanCsv_(text);
+            } catch (e) { /* オフライン時はキャッシュ表示 */ }
+        }
+
         // ==== AI構造化（「_ai」タブを読み、出演時間の補完と詳細の特典会・料金行に表示） ====
         const AI_CSV_URL = "https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/export?format=csv&gid=563903791";
         let aiById = {};
@@ -7083,6 +7109,22 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             `;
         }
 
+        function buppanCardHtml(groupName) {
+            const t = buppanByGroup[groupName];
+            if (!t) return '';
+            const body = escapeHtml(t.text).replace(/\n/g, '<br>');
+            return `
+                <div class="p-3.5 buppan-card rounded-2xl mb-2">
+                    <p class="text-xs font-black text-sky-600 mb-1.5"><i class="fa-solid fa-bag-shopping mr-1"></i>物販レギュレーション</p>
+                    <p class="text-[11px] leading-relaxed text-slate-700">${body}</p>
+                    <div class="flex items-center justify-between mt-2">
+                        ${t.url ? `<a href="${escapeHtml(t.url)}" target="_blank" class="text-[10px] font-bold text-sky-500">出典 <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i></a>` : '<span></span>'}
+                        ${t.updated ? `<span class="text-[9px] text-slate-400">${escapeHtml(t.updated)} 更新</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
         // 常設ページがない組向け：直近の公演告知（メモ欄）に新規特典の実施が書かれていればフラグ表示する
         const TOKUTEN_FLAG_RE = /新規特典|ご新規様無料|新規無料|ご新規様特典|新規様特典|ご新規様ファストパス/;
         function tokutenFlagEvent_(groupName) {
@@ -7114,6 +7156,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
         function openGroupLinksModal(groupName) {
             if (Object.keys(tokutenByGroup).length === 0) loadTokutenData();
+            if (Object.keys(buppanByGroup).length === 0) loadBuppanData();
             const groupObj = groups.find(g => g.name === groupName);
             const color = groupObj ? groupObj.color : '#ec4899';
             document.getElementById('group-links-title').innerHTML = `<span class="w-3 h-3 rounded-full inline-block mr-2" style="background-color:${color}"></span>${escapeHtml(groupName)}`;
@@ -7136,9 +7179,10 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 });
 
             const tokutenHtml = tokutenCardHtml(groupName) || tokutenFlagHtml(groupName);
-            container.innerHTML = tokutenHtml + (rows.length > 0
+            const buppanHtml = buppanCardHtml(groupName);
+            container.innerHTML = tokutenHtml + buppanHtml + (rows.length > 0
                 ? rows.join('')
-                : (tokutenHtml ? '' : `<p class="text-xs text-slate-400 text-center py-6">公式リンクはまだ登録されていません</p>`));
+                : ((tokutenHtml || buppanHtml) ? '' : `<p class="text-xs text-slate-400 text-center py-6">公式リンクはまだ登録されていません</p>`));
 
             document.getElementById('group-links-modal').classList.remove('hidden');
         }
