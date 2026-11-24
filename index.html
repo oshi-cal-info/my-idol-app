@@ -924,7 +924,7 @@ img { max-width: 100%; }
 .app-header {
   position: sticky; top: 0; z-index: 30;
   padding: 1rem 1rem 1.1rem;
-  background: linear-gradient(120deg, color-mix(in srgb, var(--primary-container) 55%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 55%, var(--surface-container-lowest)));
+  background: linear-gradient(calc(120deg + var(--tilt-deg, 0deg)), color-mix(in srgb, var(--primary-container) 55%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 55%, var(--surface-container-lowest)));
   border-radius: 0 0 2rem 2rem;
   box-shadow: 0 6px 24px color-mix(in srgb, var(--primary) 16%, transparent);
 }
@@ -1317,11 +1317,11 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 .font-extrabold { font-weight: 800; }
 
 /* --- 時間帯で変わるヘッダー（Expressive Weather 参考: 朝=青空／夕=茜／夜=星空） --- */
-html.tod-asa .app-header { background: linear-gradient(120deg, color-mix(in srgb, #38bdf8 26%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 55%, var(--surface-container-lowest))); }
-html.tod-yu .app-header { background: linear-gradient(120deg, color-mix(in srgb, #fb923c 24%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, #f472b6 26%, var(--surface-container-lowest))); }
-html.tod-yoru .app-header { background: linear-gradient(120deg, color-mix(in srgb, #a78bfa 22%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 45%, var(--surface-container-lowest))); }
+html.tod-asa .app-header { background: linear-gradient(calc(120deg + var(--tilt-deg, 0deg)), color-mix(in srgb, #38bdf8 26%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 55%, var(--surface-container-lowest))); }
+html.tod-yu .app-header { background: linear-gradient(calc(120deg + var(--tilt-deg, 0deg)), color-mix(in srgb, #fb923c 24%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, #f472b6 26%, var(--surface-container-lowest))); }
+html.tod-yoru .app-header { background: linear-gradient(calc(120deg + var(--tilt-deg, 0deg)), color-mix(in srgb, #a78bfa 22%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 45%, var(--surface-container-lowest))); }
 html.dark.tod-yoru .app-header {
-  background-image: radial-gradient(1.5px 1.5px at 18% 32%, rgba(255,255,255,.55) 50%, transparent 51%), radial-gradient(1px 1px at 64% 58%, rgba(255,255,255,.4) 50%, transparent 51%), radial-gradient(1.3px 1.3px at 84% 22%, rgba(255,255,255,.45) 50%, transparent 51%), radial-gradient(1px 1px at 42% 74%, rgba(255,255,255,.35) 50%, transparent 51%), linear-gradient(120deg, color-mix(in srgb, #a78bfa 22%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 45%, var(--surface-container-lowest)));
+  background-image: radial-gradient(1.5px 1.5px at 18% 32%, rgba(255,255,255,.55) 50%, transparent 51%), radial-gradient(1px 1px at 64% 58%, rgba(255,255,255,.4) 50%, transparent 51%), radial-gradient(1.3px 1.3px at 84% 22%, rgba(255,255,255,.45) 50%, transparent 51%), radial-gradient(1px 1px at 42% 74%, rgba(255,255,255,.35) 50%, transparent 51%), linear-gradient(calc(120deg + var(--tilt-deg, 0deg)), color-mix(in srgb, #a78bfa 22%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 45%, var(--surface-container-lowest)));
   background-size: 170px 90px, 130px 80px, 210px 100px, 150px 95px, cover;
 }
 
@@ -1345,6 +1345,16 @@ html.dark.tod-yoru .app-header {
 @media (prefers-reduced-motion: reduce) {
   .cd-card.wx-fx-rain::before, .cd-card.wx-fx-snow::before { animation: none; }
 }
+/* --- 傾き演出（Expressive Weather 参考・2026-11-24）: html.tilt-on のときだけ効く --- */
+html.tilt-on .cd-card.wx-fx-rain::before { inset: -12% -25%; transform: skewX(calc(var(--tilt-x, 0) * -10deg)); }
+html.tilt-on .cd-card.wx-fx-snow::before { transform: translateX(calc(var(--tilt-x, 0) * 14px)); }
+html.tilt-on .cd-card::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(calc(100deg + var(--tilt-x, 0) * 40deg), transparent 32%, rgba(255,255,255,.10) 48%, transparent 64%); }
+html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x, 0) * 6px) calc(var(--tilt-y, 0) * 3px), calc(var(--tilt-x, 0) * -9px) calc(var(--tilt-y, 0) * -4px), calc(var(--tilt-x, 0) * 12px) calc(var(--tilt-y, 0) * 5px), calc(var(--tilt-x, 0) * -5px) calc(var(--tilt-y, 0) * -2px), 0 0; }
+@media (prefers-reduced-motion: reduce) {
+  html.tilt-on .cd-card::after { display: none; }
+  html.tilt-on .cd-card.wx-fx-rain::before, html.tilt-on .cd-card.wx-fx-snow::before { transform: none; }
+}
+
 
 /* --- ドロワー再設計: チップ一覧が潰れないように（2026-11-23） --- */
 .drawer-panel { overflow-y: auto; }
@@ -1542,6 +1552,10 @@ html.dark.tod-yoru .app-header {
                 <i class="fa-solid fa-calendar-days mr-1.5"></i> <span id="cal-link-label">Googleカレンダー連携：オフ（おすすめ用）</span>
             </button>
             <p class="mt-1.5 text-[10px] text-slate-400 leading-relaxed px-1">連携すると、Googleカレンダーに予定が入っている日のライブが「おすすめライブ」に出なくなります。読み取るのは予定が入っている時間帯だけで、予定の中身（タイトルなど）は取得しません。</p>
+            <button id="tilt-toggle-btn" onclick="toggleTilt()" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
+                <i class="fa-solid fa-mobile-screen mr-1.5"></i> <span id="tilt-toggle-label">傾き演出：オン</span>
+            </button>
+            <p class="mt-1.5 text-[10px] text-slate-400 leading-relaxed px-1">スマホを傾けると、次のライブまでのカードの雨・雪の流れや、ヘッダーの光の向きが少し動きます。</p>
             <div class="grid grid-cols-2 gap-2 mt-2">
                 <button onclick="toggleMenu(); toggleSummary();" class="py-2.5 bg-gradient-to-r from-pink-50 to-purple-50 text-pink-600 font-bold rounded-2xl hover:from-pink-100 hover:to-purple-100 transition text-[11px] border border-pink-100 flex items-center justify-center">
                     <i class="fa-solid fa-chart-simple mr-1"></i> 推し活まとめ
@@ -6930,6 +6944,88 @@ html.dark.tod-yoru .app-header {
         // ==== おすすめライブ ====
         // 向こう2週間の「空き日」（行く予定が1件もない日）にあるライブを、推し・参戦記録・共演関係で
         // スコア付けして上位3件を出す。ルーレット（ランダム）と違い、理由つきで毎回同じ顔ぶれになる。
+        // ==== 傾き演出（Expressive Weather 参考） ====
+        // 端末の傾き（deviceorientation）を CSS 変数 --tilt-x / --tilt-y / --tilt-deg に流し、
+        // 雨・雪の流れ、夜の星空のパララックス、ヘッダーとカードの光の向きを連動させる。
+        // 演出だけの機能で、データは一切扱わない。iOS は許可が必要なのでトグルを押したときだけ取る。
+        const TILT_KEY = 'oshi_cal_tilt';
+        let tiltStarted_ = false;
+        let tiltHandler_ = null;
+
+        function tiltNeedsPermission_() {
+            return typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
+        }
+        function tiltReducedMotion_() {
+            return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        }
+        function tiltEnabled() {
+            const p = localStorage.getItem(TILT_KEY);
+            if (p !== null) return p === '1';
+            return !tiltNeedsPermission_();
+        }
+        function startTilt_() {
+            if (tiltStarted_ || !tiltEnabled() || tiltReducedMotion_()) return;
+            if (!('DeviceOrientationEvent' in window)) return;
+            tiltStarted_ = true;
+            document.documentElement.classList.add('tilt-on');
+            let smX = 0, smY = 0, lastEvt = 0;
+            tiltHandler_ = (e) => {
+                if (e.gamma === null || e.gamma === undefined || document.hidden) return;
+                const now = performance.now();
+                if (now - lastEvt < 33) return;
+                lastEvt = now;
+                const gx = Math.max(-1, Math.min(1, e.gamma / 28));
+                const gy = Math.max(-1, Math.min(1, ((e.beta || 0) - 42) / 28));
+                smX += (gx - smX) * 0.15;
+                smY += (gy - smY) * 0.15;
+                const el = document.documentElement;
+                el.style.setProperty('--tilt-x', smX.toFixed(3));
+                el.style.setProperty('--tilt-y', smY.toFixed(3));
+                el.style.setProperty('--tilt-deg', (smX * 22).toFixed(1) + 'deg');
+            };
+            window.addEventListener('deviceorientation', tiltHandler_, { passive: true });
+        }
+        function stopTilt_() {
+            if (tiltHandler_) window.removeEventListener('deviceorientation', tiltHandler_);
+            tiltHandler_ = null;
+            tiltStarted_ = false;
+            const el = document.documentElement;
+            el.classList.remove('tilt-on');
+            el.style.removeProperty('--tilt-x');
+            el.style.removeProperty('--tilt-y');
+            el.style.removeProperty('--tilt-deg');
+        }
+        async function toggleTilt() {
+            if (tiltEnabled()) {
+                localStorage.setItem(TILT_KEY, '0');
+                stopTilt_();
+                updateTiltUI();
+                return;
+            }
+            localStorage.setItem(TILT_KEY, '1');
+            if (tiltNeedsPermission_()) {
+                try {
+                    const r = await DeviceOrientationEvent.requestPermission();
+                    if (r !== 'granted') {
+                        localStorage.setItem(TILT_KEY, '0');
+                        alert('傾きの許可が得られなかったので、演出はオフのままです');
+                        updateTiltUI();
+                        return;
+                    }
+                } catch (e) {
+                    localStorage.setItem(TILT_KEY, '0');
+                    updateTiltUI();
+                    return;
+                }
+            }
+            startTilt_();
+            updateTiltUI();
+        }
+        function updateTiltUI() {
+            const label = document.getElementById('tilt-toggle-label');
+            if (label) label.textContent = tiltEnabled() ? '傾き演出：オン' : '傾き演出：オフ';
+        }
+
         // ==== Googleカレンダー連携（freebusy・端末内だけで判定） ====
         // 権限は「埋まっている時間帯だけ」を返す calendar.freebusy のみ。予定のタイトルや
         // 内容は一切取得しない。取得した時間帯はこの端末の localStorage にだけ保存し、
@@ -8850,6 +8946,8 @@ html.dark.tod-yoru .app-header {
             loadHighlightData(); // 週間ハイライトも並行して読み始める
             updateCalLinkUI();
             maybeRefreshCalBusy_(); // カレンダー連携済みなら古いキャッシュを静かに更新
+            updateTiltUI();
+            startTilt_(); // 傾き演出（許可が要る端末ではトグルを押すまで始まらない）
             await fetchSheetData();
 
             // アプリを開いたままにしている間も、一定間隔で新着をチェックする
