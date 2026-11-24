@@ -1309,8 +1309,18 @@ body.dark #ptr-ind { background: #33222e; }
   #search-modal .search-panel { max-width: none !important; width: 100%; height: 100dvh; max-height: none !important; border-radius: 0 !important; }
 }
 /* --- date/time inputs: appearance:none で消えていたネイティブ表示を戻す (BUG #35, 2026-11-25) --- */
-input[type="date"].fld, input[type="time"].fld { appearance: auto; min-height: 2.9rem; }
-input[type="date"].fld::-webkit-calendar-picker-indicator, input[type="time"].fld::-webkit-calendar-picker-indicator { opacity: .6; cursor: pointer; }
+/* Beer CSS は :not(.field)>input[type^=date/time] 本体を opacity:0 + position:absolute にする（.field 前提の設計）。
+   .fld は .field の外で使うため、本体ごと透明・絶対配置になって値が見えなくなる。ここで通常表示へ完全に戻す（BUG#35 本原因） */
+input[type="date"].fld, input[type="time"].fld {
+  -webkit-appearance: auto; appearance: auto;
+  opacity: 1 !important; position: relative !important; inset: auto !important;
+  inline-size: 100% !important; block-size: auto !important; height: auto; min-height: 2.9rem;
+  margin: 0; z-index: auto !important;
+}
+input[type="date"].fld::-webkit-calendar-picker-indicator, input[type="time"].fld::-webkit-calendar-picker-indicator {
+  opacity: .6; position: static; inline-size: auto; block-size: auto; width: auto; height: auto; margin: 0; cursor: pointer;
+}
+input[type="date"].fld::-webkit-datetime-edit, input[type="time"].fld::-webkit-datetime-edit { color: var(--on-surface); }
 body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-scheme: dark; }
 .ovl.flipping { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 @media (prefers-reduced-motion: reduce) {
@@ -5194,14 +5204,16 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 panel.style.opacity = '.35';
                 panel.style.willChange = 'transform, opacity';
                 requestAnimationFrame(() => requestAnimationFrame(() => {
-                    panel.style.transition = 'transform .3s cubic-bezier(.25,1.15,.35,1), opacity .22s ease';
+                    // オーバーシュート付きベジェ（1を超える制御点）は「広がる→縮む→広がる」二度跳ねの原因になるため使わない
+                    panel.style.transition = 'transform .32s cubic-bezier(.25,.8,.3,1), opacity .22s ease';
                     panel.style.transform = '';
                     panel.style.opacity = '';
                     setTimeout(() => {
                         panel.style.transition = ''; panel.style.willChange = '';
-                        panel.classList.remove('flip-in');
+                        // flip-in（detailPop抑制）はここで外さない。外すと detailPop がその瞬間から再生され二度広がって見える。
+                        // 閉じる時（closeEventDetail）に外す。
                         if (modal) modal.classList.remove('flipping');
-                    }, 340);
+                    }, 360);
                 }));
             } catch (e) { /* 変形できなくても表示は通常通り */ }
         }
@@ -8177,7 +8189,10 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         }
 
         function closeEventDetail() {
-            document.getElementById('event-detail-modal').classList.add('hidden');
+            const modal = document.getElementById('event-detail-modal');
+            modal.classList.add('hidden');
+            const panel = modal.querySelector(':scope > div');
+            if (panel) panel.classList.remove('flip-in');
             detailEventId = null;
         }
 
