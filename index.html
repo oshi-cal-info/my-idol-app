@@ -1272,8 +1272,6 @@ body.dark #boot-splash .bs-name { color: #f6e3ef; }
 #boot-splash .bs-wave { width: 148px; }
 #boot-splash .bs-cap { font-size: 11px; color: #a06a8d; font-weight: 700; }
 body.dark #boot-splash .bs-cap { color: #c39bb6; }
-#refresh-wave { position: absolute; left: 18px; right: 18px; bottom: 5px; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
-#refresh-wave.on { opacity: 1; }
 .skel-card { border-radius: 1.5rem; padding: 14px 16px; background: #fff; border: 1px solid rgba(249,168,212,.35); display: flex; gap: 12px; }
 body.dark .skel-card { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.07); }
 .skel-blk { border-radius: 10px; background: linear-gradient(100deg, #f6e0ee 40%, #fbeff7 50%, #f6e0ee 60%); background-size: 200% 100%; animation: skelShimmer 1.4s linear infinite; }
@@ -1308,6 +1306,11 @@ body.dark #ptr-ind { background: #33222e; }
   #search-modal { padding: 0 !important; align-items: stretch !important; }
   #search-modal .search-panel { max-width: none !important; width: 100%; height: 100dvh; max-height: none !important; border-radius: 0 !important; }
 }
+/* --- date/time inputs: appearance:none で消えていたネイティブ表示を戻す (BUG #35, 2026-11-25) --- */
+input[type="date"].fld, input[type="time"].fld { appearance: auto; min-height: 2.9rem; }
+input[type="date"].fld::-webkit-calendar-picker-indicator, input[type="time"].fld::-webkit-calendar-picker-indicator { opacity: .6; cursor: pointer; }
+body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-scheme: dark; }
+.ovl.flipping { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .view-in, .card-in, .ovl:not(.hidden), .ovl:not(.hidden) > .dlg-card, .ovl:not(.hidden) > .sheet-card, .detail-pop { animation: none !important; }
 }
@@ -1455,7 +1458,6 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             </button>
         </div>
         </div>
-            <div id="refresh-wave" class="wave-progress ind"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path class="wp-track" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/><path class="wp-fill" pathLength="100" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/></svg></div>
     </header>
 
     <!-- メインコンテンツ -->
@@ -5167,10 +5169,6 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const wait = Math.max(0, 450 - (performance.now() - bootSplashStart_));
             setTimeout(() => { s.classList.add('done'); setTimeout(() => s.remove(), 420); }, wait);
         }
-        function setRefreshing_(on) {
-            const w = document.getElementById('refresh-wave');
-            if (w) w.classList.toggle('on', !!on);
-        }
         function skeletonCardsHtml_(n) {
             let cards = '';
             for (let i = 0; i < (n || 3); i++) {
@@ -5179,24 +5177,29 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             return `<div class="py-2">${cards}</div>`;
         }
 
-        // ==== コンテナ変形（カード→詳細） ====
+        // ==== コンテナ変形（カード→詳細）: 歪ませず、カードの位置から均一に立ち上がる軽い版 ====
         function flipPanel_(panel, src) {
             try {
                 const r = panel.getBoundingClientRect();
                 if (!r.width || !r.height || !src.width) return;
-                const sx = Math.max(.06, src.width / r.width), sy = Math.max(.06, src.height / r.height);
-                const dx = (src.left + src.width / 2) - (r.left + r.width / 2);
-                const dy = (src.top + src.height / 2) - (r.top + r.height / 2);
+                const dy = Math.max(-window.innerHeight * .45, Math.min(window.innerHeight * .45,
+                    (src.top + src.height / 2) - (r.top + r.height / 2)));
+                const modal = panel.closest('.ovl');
                 panel.classList.add('flip-in');
-                panel.style.transformOrigin = 'center center';
+                if (modal) modal.classList.add('flipping');
                 panel.style.transition = 'none';
-                panel.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
-                panel.style.opacity = '.55';
+                panel.style.transform = `translateY(${dy}px) scale(.965)`;
+                panel.style.opacity = '.35';
+                panel.style.willChange = 'transform, opacity';
                 requestAnimationFrame(() => requestAnimationFrame(() => {
-                    panel.style.transition = 'transform .38s cubic-bezier(.3,1.22,.4,1), opacity .25s ease';
+                    panel.style.transition = 'transform .3s cubic-bezier(.25,1.15,.35,1), opacity .22s ease';
                     panel.style.transform = '';
                     panel.style.opacity = '';
-                    setTimeout(() => { panel.style.transition = ''; panel.style.transformOrigin = ''; panel.classList.remove('flip-in'); }, 430);
+                    setTimeout(() => {
+                        panel.style.transition = ''; panel.style.willChange = '';
+                        panel.classList.remove('flip-in');
+                        if (modal) modal.classList.remove('flipping');
+                    }, 340);
                 }));
             } catch (e) { /* 変形できなくても表示は通常通り */ }
         }
@@ -5210,14 +5213,35 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const handle = document.createElement('div');
             handle.className = 'sheet-handle';
             panel.prepend(handle);
-            let startY = 0, dy = 0, dragging = false;
-            handle.addEventListener('pointerdown', e => { dragging = true; startY = e.clientY; dy = 0; panel.style.transition = 'none'; try { handle.setPointerCapture(e.pointerId); } catch (err) {} });
-            handle.addEventListener('pointermove', e => { if (!dragging) return; dy = Math.max(0, e.clientY - startY); panel.style.transform = `translateY(${dy}px)`; });
+            let startY = 0, dy = 0, dragging = false, rafId = 0, lastY = 0, lastT = 0, vel = 0;
+            handle.addEventListener('pointerdown', e => {
+                dragging = true; startY = e.clientY; dy = 0; vel = 0;
+                lastY = e.clientY; lastT = performance.now();
+                panel.style.transition = 'none'; panel.style.willChange = 'transform';
+                try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+            });
+            handle.addEventListener('pointermove', e => {
+                if (!dragging) return;
+                const now = performance.now();
+                const dt = now - lastT;
+                if (dt > 0) vel = vel * .6 + ((e.clientY - lastY) / dt) * .4;
+                lastY = e.clientY; lastT = now;
+                dy = Math.max(0, e.clientY - startY);
+                if (!rafId) rafId = requestAnimationFrame(() => { rafId = 0; if (dragging) panel.style.transform = `translateY(${dy}px)`; });
+            });
             const end = () => {
                 if (!dragging) return; dragging = false;
-                panel.style.transition = 'transform .32s cubic-bezier(.3,1.2,.4,1)';
-                if (dy > 90) { panel.style.transform = 'translateY(105%)'; setTimeout(() => { closeFn(); panel.style.transform = ''; panel.style.transition = ''; }, 170); }
-                else { panel.style.transform = ''; setTimeout(() => { panel.style.transition = ''; }, 340); }
+                if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+                panel.style.willChange = '';
+                if (dy > 80 || vel > .45) {
+                    panel.style.transition = 'transform .26s ease-in';
+                    panel.style.transform = 'translateY(105%)';
+                    setTimeout(() => { closeFn(); panel.style.transform = ''; panel.style.transition = ''; }, 250);
+                } else {
+                    panel.style.transition = 'transform .38s cubic-bezier(.25,1.12,.35,1)';
+                    panel.style.transform = 'translateY(0px)';
+                    setTimeout(() => { panel.style.transform = ''; panel.style.transition = ''; }, 390);
+                }
             };
             handle.addEventListener('pointerup', end);
             handle.addEventListener('pointercancel', end);
@@ -5289,8 +5313,6 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
         async function fetchSheetData() {
             if (!AUTO_SYNC_CSV_URL) return;
-            const bg = sheetDataReady;
-            if (bg) setRefreshing_(true);
             try {
                 const response = await fetch(AUTO_SYNC_CSV_URL);
                 if (!response.ok) return;
@@ -5299,8 +5321,6 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 parseCSV(csvText);
             } catch (e) {
                 console.log("Auto sync failed:", e);
-            } finally {
-                if (bg) setRefreshing_(false);
             }
         }
 
