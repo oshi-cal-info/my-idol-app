@@ -4948,6 +4948,8 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             "ネコプラpixx.": "https://unavatar.io/x/NECOPLASTIC",
             "桃色革命": "https://unavatar.io/x/momoirokakumei"
         };
+        const LINK_ONLY_GROUPS = new Set(["RealRomantic", "いぎなり東北産", "PassCode", "私立恵比寿中学", "超ときめき♡宣伝部", "Pixel Ribbon", "KAWAII LAB. MATES", "点染テンセイ少女。", "WHITE SCORPION", "最終未来少女", "Ringwanderung", "きゅるりんってしてみて", "feelNEO", "chuLa", "虹のコンキスタドール", "くまま", "SUPER☆GiRLS", "ROOKEY♡ROOKEYS", "KAWAII LAB. SOUTH", "MAGICAL SPEC", "selfish", "AVAM", "RAViDAVi", "瞬きもせず", "びっくえんじぇる", "いちごみるく色に染まりたい。", "W.ダブルヴィー", "MORE*", "STAiNY", "Ma'Scar'Piece", "僕が見たかった青空", "≒JOY", "≠ME", "＝LOVE", "i-COL", "CYNHN", "NEKIRU", "Primulav", "@onefive", "ばってん少女隊", "きのホ。", "fishbowl", "Rain Tree", "シャニムニ=パレード", "Kolokol", "ネコプラpixx.", "ChumToto", "アイテムはてるてるのみ", "すーぱーぷーばぁー!!", "Falench.", "さよならステイチューン", "カラフルスクリーム", "メイビーME", "アップアップガールズ（仮）", "ファントムシータ", "IS:SUE", "BYBBiT", "GILTY x GILTY", "RE-GE", "コングラッチェ！", "PRSMIN", "フルコース", "いにしえ永遠？", "ワッツ◎さーくる", "アルテミスの翼", "アイドルカレッジ", "YOLOZ", "Hey!Mommy!", "すてねこキャッツ", "LINKL PLANET", "ハルカエコー", "KiSS KiSS", "KRD8", "桃色革命", "Jumping Kiss", "Re:♡", "As a Cutie Pomeranian", "このアイドルはフィクションです。", "ギミラブ！", "QUON", "LOVE PANIC!"]);
+
         const LINK_META = {
             x: { label: "X (Twitter)", icon: "fa-brands fa-x-twitter", color: "#000000" },
             instagram: { label: "Instagram", icon: "fa-brands fa-instagram", color: "#e1306c" },
@@ -6812,7 +6814,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                         </span>
                         <span class="flex-1 min-w-0">
                             <span class="block text-[13px] font-bold ${isHidden ? 'text-slate-400' : 'text-slate-800'} truncate">${escapeHtml(g.name)}</span>
-                            <span class="block text-[10px] text-slate-400">未来のライブ ${futureCounts[g.name] || 0}件${notifyOff ? ' ・ 通知オフ' : ''}</span>
+                            <span class="block text-[10px] text-slate-400">${(typeof LINK_ONLY_GROUPS !== 'undefined' && LINK_ONLY_GROUPS.has(g.name)) ? '公式リンクのみ（予定は未対応）' : `未来のライブ ${futureCounts[g.name] || 0}件`}${notifyOff ? ' ・ 通知オフ' : ''}</span>
                         </span>
                         ${isHidden ? '<i class="fa-regular fa-circle text-slate-300"></i>' : `<i class="fa-solid fa-circle-check" style="color:${g.color}"></i>`}
                     </div>`;
