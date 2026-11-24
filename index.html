@@ -1258,6 +1258,9 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 .ovl:not(.hidden) { animation: ovlIn .18s ease-out; }
 .drawer-panel { transition-duration: .38s !important; transition-timing-function: cubic-bezier(.3,1.08,.64,1) !important; }
 .buppan-card { background: linear-gradient(135deg, #f0f9ff, rgba(204,251,241,.45)); border: 1px solid rgba(125,211,252,.45); }
+body.dark .buppan-card { background: linear-gradient(135deg, rgba(8,47,73,.85), rgba(19,78,94,.55)); border-color: rgba(56,189,248,.35); }
+.buppan-card .buppan-head { color: #0284c7; }
+body.dark .buppan-card .buppan-head { color: #38bdf8; }
 @media (prefers-reduced-motion: reduce) {
   .view-in, .card-in, .ovl:not(.hidden), .ovl:not(.hidden) > .dlg-card, .ovl:not(.hidden) > .sheet-card, .detail-pop { animation: none !important; }
 }
@@ -7115,7 +7118,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const body = escapeHtml(t.text).replace(/\n/g, '<br>');
             return `
                 <div class="p-3.5 buppan-card rounded-2xl mb-2">
-                    <p class="text-xs font-black text-sky-600 mb-1.5"><i class="fa-solid fa-bag-shopping mr-1"></i>物販レギュレーション</p>
+                    <p class="text-xs font-black buppan-head mb-1.5"><i class="fa-solid fa-bag-shopping mr-1"></i>物販レギュレーション</p>
                     <p class="text-[11px] leading-relaxed text-slate-700">${body}</p>
                     <div class="flex items-center justify-between mt-2">
                         ${t.url ? `<a href="${escapeHtml(t.url)}" target="_blank" class="text-[10px] font-bold text-sky-500">出典 <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i></a>` : '<span></span>'}
