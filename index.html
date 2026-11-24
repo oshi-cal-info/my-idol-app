@@ -1348,7 +1348,7 @@ html.dark.tod-yoru .app-header {
 
 /* --- ドロワー再設計: チップ一覧が潰れないように（2026-11-23） --- */
 .drawer-panel { overflow-y: auto; }
-#group-management-list { min-height: 160px; }
+#group-management-list { flex: 0 0 auto; height: 40vh; min-height: 200px; }
 </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -1541,6 +1541,7 @@ html.dark.tod-yoru .app-header {
             <button id="cal-link-btn" onclick="toggleCalLink()" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
                 <i class="fa-solid fa-calendar-days mr-1.5"></i> <span id="cal-link-label">Googleカレンダー連携：オフ（おすすめ用）</span>
             </button>
+            <p class="mt-1.5 text-[10px] text-slate-400 leading-relaxed px-1">連携すると、Googleカレンダーに予定が入っている日のライブが「おすすめライブ」に出なくなります。読み取るのは予定が入っている時間帯だけで、予定の中身（タイトルなど）は取得しません。</p>
             <div class="grid grid-cols-2 gap-2 mt-2">
                 <button onclick="toggleMenu(); toggleSummary();" class="py-2.5 bg-gradient-to-r from-pink-50 to-purple-50 text-pink-600 font-bold rounded-2xl hover:from-pink-100 hover:to-purple-100 transition text-[11px] border border-pink-100 flex items-center justify-center">
                     <i class="fa-solid fa-chart-simple mr-1"></i> 推し活まとめ
