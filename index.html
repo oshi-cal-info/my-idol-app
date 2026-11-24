@@ -1366,6 +1366,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
+        try { if (new URLSearchParams(location.search).get('owner') === '1') localStorage.setItem('oshi_owner_traffic', '1'); if (localStorage.getItem('oshi_owner_traffic') === '1') gtag('set', 'user_properties', { owner_traffic: 'self' }); } catch (e) {}
         gtag('config', 'G-8M7KLCRHDB');
     </script>
 </head>
@@ -1944,6 +1945,12 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
         async function handleAuthChange(user) {
             currentUser = user;
+            if (user && user.email === 'itsuiwa123@gmail.com') {
+                try {
+                    localStorage.setItem('oshi_owner_traffic', '1');
+                    if (typeof gtag === 'function') gtag('set', 'user_properties', { owner_traffic: 'self' });
+                } catch (e) {}
+            }
             updateAuthUI();
             if (user) {
                 await loadCloudData();

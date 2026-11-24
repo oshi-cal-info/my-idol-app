@@ -378,6 +378,7 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
+  try { if (new URLSearchParams(location.search).get('owner') === '1') localStorage.setItem('oshi_owner_traffic', '1'); if (localStorage.getItem('oshi_owner_traffic') === '1') gtag('set', 'user_properties', { owner_traffic: 'self' }); } catch (e) {}
   gtag('config', 'G-8M7KLCRHDB');
 </script>
 </head>
