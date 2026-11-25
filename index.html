@@ -1499,7 +1499,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
 /* --- ドロワー再設計: チップ一覧が潰れないように（2026-11-23） --- */
 .drawer-panel { overflow-y: auto; }
-#group-management-list { flex: 0 0 auto; height: 40vh; min-height: 200px; }
+#group-management-list { flex: 0 0 auto; }
 </style>
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8M7KLCRHDB"></script>
@@ -1688,14 +1688,10 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     <button type="button" data-tmode="auto" onclick="setThemeMode('auto')" class="seg-btn">端末に合わせる</button>
                 </div>
             </div>
-            <div class="relative mb-3">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
-                <input id="group-search" type="text" placeholder="グループ名で検索" oninput="renderGroupManagementList()" class="fld" style="padding-left:2.3rem">
-            </div>
             <button onclick="openGroupList()" class="w-full py-2.5 mb-2 bg-pink-50 text-pink-600 font-bold rounded-xl border border-pink-100 text-[11px] flex items-center justify-center gap-2"><i class="fa-solid fa-list"></i>グループを一覧で見る</button>
-            <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="group-management-list"></div>
+            <div class="space-y-2" id="group-management-list"></div>
             <p class="mt-3 text-[10px] text-slate-400 leading-relaxed px-1">
-                グループはライブスケジュールから自動で追加されます。チップをタップすると表示オン/オフ、長押しすると通知・色・公式リンクなどの設定が開きます。
+                グループはライブスケジュールから自動で追加されます。表示・通知の設定は「グループを一覧で見る」から変更できます。
             </p>
             <button id="notify-toggle-btn" onclick="toggleNotifySetting()" class="mt-3 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
                 <i class="fa-solid fa-bell mr-1.5"></i> <span id="notify-toggle-label">新着ライブの通知を受け取る</span>
@@ -1726,7 +1722,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1432</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1441</div>
         </div>
     </div>
 
@@ -8758,8 +8754,8 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
         function renderGroupManagementList() {
             const container = document.getElementById('group-management-list');
-            const mgmtQuery = (document.getElementById('group-search')?.value || '').trim().toLowerCase();
-            let html = mgmtQuery ? '' : `
+            if (!container) return;
+            container.innerHTML = `
                 <button onclick="subscribeGroupCalendar(-1)" class="w-full flex items-center justify-between p-2.5 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100 rounded-2xl shadow-sm">
                     <span class="flex items-center space-x-3 min-w-0">
                         <span class="w-4 h-4 rounded-full shadow-sm flex-shrink-0" style="background: linear-gradient(135deg,#ec4899,#a855f7)"></span>
@@ -8771,38 +8767,6 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     <i class="fa-solid fa-calendar-plus text-pink-500 text-sm mr-1 flex-shrink-0"></i>
                 </button>
             `;
-            let mgmtShown = 0;
-            let chips = '';
-            const mgmtOrder = groups.map((g, index) => ({ g, index })).sort((a, b) => {
-                const ah = a.g.visible === false ? 1 : 0;
-                const bh = b.g.visible === false ? 1 : 0;
-                if (ah !== bh) return ah - bh;
-                return a.g.name.localeCompare(b.g.name, 'ja');
-            });
-            mgmtOrder.forEach(({ g, index }) => {
-                if (mgmtQuery && !g.name.toLowerCase().includes(mgmtQuery)) return;
-                mgmtShown++;
-                const isHidden = g.visible === false;
-                const notifyOn = g.notify !== false;
-                chips += `
-                    <div class="relative flex items-center gap-2 p-2 rounded-2xl border shadow-sm cursor-pointer select-none min-w-0 overflow-hidden [-webkit-touch-callout:none] ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}14;border-color:${g.color}45;`}"
-                        onpointerdown="chipPointerDown(${index})" onpointerup="chipPointerEnd()" onpointerleave="chipPointerEnd()" onpointercancel="chipPointerEnd()" oncontextmenu="return false" onclick="chipClick(${index})">
-                        ${groupAvatarHtml(g, false)}
-                        <span class="flex-1 min-w-0 text-[11px] font-bold leading-tight ${isHidden ? 'text-slate-400' : 'text-slate-800'}" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;border-radius:0;">${escapeHtml(g.name)}</span>
-                        <span class="flex flex-col items-center justify-center flex-shrink-0" style="width:14px;gap:3px">
-                            <span class="fa-solid ${isHidden ? 'fa-eye-slash text-slate-300' : 'fa-eye text-slate-400'}" style="font-size:9px"></span>
-                            <span class="fa-solid ${notifyOn ? 'fa-bell text-slate-400' : 'fa-bell-slash text-slate-300'}" style="font-size:9px"></span>
-                        </span>
-                    </div>
-                `;
-            });
-            if (mgmtShown > 0) {
-                html += `<div class="grid grid-cols-2 gap-2">${chips}</div>`;
-            }
-            if (mgmtQuery && mgmtShown === 0) {
-                html = `<p class="text-xs text-slate-400 text-center py-6">「${escapeHtml(mgmtQuery)}」に一致するグループがありません</p>`;
-            }
-            container.innerHTML = html;
         }
 
         // ==== グループ一覧（単独リスト） ====
@@ -8893,10 +8857,6 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         }
         function chipPointerEnd() {
             clearTimeout(chipPressTimer);
-        }
-        function chipClick(index) {
-            if (chipLongPressed) { chipLongPressed = false; return; }
-            toggleGroupVisible(index);
         }
 
         let groupActionIndex = -1;
