@@ -1346,7 +1346,7 @@ body.dark .skel-blk { background: linear-gradient(100deg, rgba(255,255,255,.06) 
 .cd-today { font-size: 30px; font-weight: 900; letter-spacing: -.02em; line-height: 1.05; }
 /* --- container transform / sheet drag / pull-to-refresh / snackbar / search (2026-11-25) --- */
 .dlg-card.flip-in { animation: none !important; }
-.sheet-handle { height: 20px; display: flex; align-items: flex-start; justify-content: center; padding-top: 7px; cursor: grab; touch-action: none; flex: none; }
+.sheet-handle { height: 20px; display: flex; align-items: flex-start; justify-content: center; padding-top: 7px; cursor: grab; touch-action: none; flex: none; position: sticky; top: 0; z-index: 20; }
 .sheet-handle::after { content: ""; width: 38px; height: 4.5px; border-radius: 999px; background: rgba(120, 90, 110, .35); }
 body.dark .sheet-handle::after { background: rgba(255, 255, 255, .3); }
 #ptr-ind { position: fixed; top: 0; left: 50%; transform: translate(-50%, -70px); z-index: 130; width: 44px; height: 44px; border-radius: 999px; background: #fff; box-shadow: 0 6px 20px rgba(190, 90, 145, .3); display: flex; align-items: center; justify-content: center; pointer-events: none; transition: transform .38s cubic-bezier(.3, 1.15, .4, 1), opacity .3s ease; }
@@ -5489,6 +5489,10 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         requestAnimationFrame(() => moveVnavInd_(false));
         window.addEventListener('resize', () => moveVnavInd_(false));
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => moveVnavInd_(false));
+        if ('ResizeObserver' in window) {
+            const vnavEl = document.querySelector('.view-nav');
+            if (vnavEl) new ResizeObserver(() => moveVnavInd_(false)).observe(vnavEl);
+        }
 
         // ==== セグメントバーのスライドピル（下部ナビと同じ動きを他の切替バーにも） ====
         function segIndSync_(bar, animate) {
@@ -5506,15 +5510,23 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         (function initSegInds_() {
             const bars = [...document.querySelectorAll('.seg-bar')];
             if (bars.length === 0) return;
+            // 選択変更のたびに滑らせ、アニメーション終了後にもう一度だけ位置を合わせ直す
+            // （テーマ変更等でバー幅が後から変わってもズレが残らないように）
+            const animatedSync = bar => {
+                segIndSync_(bar, true);
+                clearTimeout(bar._segSettle);
+                bar._segSettle = setTimeout(() => segIndSync_(bar, true), 580);
+            };
             bars.forEach(bar => {
                 const ind = document.createElement('span');
                 ind.className = 'seg-ind';
                 ind.setAttribute('aria-hidden', 'true');
                 bar.insertBefore(ind, bar.firstChild);
                 bar.querySelectorAll('.seg-btn').forEach(b =>
-                    new MutationObserver(() => segIndSync_(bar, true)).observe(b, { attributes: true, attributeFilter: ['class'] }));
+                    new MutationObserver(() => animatedSync(bar)).observe(b, { attributes: true, attributeFilter: ['class'] }));
                 new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) segIndSync_(bar, false); }).observe(bar);
-                bar.addEventListener('click', () => requestAnimationFrame(() => segIndSync_(bar, true)));
+                if ('ResizeObserver' in window) new ResizeObserver(() => segIndSync_(bar, false)).observe(bar);
+                bar.addEventListener('click', () => requestAnimationFrame(() => animatedSync(bar)));
             });
             const syncAll = () => bars.forEach(b => segIndSync_(b, false));
             window.addEventListener('resize', syncAll);
