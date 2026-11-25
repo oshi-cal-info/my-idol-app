@@ -1723,7 +1723,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1422</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1424</div>
         </div>
     </div>
 
@@ -8676,7 +8676,9 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             });
             html += '</div><div class="grid grid-cols-2 gap-1.5">'
                 + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'notifyOffOutside\')">プリセット外を通知オフ</button>'
+                + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'notifyOffInside\')">プリセット内を通知オフ</button>'
                 + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'hideOutside\')">プリセット外を非表示</button>'
+                + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'hideInside\')">プリセット内を非表示</button>'
                 + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'notifyAllOn\')">通知をすべてオン</button>'
                 + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'showAll\')">すべて表示</button>'
                 + '</div>';
@@ -8693,12 +8695,19 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 if (!p) return;
                 const inside = new Set(p.groups);
                 const outside = groups.filter(g => !inside.has(g.name));
+                const insideGroups = groups.filter(g => inside.has(g.name));
                 if (kind === 'notifyOffOutside') {
                     if (!confirm(`プリセット「${p.name}」以外の${outside.length}グループを通知オフにしますか？`)) return;
                     outside.forEach(g => { g.notify = false; });
                 } else if (kind === 'hideOutside') {
                     if (!confirm(`プリセット「${p.name}」以外の${outside.length}グループを非表示にしますか？`)) return;
                     outside.forEach(g => { g.visible = false; });
+                } else if (kind === 'notifyOffInside') {
+                    if (!confirm(`プリセット「${p.name}」の${insideGroups.length}グループを通知オフにしますか？`)) return;
+                    insideGroups.forEach(g => { g.notify = false; });
+                } else if (kind === 'hideInside') {
+                    if (!confirm(`プリセット「${p.name}」の${insideGroups.length}グループを非表示にしますか？`)) return;
+                    insideGroups.forEach(g => { g.visible = false; });
                 } else {
                     return;
                 }
