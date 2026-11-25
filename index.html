@@ -1478,7 +1478,7 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
   #group-list-modal { padding: 1rem; }
   .group-list-panel { height: auto; max-height: 85vh; max-height: 85svh; }
 }
-#group-list-rows { min-height: 0; padding: 0 0 10px; }
+#group-list-rows { min-height: 0; padding: 6px 0 10px; }
 .font-extrabold { font-weight: 800; }
 
 /* --- 時間帯で変わるヘッダー（Expressive Weather 参考: 朝=青空／夕=茜／夜=星空） --- */
@@ -1765,7 +1765,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261126-0629</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261126-0636</div>
             </div>
         </div>
     </div>
@@ -1953,7 +1953,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <select id="gl-agency-select" class="gl-agency-sel" onchange="setGroupListAgency(this.value)"></select>
                 <button type="button" id="gl-size-btn" class="gl-size-btn" onclick="toggleGroupListSize()"></button>
             </div>
-            <div id="group-bulk-bar" style="margin-bottom:6px"></div>
+            <div id="group-bulk-bar" style="margin-bottom:0"></div>
             <div id="group-list-rows" class="flex-1 overflow-y-auto space-y-1.5"></div>
         </div>
     </div>
