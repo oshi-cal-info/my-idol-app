@@ -1437,6 +1437,7 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 .bulk-op-btn.st-mixed { border-color: var(--primary); color: var(--primary); }
 .gl-fchip { margin: 0; padding: .34rem .62rem; border-radius: 999px; border: 1px solid var(--outline-variant); background: var(--surface-container); color: var(--on-surface-variant); font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; height: 37px; block-size: 37px; min-height: 0; min-block-size: 0; inline-size: auto; min-inline-size: 0; box-sizing: border-box; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; box-shadow: none; }
 .gl-fchip.on { background: var(--primary); color: var(--on-primary); }
+.gl-agency-sel { margin: 0; flex: 1; min-width: 0; height: 32px; block-size: 32px; min-height: 0; border-radius: 999px; border: 1px solid var(--outline-variant); background-color: var(--surface-container); color: var(--on-surface); font-size: 11px; font-weight: 700; padding: 0 1.7rem 0 .8rem; appearance: none; -webkit-appearance: none; box-sizing: border-box; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a08b99' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .65rem center; background-size: 11px 11px; }
 #gl-filter-chips { flex: 1; min-width: 0; overflow-x: auto; padding: 5px 2px; align-items: center; }
 .bulk-card { border: 1px solid var(--outline-variant); border-radius: 16px; padding: .6rem .7rem .7rem; }
 .bulk-all-sec { border: 1px solid var(--outline-variant); border-radius: 16px; padding: .6rem .7rem .7rem; margin-top: .55rem; }
@@ -1753,7 +1754,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251126-0044</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251126-0612</div>
             </div>
         </div>
     </div>
@@ -1935,6 +1936,10 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             <div class="flex items-center gap-1.5 mb-2">
                 <button type="button" id="gl-sort-btn" onclick="cycleGroupListSort()" class="gl-fchip" style="flex-shrink:0;background:var(--surface-container-high);color:var(--on-surface);border-color:var(--outline)"></button>
                 <div id="gl-filter-chips" class="flex gap-1 overflow-x-auto" style="scrollbar-width:none"></div>
+            </div>
+            <div class="flex items-center gap-1.5 mb-2 px-1">
+                <span class="text-[10px] font-bold text-slate-400 flex-shrink-0">事務所</span>
+                <select id="gl-agency-select" class="gl-agency-sel" onchange="setGroupListAgency(this.value)"></select>
             </div>
             <div id="group-bulk-bar" class="mb-2"></div>
             <div id="group-list-rows" class="flex-1 overflow-y-auto space-y-1.5 pr-1"></div>
@@ -6099,6 +6104,204 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
         };
 
+        // グループの所属事務所（2026-11-26 時点で190組を登録。出典は公式HP・公式SNS・Wikipedia、確認できないグループは未登録＝不明）
+        // 複合所属・提携は両方を併記。データの正は ~/workspace/agency-data/agency_map_draft.json
+        const GROUP_AGENCIES = {
+            "#Mooove!": ["ゼロイチファミリア"],
+            "#よーよーよー": ["ゼロイチファミリア"],
+            "#フラサービックル": ["SCOT", "スターレイプロダクション", "CGE"],
+            "17秒前の瞬きに光を": ["FreoMotto"],
+            "4次元コンパス": ["LIVE PLANET"],
+            "@onefive": ["アミューズ"],
+            "AISTEAL": ["LIVE PLANET", "Churros"],
+            "AVAM": ["LIVE PLANET"],
+            "AdamLilith": ["imaginate(HEROINES)"],
+            "Ange☆Reve": ["ArcJewel"],
+            "Appare!": ["PLAYYTE"],
+            "BOCCHI。": ["GDL Entertainment"],
+            "BYBBiT": ["SCOT", "TSUIMA Inc."],
+            "Brave Mental Orchestra": ["レッドノーズコーポレーション"],
+            "Bunny La Crew": ["RIZEプロダクション"],
+            "CAL&RES": ["imaginate(HEROINES)"],
+            "CANDY TUNE": ["アソビシステム(KAWAII LAB.)"],
+            "CUTIE STREET": ["アソビシステム(KAWAII LAB.)"],
+            "CYNHN": ["ディアステージ"],
+            "ChumToto": ["ディアステージ"],
+            "CiON": ["ケンズファミリー"],
+            "DREAMING MONSTER": ["LIVE PLANET"],
+            "Devil ANTHEM.": ["エイジアプロモーション"],
+            "FES☆TIVE": ["RIZEプロダクション"],
+            "FIRST DREAM": ["Beautiful Tree Entertainment"],
+            "FULIT BOX": ["ワンエイトプロモーション"],
+            "Falench.": ["SCOT"],
+            "GILTY x GILTY": ["imaginate(HEROINES)"],
+            "Gran☆Ciel": ["ArcJewel"],
+            "HAPPY CREATORS": ["Porulet"],
+            "HIGH SPIRITS": ["LIVE PLANET"],
+            "HOT DOG CAT": ["I-GET"],
+            "HelloYouth": ["Uniiiqueエンターテインメント"],
+            "Hey!Mommy!": ["NRC PRODUCTION"],
+            "Honey Devil": ["ヴィーボ"],
+            "HzMe": ["PLAYYTE"],
+            "I'mew（あいみゅう）": ["Wicky.Records"],
+            "Ill": ["imaginate(HEROINES)"],
+            "JAPANARIZM": ["プリュ"],
+            "JINKS": ["QOOLONG"],
+            "JamsCollection": ["RIZEプロダクション", "LIVE PLANET", "アップダンス・エンターテインメント"],
+            "Jewel☆Garden": ["ArcJewel"],
+            "KAWAII LAB. MATES": ["アソビシステム(KAWAII LAB.)"],
+            "KAWAII LAB. SOUTH": ["アソビシステム(KAWAII LAB.)"],
+            "KRD8": ["姫路応援プロジェクト"],
+            "KiSS KiSS": ["WACK"],
+            "KissBee": ["chu.inc"],
+            "Kolokol": ["we-B studios"],
+            "LADYBABY": ["imaginate(HEROINES)"],
+            "LINKL PLANET": ["バンダイナムコミュージックライブ"],
+            "LinQ": ["Uniiiqueエンターテインメント"],
+            "Luce Twinkle Wink☆": ["ArcJewel"],
+            "Lumiétoile": ["TWIN PLANET", "DONUTS", "インクストゥエンター"],
+            "MAGICAL SPEC": ["Uniiiqueエンターテインメント"],
+            "MEGAFON": ["imaginate(HEROINES)"],
+            "MORE STAR": ["アソビシステム(KAWAII LAB.)"],
+            "Ma'Scar'Piece": ["TWIN PLANET"],
+            "Malcolm Mask McLaren": ["エイジアプロモーション"],
+            "Mirror,Mirror": ["VONOBA"],
+            "MyDearDarlin'": ["RIZEプロダクション", "アップダンス・エンターテインメント"],
+            "NEVER END ROLL": ["me leap"],
+            "Onephony": ["ALPS STUDIO"],
+            "PATI PATI CANDY…☆": ["DPN"],
+            "PLATINUM Princess研究生": ["プラチナムピクセル"],
+            "Palette Parade": ["PLAYYTE"],
+            "PassCode": ["we-B studios"],
+            "Pastel Closet": ["imaginate(HEROINES)"],
+            "Peel the Apple": ["プラチナムピクセル"],
+            "Pixel Ribbon": ["GROVE"],
+            "RE-GE": ["スターダストプロモーション(STAR PLANET)"],
+            "READY TO KISS": ["I-GET"],
+            "Rain Tree": ["サンシャイン"],
+            "RealRomantic": ["POPROD Production"],
+            "Ringwanderung": ["サンカラーズ"],
+            "Root mimi": ["プラチナムピクセル"],
+            "SAY-LA": ["I-GET"],
+            "SEKAIE☆": ["RIZEプロダクション"],
+            "STARNOTE": ["LIVE PLANET"],
+            "STAiNY": ["SCOT"],
+            "SUPER☆GiRLS": ["エイベックス・マネジメント"],
+            "SWEET STEADY": ["アソビシステム(KAWAII LAB.)"],
+            "Shibu3 project": ["プラチナムプロダクション"],
+            "Sparkling Eyes": ["TNX"],
+            "Sweet Alley": ["LIVE PLANET"],
+            "TENRIN": ["imaginate(HEROINES)"],
+            "THE ENCORE": ["FreoMotto"],
+            "THE ORCHESTRA TOKYO": ["ZYUGEM JAPAN"],
+            "Task have Fun": ["ヴェルヴェットマネージメント"],
+            "UPローチ": ["プリュ"],
+            "UtaGe!": ["PLAYYTE"],
+            "Varia Noise.": ["HOTIS"],
+            "W.ダブルヴィー": ["mint Music ENTERTAINMENT"],
+            "WHITE SCORPION": ["東京通信グループ"],
+            "WT☆Egret": ["姫路応援プロジェクト"],
+            "XINXIN": ["HATENA CREATION"],
+            "Y∀KiN": ["FreoMotto"],
+            "ZUTTOMOTTO【ずっともっと】": ["imaginate(HEROINES)"],
+            "buGG": ["スターレイプロダクション"],
+            "chuLa": ["imaginate(HEROINES)", "SCOT"],
+            "fav me": ["アソビシステム(PEAK SPOT)"],
+            "i-COL": ["imaginate(HEROINES)"],
+            "iLiFE!": ["imaginate(HEROINES)"],
+            "iON!": ["imaginate(HEROINES)"],
+            "ideal peco": ["iDL"],
+            "kimikara": ["Wicky.Records"],
+            "log you": ["アソビシステム(PEAK SPOT)"],
+            "myojou": ["PLAYYTE"],
+            "uijin": ["sakebi"],
+            "yosugala": ["we-B studios", "sakebi"],
+            "α+": ["TWIN PLANET", "VAZ"],
+            "≒JOY": ["代々木アニメーション学院"],
+            "≠ME": ["代々木アニメーション学院"],
+            "あいすなっつ": ["ニャルコスグループ"],
+            "いぎなり東北産": ["スターダストプロモーション(STAR PLANET)"],
+            "かすみ草とステラ": ["SHINGEKI", "ジャグラーインターナショナル"],
+            "きのホ。": ["古都レコード"],
+            "きゅるりんってしてみて": ["ディアステージ"],
+            "きゅ～くる": ["ArcJewel", "TSUIMA Inc."],
+            "このアイドルはフィクションです。": ["Shu Production"],
+            "さよならステイチューン": ["ディアステージ"],
+            "しろもん": ["RIZEプロダクション"],
+            "じゅじゅ": ["クロスアイデア"],
+            "すべての瞬間は君だった。": ["パルマ"],
+            "すーぱーぷーばぁー!!": ["Nord Tune Records"],
+            "なう♡すとれーじ": ["imaginate(HEROINES)"],
+            "なみだ色の消しごむ": ["FreoMotto"],
+            "のんふぃく！": ["imaginate(HEROINES)"],
+            "ばってん少女隊": ["スターダストプロモーション(STAR PLANET)"],
+            "まねきケチャ": ["コレットプロモーション"],
+            "りんご娘": ["リンゴミュージック"],
+            "わーすた": ["エイベックス・マネジメント"],
+            "アイテムはてるてるのみ": ["SCOT"],
+            "アイドルカレッジ": ["BLUE ROSE"],
+            "アイドル諜報機関LEVEL7": ["OZ ENTERTAINMENT"],
+            "アキシブproject": ["imaginate(HEROINES)", "LIVE PLANET"],
+            "アップアップガールズ（2）": ["YU-M エンターテインメント"],
+            "アップアップガールズ（仮）": ["YU-M エンターテインメント"],
+            "ウメコマチ": ["imaginate(HEROINES)"],
+            "カラフルスクリーム": ["Nord Tune Records"],
+            "ギガLOVEアップビート": ["ヴェルヴェットマネージメント"],
+            "クマリデパート": ["ekoms"],
+            "サクヤコノハナ": ["LIVE PLANET"],
+            "シャニムニ=パレード": ["SCOT"],
+            "シンダーエラ": ["クロスアイデア"],
+            "ジエメイ": ["HATENA CREATION"],
+            "スターチスのラブレター": ["WAVES"],
+            "スターリットストーリー": ["baby bear PRODUCTION"],
+            "スリジエ": ["クリーブラッツ"],
+            "タイトル未定": ["TSUIMA Inc."],
+            "テラテラ": ["プラチナムピクセル"],
+            "テンシンランマン": ["imaginate(HEROINES)"],
+            "ドラマチックレコード": ["TWIN PLANET", "BIG ISLAND RECORDS"],
+            "ドレスコード": ["imaginate(HEROINES)"],
+            "ナナコロビヤオキ": ["imaginate(HEROINES)"],
+            "ネコプラpixx.": ["SCOT"],
+            "ハニースパイスRe.": ["プリュ"],
+            "ハルカエコー": ["imaginate(HEROINES)", "バグベア"],
+            "パラディーク": ["imaginate(HEROINES)", "PLAYYTE"],
+            "パラレルサイダー": ["imaginate(HEROINES)"],
+            "ヒロインズ研究生": ["imaginate(HEROINES)"],
+            "ヒロインズ研究生大阪": ["imaginate(HEROINES)"],
+            "ファントムシータ": ["クラウドナイン"],
+            "フルコース": ["imaginate(HEROINES)", "TWIN PLANET"],
+            "ポンコツコンポ": ["imaginate(HEROINES)"],
+            "マリークラウン": ["BREMENZ Inc."],
+            "ミラクルファンファーレ！": ["FreoMotto"],
+            "ラストシーン": ["imaginate(HEROINES)"],
+            "ラナキュラ": ["ポリム"],
+            "ラフ×ラフ": ["ALWAYS"],
+            "ルルネージュ": ["エリクサー"],
+            "ルージュブック": ["プラチナムピクセル"],
+            "ワガママなラストノート": ["FreoMotto"],
+            "ワッツ◎さーくる": ["SCOT"],
+            "僕が見たかった青空": ["Ligareaz Management"],
+            "可憐なアイボリー": ["TWIN PLANET"],
+            "夜光性アミューズ": ["imaginate(HEROINES)"],
+            "宇宙∞プラネクシア": ["mint Music ENTERTAINMENT"],
+            "強がりセンセーション": ["FreoMotto"],
+            "愛乙女★DOLL": ["ArcJewel"],
+            "手羽先センセーション": ["SENSATION"],
+            "桃色革命": ["MONSTAR Japan Association"],
+            "煌めき☆アンフォレント": ["トイプラ"],
+            "私立恵比寿中学": ["スターダストプロモーション(STAR PLANET)"],
+            "空想ロマンス": ["BIG ISLAND RECORDS"],
+            "花いろは": ["LimeLight"],
+            "虹のコンキスタドール": ["ディアステージ"],
+            "超ときめき♡宣伝部": ["スターダストプロモーション(STAR PLANET)"],
+            "透色ドロップ": ["エイトワン"],
+            "高嶺のなでしこ": ["TWIN PLANET"],
+            "＝LOVE": ["代々木アニメーション学院"],
+        };
+        // 絞り込みに出すのは2組以上が所属する事務所だけ（単独事務所はデータに残すが絞り込みには出さない）
+        const AGENCY_LIST = (() => { const c = {}; Object.values(GROUP_AGENCIES).forEach(l => l.forEach(a => { c[a] = (c[a] || 0) + 1; })); return Object.entries(c).filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ja')); })();
+        function agencyText_(name) { const l = GROUP_AGENCIES[name]; return (l && l.length) ? l.join(' / ') : ''; }
+
         // グループの公式画像（Spotifyアーティスト画像優先、無い場合はYouTube/Lit.Link/Xの公式アイコン）— 推しグループ管理チップのアバター用
         const GROUP_IMAGES = {
             "#よーよーよー": "https://image-cdn-ak.spotifycdn.com/image/ab6761610000f178b8735b4bc69d0a7049250e9d",
@@ -8898,7 +9101,9 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         }
         let groupListSort = 'name';
         let groupListFilter = 'all';
-        try { groupListSort = localStorage.getItem('oshi_gl_sort') || 'name'; groupListFilter = localStorage.getItem('oshi_gl_filter') || 'all'; } catch (e) {}
+        let groupListAgency = '';
+        try { groupListSort = localStorage.getItem('oshi_gl_sort') || 'name'; groupListFilter = localStorage.getItem('oshi_gl_filter') || 'all'; groupListAgency = localStorage.getItem('oshi_gl_agency') || ''; } catch (e) {}
+        if (groupListAgency && !AGENCY_LIST.some(([n]) => n === groupListAgency)) groupListAgency = '';
         const GL_SORTS = [['name', '名前順'], ['count', 'ライブ多い順'], ['next', '次のライブが近い順']];
         const GL_FILTERS = [['all', 'すべて'], ['visible', '表示中'], ['hidden', '非表示'], ['notify', '通知オン'], ['hasLive', 'ライブあり'], ['linkOnly', 'リンクのみ'], ['inPreset', 'プリセット内']];
         function cycleGroupListSort() {
@@ -8912,6 +9117,11 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             try { localStorage.setItem('oshi_gl_filter', groupListFilter); } catch (e) {}
             renderGroupList();
         }
+        function setGroupListAgency(v) {
+            groupListAgency = v || '';
+            try { localStorage.setItem('oshi_gl_agency', groupListAgency); } catch (e) {}
+            renderGroupList();
+        }
         function renderGroupListControls() {
             const sb = document.getElementById('gl-sort-btn');
             if (sb) sb.textContent = '並び替え：' + (GL_SORTS.find(s => s[0] === groupListSort) || GL_SORTS[0])[1];
@@ -8919,6 +9129,11 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             if (!box) return;
             box.innerHTML = GL_FILTERS.filter(([key]) => key !== 'inPreset' || filterPresets.length > 0).map(([key, label]) =>
                 `<button type="button" class="gl-fchip ${groupListFilter === key ? 'on' : ''}" onclick="setGroupListFilter('${key}')">${label}</button>`).join('');
+            const agSel = document.getElementById('gl-agency-select');
+            if (agSel) {
+                agSel.innerHTML = '<option value="">すべての事務所</option>' + AGENCY_LIST.map(([name, n]) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}（${n}組）</option>`).join('');
+                agSel.value = groupListAgency;
+            }
         }
         function renderGroupList() {
             const container = document.getElementById('group-list-rows');
@@ -8932,6 +9147,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             events.forEach(e => { if (e.group && e.date >= todayStr) { futureCounts[e.group] = (futureCounts[e.group] || 0) + 1; if (!nextLive[e.group] || e.date < nextLive[e.group]) nextLive[e.group] = e.date; } });
             const presetNames = (groupListFilter === 'inPreset' && filterPresets[bulkPresetIdx]) ? new Set(filterPresets[bulkPresetIdx].groups) : null;
             const passFilter = (g) => {
+                if (groupListAgency && !(GROUP_AGENCIES[g.name] || []).includes(groupListAgency)) return false;
                 switch (groupListFilter) {
                     case 'visible': return g.visible !== false;
                     case 'hidden': return g.visible === false;
@@ -8976,7 +9192,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                         </span>
                         <span class="flex-1 min-w-0">
                             <span class="block text-[13px] font-bold ${isHidden ? 'text-slate-400' : 'text-slate-800'} truncate">${escapeHtml(g.name)}</span>
-                            <span class="block text-[10px] text-slate-400">${(typeof LINK_ONLY_GROUPS !== 'undefined' && LINK_ONLY_GROUPS.has(g.name)) ? '公式リンクのみ（予定は未対応）' : `未来のライブ ${futureCounts[g.name] || 0}件`}${notifyOff ? ' ・ 通知オフ' : ''}</span>
+                            <span class="block text-[10px] text-slate-400 truncate">${(typeof LINK_ONLY_GROUPS !== 'undefined' && LINK_ONLY_GROUPS.has(g.name)) ? '公式リンクのみ（予定は未対応）' : `未来のライブ ${futureCounts[g.name] || 0}件`}${notifyOff ? ' ・ 通知オフ' : ''}${agencyText_(g.name) ? ` ・ ${escapeHtml(agencyText_(g.name))}` : ''}</span>
                         </span>
                         <span class="flex items-center gap-2.5 flex-shrink-0" style="margin-right:6px">
                             <button type="button" aria-label="通知オン/オフ" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()" onclick="event.stopPropagation(); toggleGroupNotify(${index})" class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${notifyOff ? 'text-slate-300' : 'text-pink-500'}"><i class="fa-${notifyOff ? 'solid fa-bell-slash' : 'solid fa-bell'} text-sm"></i></button>
@@ -8986,7 +9202,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             });
             container.innerHTML = rows || `<p class="text-xs text-slate-400 text-center py-6">${q ? `「${escapeHtml(q)}」に一致するグループがありません` : '条件に一致するグループがありません'}</p>`;
             const cnt = document.getElementById('group-list-count');
-            if (cnt) cnt.textContent = (q || groupListFilter !== 'all') ? `${shown}件表示（全${groups.length}）` : `全${groups.length}グループ`;
+            if (cnt) cnt.textContent = (q || groupListFilter !== 'all' || groupListAgency) ? `${shown}件表示（全${groups.length}）` : `全${groups.length}グループ`;
         }
         function glRowClick(index) {
             if (chipLongPressed) { chipLongPressed = false; renderGroupList(); return; }
@@ -9313,6 +9529,12 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             `;
         }
 
+        function agencyLineHtml(groupName) {
+            const t = agencyText_(groupName);
+            if (!t) return '';
+            return `<div class="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-100 rounded-2xl"><span class="fa-solid fa-building text-slate-400"></span><span class="text-xs font-bold text-slate-600">所属事務所：${escapeHtml(t)}</span></div>`;
+        }
+
         function openGroupLinksModal(groupName) {
             if (Object.keys(tokutenByGroup).length === 0) loadTokutenData();
             if (Object.keys(buppanByGroup).length === 0) loadBuppanData();
@@ -9337,11 +9559,12 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     `;
                 });
 
+            const agencyHtml = agencyLineHtml(groupName);
             const tokutenHtml = tokutenCardHtml(groupName) || tokutenFlagHtml(groupName);
             const buppanHtml = buppanCardHtml(groupName);
-            container.innerHTML = tokutenHtml + buppanHtml + (rows.length > 0
+            container.innerHTML = agencyHtml + tokutenHtml + buppanHtml + (rows.length > 0
                 ? rows.join('')
-                : ((tokutenHtml || buppanHtml) ? '' : `<p class="text-xs text-slate-400 text-center py-6">公式リンクはまだ登録されていません</p>`));
+                : ((agencyHtml || tokutenHtml || buppanHtml) ? '' : `<p class="text-xs text-slate-400 text-center py-6">公式リンクはまだ登録されていません</p>`));
 
             document.getElementById('group-links-modal').classList.remove('hidden');
         }
@@ -10142,6 +10365,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 const isFav = favorites.has(e.id);
                 return `
                     <div class="rounded-2xl border border-pink-50 p-3 space-y-2">
+                        ${agencyText_(e.group) ? `<p class="text-[10px] font-semibold text-slate-400"><span class="fa-solid fa-building mr-1"></span>所属事務所：${escapeHtml(agencyText_(e.group))}</p>` : ''}
                         ${isMulti ? `
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2">
