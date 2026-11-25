@@ -1435,6 +1435,8 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 #group-list-modal button { margin: 0; }
 .bulk-op-btn.st-on { background: var(--primary); border-color: var(--primary); color: var(--on-primary, #fff); }
 .bulk-op-btn.st-mixed { border-color: var(--primary); color: var(--primary); }
+.gl-fchip { margin: 0; padding: .34rem .62rem; border-radius: 999px; border: 1px solid var(--outline-variant); background: var(--surface-container); color: var(--on-surface-variant); font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; height: auto; block-size: auto; min-height: 0; min-block-size: 0; inline-size: auto; min-inline-size: 0; box-sizing: border-box; }
+.gl-fchip.on { background: var(--primary); color: var(--on-primary); border-color: transparent; }
 .bulk-card { border: 1px solid var(--outline-variant); border-radius: 16px; padding: .6rem .7rem .7rem; }
 .bulk-all-sec { border: 1px solid var(--outline-variant); border-radius: 16px; padding: .6rem .7rem .7rem; margin-top: .55rem; }
 .bulk-op-btn { white-space: nowrap; overflow: hidden; }
@@ -1750,7 +1752,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1652</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1740</div>
             </div>
         </div>
     </div>
@@ -1929,6 +1931,10 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <input id="group-list-search" type="text" placeholder="グループ名で検索" oninput="renderGroupList()" class="fld" style="padding-left:2.3rem;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a08b99' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 L21 21'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:.9rem center;background-size:13px 13px">
             </div>
             <p class="text-[10px] text-slate-400 px-1 mb-2">タップで表示オン/オフ・長押しで通知や色などの設定が開きます</p>
+            <div class="flex items-center gap-1.5 mb-2">
+                <button type="button" id="gl-sort-btn" onclick="cycleGroupListSort()" class="gl-fchip" style="flex-shrink:0;background:var(--surface-container-high);color:var(--on-surface);border-color:var(--outline)"></button>
+                <div id="gl-filter-chips" class="flex gap-1 overflow-x-auto" style="scrollbar-width:none"></div>
+            </div>
             <div id="group-bulk-bar" class="mb-2"></div>
             <div id="group-list-rows" class="flex-1 overflow-y-auto space-y-1.5 pr-1"></div>
         </div>
@@ -8889,18 +8895,65 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const rows = document.getElementById('group-list-rows');
             if (rows) rows.scrollTop = 0;
         }
+        let groupListSort = 'name';
+        let groupListFilter = 'all';
+        try { groupListSort = localStorage.getItem('oshi_gl_sort') || 'name'; groupListFilter = localStorage.getItem('oshi_gl_filter') || 'all'; } catch (e) {}
+        const GL_SORTS = [['name', '名前順'], ['count', 'ライブ多い順'], ['next', '次のライブが近い順']];
+        const GL_FILTERS = [['all', 'すべて'], ['visible', '表示中'], ['hidden', '非表示'], ['notify', '通知オン'], ['hasLive', 'ライブあり'], ['linkOnly', 'リンクのみ'], ['inPreset', 'プリセット内']];
+        function cycleGroupListSort() {
+            const i = GL_SORTS.findIndex(s => s[0] === groupListSort);
+            groupListSort = GL_SORTS[(i + 1) % GL_SORTS.length][0];
+            try { localStorage.setItem('oshi_gl_sort', groupListSort); } catch (e) {}
+            renderGroupList();
+        }
+        function setGroupListFilter(f) {
+            groupListFilter = f;
+            try { localStorage.setItem('oshi_gl_filter', groupListFilter); } catch (e) {}
+            renderGroupList();
+        }
+        function renderGroupListControls() {
+            const sb = document.getElementById('gl-sort-btn');
+            if (sb) sb.textContent = '並び替え：' + (GL_SORTS.find(s => s[0] === groupListSort) || GL_SORTS[0])[1];
+            const box = document.getElementById('gl-filter-chips');
+            if (!box) return;
+            box.innerHTML = GL_FILTERS.filter(([key]) => key !== 'inPreset' || filterPresets.length > 0).map(([key, label]) =>
+                `<button type="button" class="gl-fchip ${groupListFilter === key ? 'on' : ''}" onclick="setGroupListFilter('${key}')">${label}</button>`).join('');
+        }
         function renderGroupList() {
             const container = document.getElementById('group-list-rows');
             if (!container) return;
             renderGroupBulkBar();
+            renderGroupListControls();
             const q = (document.getElementById('group-list-search')?.value || '').trim().toLowerCase();
             const todayStr = dayjs().format('YYYY-MM-DD');
             const futureCounts = {};
-            events.forEach(e => { if (e.group && e.date >= todayStr) futureCounts[e.group] = (futureCounts[e.group] || 0) + 1; });
-            const order = groups.map((g, index) => ({ g, index })).sort((a, b) => {
-                const ah = a.g.visible === false ? 1 : 0;
-                const bh = b.g.visible === false ? 1 : 0;
-                if (ah !== bh) return ah - bh;
+            const nextLive = {};
+            events.forEach(e => { if (e.group && e.date >= todayStr) { futureCounts[e.group] = (futureCounts[e.group] || 0) + 1; if (!nextLive[e.group] || e.date < nextLive[e.group]) nextLive[e.group] = e.date; } });
+            const presetNames = (groupListFilter === 'inPreset' && filterPresets[bulkPresetIdx]) ? new Set(filterPresets[bulkPresetIdx].groups) : null;
+            const passFilter = (g) => {
+                switch (groupListFilter) {
+                    case 'visible': return g.visible !== false;
+                    case 'hidden': return g.visible === false;
+                    case 'notify': return g.notify !== false;
+                    case 'hasLive': return (futureCounts[g.name] || 0) > 0;
+                    case 'linkOnly': return typeof LINK_ONLY_GROUPS !== 'undefined' && LINK_ONLY_GROUPS.has(g.name);
+                    case 'inPreset': return presetNames ? presetNames.has(g.name) : true;
+                    default: return true;
+                }
+            };
+            const order = groups.map((g, index) => ({ g, index })).filter(({ g }) => passFilter(g)).sort((a, b) => {
+                if (groupListSort === 'count') {
+                    const d = (futureCounts[b.g.name] || 0) - (futureCounts[a.g.name] || 0);
+                    if (d) return d;
+                } else if (groupListSort === 'next') {
+                    const da = nextLive[a.g.name] || '9999-99-99';
+                    const db = nextLive[b.g.name] || '9999-99-99';
+                    if (da !== db) return da < db ? -1 : 1;
+                } else {
+                    const ah = a.g.visible === false ? 1 : 0;
+                    const bh = b.g.visible === false ? 1 : 0;
+                    if (ah !== bh) return ah - bh;
+                }
                 return a.g.name.localeCompare(b.g.name, 'ja');
             });
             let shown = 0;
@@ -8930,9 +8983,9 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                         </span>
                     </div>`;
             });
-            container.innerHTML = rows || `<p class="text-xs text-slate-400 text-center py-6">「${escapeHtml(q)}」に一致するグループがありません</p>`;
+            container.innerHTML = rows || `<p class="text-xs text-slate-400 text-center py-6">${q ? `「${escapeHtml(q)}」に一致するグループがありません` : '条件に一致するグループがありません'}</p>`;
             const cnt = document.getElementById('group-list-count');
-            if (cnt) cnt.textContent = `全${groups.length}グループ`;
+            if (cnt) cnt.textContent = (q || groupListFilter !== 'all') ? `${shown}件表示（全${groups.length}）` : `全${groups.length}グループ`;
         }
         function glRowClick(index) {
             if (chipLongPressed) { chipLongPressed = false; renderGroupList(); return; }
