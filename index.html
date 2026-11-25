@@ -1723,7 +1723,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1419</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1422</div>
         </div>
     </div>
 
@@ -1869,6 +1869,24 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <input id="filter-search" type="text" placeholder="グループ名で検索" oninput="renderFilterGroupList()" class="fld" style="padding-left:2.3rem">
             </div>
             <div id="filter-group-list" class="flex-1 overflow-y-auto space-y-1.5 pr-1"></div>
+        </div>
+    </div>
+
+    <!-- プリセット編集モーダル -->
+    <div id="preset-edit-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="if(event.target===this) closeModal('preset-edit-modal')">
+        <div class="dlg-card w-full max-w-sm p-6 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-base text-slate-800">プリセットの編集</h3>
+                <button onclick="closeModal('preset-edit-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div>
+                <label class="fld-label">プリセット名</label>
+                <input id="preset-edit-name" type="text" class="fld w-full" placeholder="プリセット名">
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="deletePresetFromEdit()" class="py-2.5 px-4 bg-red-50 text-red-500 font-bold rounded-xl border border-red-100 text-xs">削除</button>
+                <button onclick="savePresetName()" class="btn-primary" style="flex:1">名前を保存</button>
+            </div>
         </div>
     </div>
 
@@ -8549,7 +8567,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 html += `<button class="preset-chip" onpointerdown="presetPointerDown(${i})" onpointerup="presetPointerEnd()" onpointerleave="presetPointerEnd()" onpointercancel="presetPointerEnd()" oncontextmenu="return false" onclick="presetClick(${i})">${escapeHtml(p.name)}<span class="opacity-50 font-semibold ml-1">${p.groups.length}</span></button>`;
             });
             html += `<button class="preset-chip preset-add" onclick="togglePresetSaveRow()"><i class="fa-solid fa-plus mr-1"></i>現在の選択を保存</button></div>`;
-            if (filterPresets.length) html += '<p class="text-[10px] text-slate-400 mt-1.5">タップで適用・長押しで削除</p>';
+            if (filterPresets.length) html += '<p class="text-[10px] text-slate-400 mt-1.5">タップで適用・長押しで名前の変更や削除</p>';
             box.innerHTML = html;
         }
 
@@ -8560,12 +8578,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             clearTimeout(presetPressTimer);
             presetPressTimer = setTimeout(() => {
                 presetLongPressed = true;
-                const p = filterPresets[i];
-                if (p && confirm(`プリセット「${p.name}」を削除しますか？`)) {
-                    filterPresets.splice(i, 1);
-                    saveUserData();
-                    renderFilterPresets();
-                }
+                openPresetEdit(i);
             }, 450);
         }
         function presetPointerEnd() { clearTimeout(presetPressTimer); }
@@ -8581,6 +8594,41 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             renderFilterGroupList();
             updateFilterSummaryLabel();
             render();
+        }
+
+        // ==== プリセットの編集（名前の変更・削除） ====
+        let editingPresetIdx = -1;
+        function openPresetEdit(i) {
+            const p = filterPresets[i];
+            if (!p) return;
+            editingPresetIdx = i;
+            const input = document.getElementById('preset-edit-name');
+            if (input) input.value = p.name;
+            document.getElementById('preset-edit-modal').classList.remove('hidden');
+        }
+        function savePresetName() {
+            const p = filterPresets[editingPresetIdx];
+            if (!p) return;
+            const input = document.getElementById('preset-edit-name');
+            const name = (input?.value || '').trim();
+            if (!name) { if (input) input.focus(); return; }
+            p.name = name;
+            saveUserData();
+            renderFilterPresets();
+            renderGroupBulkBar();
+            closeModal('preset-edit-modal');
+        }
+        function deletePresetFromEdit() {
+            const p = filterPresets[editingPresetIdx];
+            if (!p) return;
+            if (!confirm(`プリセット「${p.name}」を削除しますか？`)) return;
+            filterPresets.splice(editingPresetIdx, 1);
+            editingPresetIdx = -1;
+            saveUserData();
+            renderFilterPresets();
+            renderGroupBulkBar();
+            renderFilterGroupList();
+            closeModal('preset-edit-modal');
         }
         function togglePresetSaveRow() {
             const row = document.getElementById('preset-save-row');
