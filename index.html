@@ -1346,7 +1346,7 @@ body.dark .skel-blk { background: linear-gradient(100deg, rgba(255,255,255,.06) 
 .cd-today { font-size: 30px; font-weight: 900; letter-spacing: -.02em; line-height: 1.05; }
 /* --- container transform / sheet drag / pull-to-refresh / snackbar / search (2026-11-25) --- */
 .dlg-card.flip-in { animation: none !important; }
-.sheet-handle { height: 20px; display: flex; align-items: flex-start; justify-content: center; padding-top: 7px; cursor: grab; touch-action: none; flex: none; position: sticky; top: 0; z-index: 20; }
+.sheet-handle { height: 20px; display: flex; align-items: flex-start; justify-content: center; padding-top: 7px; cursor: grab; touch-action: none; flex: none; position: sticky; top: 0; z-index: 20; background: inherit; border-radius: 1.75rem 1.75rem 0 0; }
 .sheet-handle::after { content: ""; width: 38px; height: 4.5px; border-radius: 999px; background: rgba(120, 90, 110, .35); }
 body.dark .sheet-handle::after { background: rgba(255, 255, 255, .3); }
 #ptr-ind { position: fixed; top: 0; left: 50%; transform: translate(-50%, -70px); z-index: 130; width: 44px; height: 44px; border-radius: 999px; background: #fff; box-shadow: 0 6px 20px rgba(190, 90, 145, .3); display: flex; align-items: center; justify-content: center; pointer-events: none; transition: transform .38s cubic-bezier(.3, 1.15, .4, 1), opacity .3s ease; }
@@ -5498,25 +5498,26 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         function segIndSync_(bar, animate) {
             const ind = bar.querySelector('.seg-ind');
             const btn = bar.querySelector('.seg-btn.on');
-            if (!ind || !btn || btn.offsetWidth === 0) return;
+            if (!ind || !btn) return;
+            // rect で読む（レイアウト確定後の実測値。offset 系の古い値掴みを避ける）
+            const barR = bar.getBoundingClientRect();
+            const btnR = btn.getBoundingClientRect();
+            if (btnR.width === 0) return;
             if (!animate) ind.classList.add('no-anim');
-            ind.style.left = btn.offsetLeft + 'px';
-            ind.style.top = btn.offsetTop + 'px';
-            ind.style.width = btn.offsetWidth + 'px';
-            ind.style.height = btn.offsetHeight + 'px';
+            else bar._segAnimUntil = Date.now() + 520;
+            ind.style.left = (btnR.left - barR.left) + 'px';
+            ind.style.top = (btnR.top - barR.top) + 'px';
+            ind.style.width = btnR.width + 'px';
+            ind.style.height = btnR.height + 'px';
             if (!animate) { void ind.offsetWidth; ind.classList.remove('no-anim'); }
         }
 
         (function initSegInds_() {
             const bars = [...document.querySelectorAll('.seg-bar')];
             if (bars.length === 0) return;
-            // 選択変更のたびに滑らせ、アニメーション終了後にもう一度だけ位置を合わせ直す
-            // （テーマ変更等でバー幅が後から変わってもズレが残らないように）
-            const animatedSync = bar => {
-                segIndSync_(bar, true);
-                clearTimeout(bar._segSettle);
-                bar._segSettle = setTimeout(() => segIndSync_(bar, true), 580);
-            };
+            // 選択変更では1回だけ滑らせる。バー幅が後から変わった場合は ResizeObserver が
+            // 補正する（滑走中ならアニメーションのまま目標だけ差し替え、終わっていれば即合わせ）
+            const animatedSync = bar => segIndSync_(bar, true);
             bars.forEach(bar => {
                 const ind = document.createElement('span');
                 ind.className = 'seg-ind';
@@ -5525,7 +5526,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 bar.querySelectorAll('.seg-btn').forEach(b =>
                     new MutationObserver(() => animatedSync(bar)).observe(b, { attributes: true, attributeFilter: ['class'] }));
                 new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) segIndSync_(bar, false); }).observe(bar);
-                if ('ResizeObserver' in window) new ResizeObserver(() => segIndSync_(bar, false)).observe(bar);
+                if ('ResizeObserver' in window) new ResizeObserver(() => segIndSync_(bar, Date.now() < (bar._segAnimUntil || 0))).observe(bar);
                 bar.addEventListener('click', () => requestAnimationFrame(() => animatedSync(bar)));
             });
             const syncAll = () => bars.forEach(b => segIndSync_(b, false));
