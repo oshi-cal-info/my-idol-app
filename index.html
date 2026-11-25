@@ -1456,7 +1456,7 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
   #group-list-modal { padding: 1rem; }
   .group-list-panel { height: auto; max-height: 85vh; max-height: 85svh; }
 }
-#group-list-rows { min-height: 0; }
+#group-list-rows { min-height: 0; padding-right: 10px; }
 .font-extrabold { font-weight: 800; }
 
 /* --- 時間帯で変わるヘッダー（Expressive Weather 参考: 朝=青空／夕=茜／夜=星空） --- */
@@ -1743,7 +1743,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1518</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1530</div>
             </div>
         </div>
     </div>
@@ -8901,7 +8901,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                             <span class="block text-[13px] font-bold ${isHidden ? 'text-slate-400' : 'text-slate-800'} truncate">${escapeHtml(g.name)}</span>
                             <span class="block text-[10px] text-slate-400">${(typeof LINK_ONLY_GROUPS !== 'undefined' && LINK_ONLY_GROUPS.has(g.name)) ? '公式リンクのみ（予定は未対応）' : `未来のライブ ${futureCounts[g.name] || 0}件`}${notifyOff ? ' ・ 通知オフ' : ''}</span>
                         </span>
-                        <span class="flex items-center gap-2.5 flex-shrink-0" style="margin-right:2px">
+                        <span class="flex items-center gap-2.5 flex-shrink-0" style="margin-right:6px">
                             <button type="button" aria-label="通知オン/オフ" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()" onclick="event.stopPropagation(); toggleGroupNotify(${index})" class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${notifyOff ? 'text-slate-300' : 'text-pink-500'}"><i class="fa-${notifyOff ? 'solid fa-bell-slash' : 'solid fa-bell'} text-sm"></i></button>
                             ${isHidden ? '<span class="fa-regular fa-circle text-slate-300" style="font-size:19px;line-height:1"></span>' : `<span class="fa-solid fa-circle-check" style="color:${g.color};font-size:19px;line-height:1"></span>`}
                         </span>
