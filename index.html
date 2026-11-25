@@ -1429,6 +1429,9 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
   transition: transform .2s cubic-bezier(.32,1.16,.3,1);
 }
 .bulk-op-btn:active { transform: scale(.96); }
+.bulk-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .375rem; }
+.bulk-op-btn { white-space: nowrap; overflow: hidden; }
+.bulk-op-btn i { font-size: .8rem; min-inline-size: 0; min-block-size: 0; inline-size: auto; block-size: auto; }
 .load-ind {
   width: 42px; height: 42px; margin: 0 auto;
   background: linear-gradient(135deg, var(--primary), var(--tertiary));
@@ -1723,7 +1726,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1425</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1430</div>
         </div>
     </div>
 
@@ -8676,13 +8679,13 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 html += `<button class="preset-chip${i === bulkPresetIdx ? ' preset-on' : ''}" onclick="setBulkPreset(${i})">${escapeHtml(p.name)}<span class="opacity-50 font-semibold ml-1">${p.groups.length}</span></button>`;
             });
             html += '</div>'
-                + '<p class="fld-label" style="margin:.35rem 0 .25rem">プリセット内</p><div class="grid grid-cols-4 gap-1.5">'
+                + '<p class="fld-label" style="margin:.35rem 0 .25rem">プリセット内</p><div class="grid bulk-grid-4">'
                 + opBtn('notifyOnInside', 'fa-bell', '通知オン')
                 + opBtn('notifyOffInside', 'fa-bell-slash', '通知オフ')
                 + opBtn('showInside', 'fa-eye', '表示')
                 + opBtn('hideInside', 'fa-eye-slash', '非表示')
                 + '</div>'
-                + '<p class="fld-label" style="margin:.55rem 0 .25rem">プリセット外</p><div class="grid grid-cols-4 gap-1.5">'
+                + '<p class="fld-label" style="margin:.55rem 0 .25rem">プリセット外</p><div class="grid bulk-grid-4">'
                 + opBtn('notifyOnOutside', 'fa-bell', '通知オン')
                 + opBtn('notifyOffOutside', 'fa-bell-slash', '通知オフ')
                 + opBtn('showOutside', 'fa-eye', '表示')
