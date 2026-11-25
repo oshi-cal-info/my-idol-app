@@ -1198,8 +1198,18 @@ button {
   border: 1px solid var(--outline-variant);
   box-shadow: 0 14px 34px rgb(0 0 0/.28);
 }
-.view-nav .seg-btn { flex: 1 1 0; padding: .68rem .1rem; font-size: .72rem; border-radius: 9999px; }
-.view-nav .seg-btn.on { flex-grow: 1.55; }
+.view-nav .seg-btn { flex: 1 1 0; padding: .68rem .1rem; font-size: .72rem; border-radius: 9999px; position: relative; z-index: 1; background: transparent; box-shadow: none; transition: color .35s ease, transform .25s cubic-bezier(.3,1.2,.4,1); }
+.view-nav .seg-btn.on { background: transparent; box-shadow: none; }
+/* sliding pill indicator (Google Photos style): buttons stay put, only the pill moves */
+.vnav-ind {
+  position: absolute; top: .35rem; bottom: .35rem; left: 0; width: 0; z-index: 0;
+  border-radius: 9999px; background: var(--primary);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 38%, transparent);
+  transform: translateX(0);
+  transition: transform .55s cubic-bezier(.32,1.16,.3,1), width .55s cubic-bezier(.32,1.16,.3,1);
+}
+.vnav-ind.no-anim { transition: none; }
+@media (prefers-reduced-motion: reduce) { .vnav-ind { transition: none; } }
 .fab-stack { bottom: calc(5.7rem + env(safe-area-inset-bottom)); right: 1rem; }
 
 /* flex column scroll areas must be allowed to shrink */
@@ -1213,8 +1223,7 @@ button {
 }
 .seg-btn.on #going-count-badge { background: var(--on-primary); color: var(--primary); }
 /* Expressive spring on the bottom nav */
-.view-nav .seg-btn { transition: flex-grow .42s cubic-bezier(.22,1,.36,1), transform .18s ease-out, background-color .25s, color .25s; }
-.view-nav .seg-btn:active { transform: scale(.96); }
+.view-nav .seg-btn:active { transform: scale(.97); }
 .seg-btn.on { animation: nav-pop .35s cubic-bezier(.34,1.25,.64,1); }
 /* 下部ナビでは幅アニメーションとポップを重ねるとカクつくので、ポップは止める */
 .view-nav .seg-btn.on { animation: none; }
@@ -1319,7 +1328,6 @@ body.dark .skel-blk { background: linear-gradient(100deg, rgba(255,255,255,.06) 
 .preset-chip:active { border-radius: 10px; }
 .btn-primary { transition: all .25s cubic-bezier(.34,1.45,.64,1); }
 .btn-primary:active { border-radius: 14px; }
-.view-nav .seg-btn { transition: all .3s cubic-bezier(.34,1.45,.64,1); }
 .view-nav .seg-btn:active { border-radius: 18px; }
 .cd-big { font-size: 46px; font-weight: 900; letter-spacing: -.03em; line-height: 1; }
 .cd-today { font-size: 30px; font-weight: 900; letter-spacing: -.02em; line-height: 1.05; }
@@ -1599,6 +1607,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
     <!-- 下部フローティングナビ（表示切替） -->
     <div class="view-nav" role="navigation" aria-label="表示切替">
+        <span class="vnav-ind" aria-hidden="true"></span>
         <button id="tab-list" onclick="switchView('list')" class="seg-btn on">リスト</button>
         <button id="tab-going" onclick="switchView('going')" class="seg-btn">行く予定<span id="going-count-badge" class="hidden"></span></button>
         <button id="tab-week" onclick="switchView('week')" class="seg-btn">週表示</button>
@@ -5462,6 +5471,11 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             document.addEventListener('touchend', end);
             document.addEventListener('touchcancel', end);
         })();
+
+        // 下部ナビ：インジケーターの初期配置とリサイズ・フォント読込への追随（アニメーションなしで合わせる）
+        requestAnimationFrame(() => moveVnavInd_(false));
+        window.addEventListener('resize', () => moveVnavInd_(false));
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => moveVnavInd_(false));
 
         async function fetchSheetData() {
             if (!AUTO_SYNC_CSV_URL) return;
@@ -10099,6 +10113,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 goingBtn.className = view === 'going' ? activeCls : inactiveCls;
                 monthBtn.className = view === 'month' ? activeCls : inactiveCls;
                 weekBtn.className = view === 'week' ? activeCls : inactiveCls;
+                moveVnavInd_(true);
 
                 // ビューのフェードイン＋カードのスタッガー出現（アニメーション磨き込み）
                 const target = view === 'list' ? listDiv : view === 'going' ? goingDiv : view === 'month' ? monthDiv : weekDiv;
@@ -10120,6 +10135,19 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     }, 1100);
                 }
             });
+        }
+
+        // 下部ナビのピル型インジケーターを選択中ボタンの位置へ滑らせる
+        function moveVnavInd_(animate) {
+            const nav = document.querySelector('.view-nav');
+            if (!nav) return;
+            const ind = nav.querySelector('.vnav-ind');
+            const btn = nav.querySelector('.seg-btn.on');
+            if (!ind || !btn) return;
+            if (!animate) ind.classList.add('no-anim');
+            ind.style.width = btn.offsetWidth + 'px';
+            ind.style.transform = `translateX(${btn.offsetLeft}px)`;
+            if (!animate) { void ind.offsetWidth; ind.classList.remove('no-anim'); }
         }
 
         function setMonthShowFavoritesOnly(value) {
