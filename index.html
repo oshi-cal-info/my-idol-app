@@ -1743,7 +1743,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1513</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1518</div>
             </div>
         </div>
     </div>
@@ -6872,10 +6872,11 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
         // ドロワーのスクロール端でパネル全体が少し沈んで跳ね返る（オーバースクロールの感触）
         (function initDrawerBounce_() {
+            const MAX_OFF = 56;
             document.querySelectorAll('.drawer-panel').forEach(panel => {
                 const target = panel.querySelector('[data-bounce]');
                 if (!target) return;
-                let startY = null, scroller = null, off = 0;
+                let startY = null, scroller = null, off = 0, rafId = 0, lastDy = 0;
                 const findScroller = el => {
                     let n = el;
                     while (n && n !== panel.parentElement) {
@@ -6888,28 +6889,49 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     }
                     return panel;
                 };
+                const apply = () => {
+                    rafId = 0;
+                    target.style.transform = off ? `translateY(${off.toFixed(1)}px)` : '';
+                };
                 panel.addEventListener('touchstart', e => {
                     startY = e.touches[0].clientY;
                     scroller = findScroller(e.target);
-                    target.style.transition = 'none';
+                    off = 0; lastDy = 0;
+                    target.style.willChange = 'transform';
                 }, { passive: true });
                 panel.addEventListener('touchmove', e => {
                     if (startY === null || !scroller) return;
                     const dy = e.touches[0].clientY - startY;
                     const max = scroller.scrollHeight - scroller.clientHeight;
-                    let o = 0;
-                    if (scroller.scrollTop <= 0 && dy > 0) o = Math.min(40, dy / 3);
-                    else if (scroller.scrollTop >= max - 1 && dy < 0) o = Math.max(-40, dy / 3);
-                    off = o;
-                    target.style.transform = o ? `translateY(${o}px)` : '';
-                }, { passive: true });
+                    const over = (scroller.scrollTop <= 0 && dy > 0) || (scroller.scrollTop >= max - 1 && dy < 0);
+                    if (over) {
+                        // 端ではブラウザ側のスクロール/ストレッチを止めて、こちらで滑らかに引っ張る
+                        e.preventDefault();
+                        lastDy = dy;
+                        off = Math.sign(dy) * MAX_OFF * (1 - Math.exp(-Math.abs(dy) / (MAX_OFF * 2.2)));
+                        if (!rafId) rafId = requestAnimationFrame(apply);
+                    } else if (off) {
+                        off = 0;
+                        if (!rafId) rafId = requestAnimationFrame(apply);
+                    }
+                }, { passive: false });
                 const end = () => {
                     if (startY === null) return;
                     startY = null;
+                    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+                    target.style.willChange = '';
                     if (off) {
-                        target.style.transition = 'transform .55s cubic-bezier(.3,1.25,.4,1)';
-                        target.style.transform = '';
+                        const from = off;
                         off = 0;
+                        if (target.animate) {
+                            target.style.transform = '';
+                            target.animate(
+                                [{ transform: `translateY(${from.toFixed(1)}px)` }, { transform: 'translateY(0px)' }],
+                                { duration: 480, easing: 'cubic-bezier(.3,1.3,.4,1)' });
+                        } else {
+                            target.style.transition = 'transform .5s cubic-bezier(.3,1.3,.4,1)';
+                            target.style.transform = '';
+                        }
                     }
                 };
                 panel.addEventListener('touchend', end);
