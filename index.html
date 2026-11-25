@@ -1350,9 +1350,9 @@ body.dark .skel-blk { background: linear-gradient(100deg, rgba(255,255,255,.06) 
 #event-detail-body { overflow-y: auto; min-height: 0; }
 #group-action-modal .sheet-card { display: flex; flex-direction: column; overflow: hidden; }
 #group-action-body { overflow-y: auto; min-height: 0; }
-.sheet-handle { height: 20px; display: flex; align-items: flex-start; justify-content: center; padding-top: 7px; cursor: grab; touch-action: none; flex: none; position: sticky; top: 0; z-index: 20; background: inherit; border-radius: 1.75rem 1.75rem 0 0; }
-.sheet-handle::after { content: ""; width: 38px; height: 4.5px; border-radius: 999px; background: rgba(120, 90, 110, .35); }
-body.dark .sheet-handle::after { background: rgba(255, 255, 255, .3); }
+.sheet-handle { height: 22px; display: flex; align-items: flex-start; justify-content: center; padding-top: 8px; cursor: grab; touch-action: none; flex: none; position: sticky; top: 0; z-index: 20; }
+.sheet-handle::after { content: ""; width: 46px; height: 5.5px; border-radius: 999px; background: color-mix(in srgb, var(--on-surface) 48%, transparent); }
+body.dark .sheet-handle::after { background: color-mix(in srgb, var(--on-surface) 55%, transparent); }
 #ptr-ind { position: fixed; top: 0; left: 50%; transform: translate(-50%, -70px); z-index: 130; width: 44px; height: 44px; border-radius: 999px; background: #fff; box-shadow: 0 6px 20px rgba(190, 90, 145, .3); display: flex; align-items: center; justify-content: center; pointer-events: none; transition: transform .38s cubic-bezier(.3, 1.15, .4, 1), opacity .3s ease; }
 #ptr-ind.drag { transition: none; }
 #ptr-ind.done { transform: translate(-50%, -78px) scale(.5); opacity: 0; }
