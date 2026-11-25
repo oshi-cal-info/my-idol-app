@@ -1351,8 +1351,8 @@ body.dark .skel-blk { background: linear-gradient(100deg, rgba(255,255,255,.06) 
 #group-action-modal .sheet-card { display: flex; flex-direction: column; overflow: hidden; }
 #group-action-body { overflow-y: auto; min-height: 0; }
 .sheet-handle { height: 22px; display: flex; align-items: flex-start; justify-content: center; padding-top: 8px; cursor: grab; touch-action: none; flex: none; position: sticky; top: 0; z-index: 20; }
-.sheet-handle::after { content: ""; width: 46px; height: 5.5px; border-radius: 999px; background: color-mix(in srgb, var(--on-surface) 48%, transparent); }
-body.dark .sheet-handle::after { background: color-mix(in srgb, var(--on-surface) 55%, transparent); }
+.sheet-handle::after { content: ""; width: 46px; height: 5.5px; border-radius: 999px; background: #9c8694; }
+/* バーの色はテーマ変数を使わず固定色（ライト/ダーク両背景で視認できる中間色） */
 #ptr-ind { position: fixed; top: 0; left: 50%; transform: translate(-50%, -70px); z-index: 130; width: 44px; height: 44px; border-radius: 999px; background: #fff; box-shadow: 0 6px 20px rgba(190, 90, 145, .3); display: flex; align-items: center; justify-content: center; pointer-events: none; transition: transform .38s cubic-bezier(.3, 1.15, .4, 1), opacity .3s ease; }
 #ptr-ind.drag { transition: none; }
 #ptr-ind.done { transform: translate(-50%, -78px) scale(.5); opacity: 0; }
@@ -1715,7 +1715,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1135</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1215</div>
         </div>
     </div>
 
