@@ -1750,7 +1750,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1648</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1652</div>
             </div>
         </div>
     </div>
@@ -8912,7 +8912,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 const notifyOff = g.notify === false;
                 const img = (typeof GROUP_IMAGES !== 'undefined' && GROUP_IMAGES[g.name]) ? GROUP_IMAGES[g.name] : '';
                 rows += `
-                    <div class="flex items-center gap-3 p-2.5 rounded-2xl border shadow-sm cursor-pointer select-none min-w-0 ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}10;border-color:${g.color}40;`}"
+                    <div class="flex items-center gap-3 p-2.5 rounded-2xl border shadow-sm cursor-pointer select-none min-w-0 ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}10;border-color:${g.color}80;`}"
                         onpointerdown="chipPointerDown(${index})" onpointerup="chipPointerEnd()" onpointerleave="chipPointerEnd()" onpointercancel="chipPointerEnd()" oncontextmenu="return false" onclick="glRowClick(${index})">
                         <span class="relative w-10 h-10 flex-shrink-0">
                             <span class="block w-10 h-10 rounded-xl overflow-hidden shadow-sm relative" style="background-color:${g.color}">
