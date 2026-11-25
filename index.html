@@ -1109,6 +1109,36 @@ input[type="color"].fld { padding: .3rem; height: 2.75rem; cursor: pointer; }
 .wk-cell.today { box-shadow: inset 0 0 0 2px var(--primary); }
 .wk-cell.sel { background: var(--primary); color: var(--on-primary); border-radius: 1.5rem; }
 
+/* --- month cells as individual containers (Google Calendar 2025 style, 2026-11-25) --- */
+.mcell {
+  min-height: 3.35rem; border-radius: 1.05rem; border: none; cursor: pointer;
+  background: var(--surface-container-low); color: var(--on-surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  gap: 3px; font-size: .74rem; font-weight: 700; position: relative; padding: 5px 2px 4px;
+  transition: all .25s cubic-bezier(.34,1.3,.64,1);
+}
+.mcell:active { transform: scale(.93); }
+.mcell.dim { background: transparent; color: var(--on-surface-variant); opacity: .42; }
+.mcell.today { box-shadow: inset 0 0 0 2px var(--primary); color: var(--primary); }
+.mcell.sel { background: linear-gradient(135deg, #ec4899, #a855f7); color: #fff; box-shadow: 0 4px 10px rgba(236,72,153,.30); }
+.mcell.sel.today { box-shadow: inset 0 0 0 2px #fff, 0 4px 10px rgba(236,72,153,.30); }
+.mcell .dots { display: flex; gap: 2.5px; align-items: center; justify-content: center; min-height: 6px; }
+.mcell .dots i { width: 5px; height: 5px; border-radius: 9999px; display: block; }
+.mcell.sel .dots i { background: #fff !important; }
+
+/* --- card swipe actions (right = 行く / left = 外す, 2026-11-25) --- */
+.swipe-wrap { position: relative; }
+.swipe-bg {
+  position: absolute; inset: 0; border-radius: 1.5rem; display: flex; align-items: center;
+  gap: 6px; padding: 0 22px; font-size: 12px; font-weight: 800; color: #fff;
+  opacity: 0; pointer-events: none;
+}
+.swipe-bg-add { background: linear-gradient(135deg, #ec4899, #f472b6); justify-content: flex-start; }
+.swipe-bg-del { background: #64748b; justify-content: flex-end; }
+.event-card { position: relative; z-index: 1; }
+.event-card.swiping { transition: none !important; }
+.event-card.snapback { transition: transform .32s cubic-bezier(.3,1.2,.4,1); }
+
 /* --- venue map (Leaflet guards) --- */
 .leaflet-pane img, .leaflet-tile { max-width: none !important; }
 .vpin { width: 30px; height: 30px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid var(--surface-container-lowest); box-shadow: 0 2px 6px rgba(0,0,0,.3); cursor: pointer; }
@@ -5339,6 +5369,96 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         sheetDrag_('group-list-modal', () => closeModal('group-list-modal'));
         sheetDrag_('group-action-modal', () => closeModal('group-action-modal'));
         sheetDrag_('venue-modal', () => closeModal('venue-modal'));
+
+        // ==== カードの横スワイプ（右=行く予定に追加 / 左=外す） ====
+        // カード（同じライブの全行）をまとめてお気に入り切替する。縦スクロールと
+        // 判定が競合しないよう、横移動が縦の1.25倍を超えた時だけ横スワイプとして扱う。
+        function swipeApplyFav_(ids, add) {
+            let changed = false;
+            ids.forEach(id => {
+                if (add && !favorites.has(id)) { favorites.add(id); changed = true; }
+                if (!add && favorites.has(id)) { favorites.delete(id); changed = true; }
+            });
+            if (!changed) return false;
+            saveFavorites();
+            render();
+            renderFavList();
+            return true;
+        }
+
+        function swipeGestureFav_(card, add) {
+            const key = card.getAttribute('data-livekey') || '';
+            const ids = key.replace(/^live_/, '').split('|').filter(Boolean);
+            if (ids.length === 0) return;
+            if (!swipeApplyFav_(ids, add)) return;
+            showSnackbar_(
+                add ? '「行く予定」に追加しました' : '「行く予定」から外しました',
+                '元に戻す',
+                () => swipeApplyFav_(ids, !add)
+            );
+        }
+
+        (function initSwipe_() {
+            let st = null;
+            let suppressClickUntil = 0;
+            document.addEventListener('click', e => {
+                if (Date.now() < suppressClickUntil) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    suppressClickUntil = 0;
+                }
+            }, true);
+            document.addEventListener('touchstart', e => {
+                const card = e.target.closest('.event-card');
+                if (!card) { st = null; return; }
+                const t = e.touches[0];
+                st = { card, x: t.clientX, y: t.clientY, dx: 0, lock: 0 };
+            }, { passive: true });
+            document.addEventListener('touchmove', e => {
+                if (!st || st.lock === -1) return;
+                const t = e.touches[0];
+                const dx = t.clientX - st.x, dy = t.clientY - st.y;
+                if (st.lock === 0) {
+                    if (Math.abs(dy) > 14 && Math.abs(dy) > Math.abs(dx)) { st.lock = -1; return; }
+                    if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+                        st.lock = 1;
+                        st.card.classList.add('swiping');
+                    } else return;
+                }
+                if (e.cancelable) e.preventDefault();
+                let v = dx;
+                const MAX = 130;
+                if (v > MAX) v = MAX + (v - MAX) * 0.25;
+                if (v < -MAX) v = -MAX + (v + MAX) * 0.25;
+                st.dx = v;
+                st.card.style.transform = `translateX(${v}px)`;
+                const wrap = st.card.closest('.swipe-wrap');
+                if (wrap) {
+                    const add = wrap.querySelector('.swipe-bg-add');
+                    const del = wrap.querySelector('.swipe-bg-del');
+                    const p = Math.min(1, Math.abs(v) / 72);
+                    if (add) add.style.opacity = v > 0 ? String(p) : '0';
+                    if (del) del.style.opacity = v < 0 ? String(p) : '0';
+                }
+            }, { passive: false });
+            const end = () => {
+                if (!st) return;
+                const s = st; st = null;
+                if (s.lock !== 1) return;
+                const card = s.card;
+                card.classList.remove('swiping');
+                card.classList.add('snapback');
+                card.style.transform = '';
+                const wrap = card.closest('.swipe-wrap');
+                if (wrap) wrap.querySelectorAll('.swipe-bg').forEach(b => { b.style.opacity = '0'; });
+                setTimeout(() => card.classList.remove('snapback'), 350);
+                if (Math.abs(s.dx) > 12) suppressClickUntil = Date.now() + 400;
+                if (s.dx >= 72) swipeGestureFav_(card, true);
+                else if (s.dx <= -72) swipeGestureFav_(card, false);
+            };
+            document.addEventListener('touchend', end);
+            document.addEventListener('touchcancel', end);
+        })();
 
         async function fetchSheetData() {
             if (!AUTO_SYNC_CSV_URL) return;
@@ -9725,6 +9845,9 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
 
                 segHtml += `
+                    <div class="swipe-wrap">
+                        <div class="swipe-bg swipe-bg-add"><i class="fa-solid fa-heart"></i><span>行く</span></div>
+                        <div class="swipe-bg swipe-bg-del"><span>外す</span><i class="fa-solid fa-heart-crack"></i></div>
                     <div data-livekey="${cardKey}" class="event-card bg-white rounded-3xl shadow-sm overflow-hidden flex items-stretch ${specialFrameCls}">
                         ${barHtml}
                         <div class="flex-1 p-4 cursor-pointer" onclick="openEventDetail('${rep.id}')">
@@ -9748,6 +9871,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                             </div>
                         </div>
                     </div>
+                    </div>
                 `;
                 segCount++;
             });
@@ -9760,41 +9884,53 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             return buildEventCardSegments(filtered, isGoingView).map(s => s.html).join('');
         }
 
+        // 日セル1個分のHTML（月表示のセル格納化：前後の月の日も薄く埋める）
+        function monthCellHtml_(dateStr, dayNum, dim) {
+            const dayEvents = events.filter(e => e.date === dateStr && matchesActiveFilters(e.group) && (!monthShowFavoritesOnly || favorites.has(e.id)));
+            const hasSpecial = dayEvents.some(e => specialEventInfo(e));
+            const isSelected = selectedDate === dateStr;
+            const isToday = dayjs().format('YYYY-MM-DD') === dateStr;
+            // ドット：生誕・周年があれば先頭に金ドット、あとは出演グループの色（最大3つ）
+            const colors = [];
+            if (hasSpecial) colors.push('#f59e0b');
+            const seen = new Set();
+            dayEvents.forEach(e => {
+                if (colors.length >= 3 || !e.group || seen.has(e.group)) return;
+                seen.add(e.group);
+                const go = groups.find(g => g.name === e.group);
+                colors.push(go ? go.color : '#ec4899');
+            });
+            const dots = colors.length
+                ? `<span class="dots">${colors.map(c => `<i style="background:${c}"></i>`).join('')}</span>`
+                : `<span class="dots"></span>`;
+            const cls = 'mcell' + (dim ? ' dim' : '') + (isSelected ? ' sel' : '') + (isToday ? ' today' : '');
+            return `<div onclick="selectDateInMonth('${dateStr}')" class="${cls}"><span>${dayNum}</span>${dots}</div>`;
+        }
+
         function renderMonthView() {
             updateMonthModeButtons();
             document.getElementById('calendar-title').innerText = currentMonth.format('YYYY年 M月');
             const grid = document.getElementById('calendar-grid');
-            
-            const startDay = currentMonth.startOf('month').day();
+
+            const first = currentMonth.startOf('month');
+            const startDay = first.day();
             const daysInMonth = currentMonth.daysInMonth();
-            
+            const prev = currentMonth.subtract(1, 'month');
+            const prevDays = prev.daysInMonth();
+            const next = currentMonth.add(1, 'month');
+
             let html = '';
-            for (let i = 0; i < startDay; i++) {
-                html += `<div></div>`;
+            for (let i = startDay - 1; i >= 0; i--) {
+                const d = prevDays - i;
+                html += monthCellHtml_(prev.date(d).format('YYYY-MM-DD'), d, true);
             }
-
             for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = currentMonth.date(day).format('YYYY-MM-DD');
-                const hasEvent = events.some(e => e.date === dateStr && matchesActiveFilters(e.group) && (!monthShowFavoritesOnly || favorites.has(e.id)));
-                const hasSpecial = hasEvent && events.some(e => e.date === dateStr && matchesActiveFilters(e.group) && (!monthShowFavoritesOnly || favorites.has(e.id)) && specialEventInfo(e));
-                const isSelected = selectedDate === dateStr;
-                const isToday = dayjs().format('YYYY-MM-DD') === dateStr;
-
-                let classes = "h-11 rounded-2xl flex flex-col items-center justify-center text-xs font-bold relative transition cursor-pointer ";
-                if (isSelected) {
-                    classes += "bg-gradient-to-tr from-pink-500 to-purple-500 text-white shadow-md shadow-pink-500/30 ";
-                } else if (isToday) {
-                    classes += "border-2 border-pink-400 text-pink-500 bg-pink-50/50 ";
-                } else {
-                    classes += "hover:bg-pink-50 text-slate-700 ";
-                }
-
-                html += `
-                    <div onclick="selectDate('${dateStr}')" class="${classes}">
-                        <span>${day}</span>
-                        ${hasEvent ? `<span class="w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-white' : (hasSpecial ? 'bg-amber-400' : 'bg-pink-500')}"></span>` : ''}
-                    </div>
-                `;
+                html += monthCellHtml_(currentMonth.date(day).format('YYYY-MM-DD'), day, false);
+            }
+            const total = startDay + daysInMonth;
+            const trailing = (7 - (total % 7)) % 7;
+            for (let d = 1; d <= trailing; d++) {
+                html += monthCellHtml_(next.date(d).format('YYYY-MM-DD'), d, true);
             }
             grid.innerHTML = html;
             renderSelectedDayEvents();
@@ -9899,6 +10035,15 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         function selectDate(dateStr) {
             selectedDate = dateStr;
             renderMonthView();
+        }
+
+        // 前後の月の日セルを選んだら、表示月もそちらへ移してから選択する
+        function selectDateInMonth(dateStr) {
+            const d = dayjs(dateStr);
+            if (d.isValid() && (d.year() !== currentMonth.year() || d.month() !== currentMonth.month())) {
+                currentMonth = d.startOf('month');
+            }
+            selectDate(dateStr);
         }
 
         function renderSelectedDayEvents(containerId = 'selected-day-events', favoritesOnly = monthShowFavoritesOnly) {
