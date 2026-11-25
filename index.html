@@ -1449,10 +1449,12 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 }
 
 /* --- group list panel sizing (compat.cssに無い任意値クラスを使わないための専用定義) --- */
-.group-list-panel { height: 92vh; }
+.group-list-panel { height: 92vh; height: 92svh; }
+.drawer-sec { margin-top: 1.15rem; }
+.drawer-sec > .fld-label { margin-bottom: .45rem; }
 @media (min-width: 640px) {
   #group-list-modal { padding: 1rem; }
-  .group-list-panel { height: auto; max-height: 85vh; }
+  .group-list-panel { height: auto; max-height: 85vh; max-height: 85svh; }
 }
 #group-list-rows { min-height: 0; }
 .font-extrabold { font-weight: 800; }
@@ -1662,8 +1664,11 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <button onclick="toggleMenu()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
+            <!-- アカウント -->
+            <div class="drawer-sec" style="margin-top:0">
+                <p class="fld-label">アカウント</p>
             <!-- ログイン・同期 -->
-            <div class="mb-4 p-3 bg-pink-50/40 border border-pink-100 rounded-2xl">
+            <div class="p-3 bg-pink-50/40 border border-pink-100 rounded-2xl">
                 <div id="auth-logged-out" class="flex items-center justify-between">
                     <span class="text-[11px] font-bold text-slate-500">ログインしてデータを同期</span>
                     <button onclick="signInWithGoogle()" class="px-3 py-1.5 bg-white text-pink-600 font-bold rounded-full text-[10px] border border-pink-200 shadow-sm flex-shrink-0">
@@ -1679,32 +1684,46 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 </div>
                 <p class="text-[9px] text-slate-400 mt-1.5 leading-relaxed">ログインすると、お気に入り・メモ・グループ設定を他の端末とも共有できるようになります。</p>
             </div>
-
-            <div class="mb-4">
-                <p class="fld-label">テーマ</p>
-                <div class="seg-bar" style="margin-top:0" id="theme-mode-seg">
-                    <button type="button" data-tmode="light" onclick="setThemeMode('light')" class="seg-btn">ライト</button>
-                    <button type="button" data-tmode="dark" onclick="setThemeMode('dark')" class="seg-btn">ダーク</button>
-                    <button type="button" data-tmode="auto" onclick="setThemeMode('auto')" class="seg-btn">端末に合わせる</button>
-                </div>
             </div>
+
+            <!-- グループ -->
+            <div class="drawer-sec">
+                <p class="fld-label">グループ</p>
             <button onclick="openGroupList()" class="w-full py-2.5 mb-2 bg-pink-50 text-pink-600 font-bold rounded-xl border border-pink-100 text-[11px] flex items-center justify-center gap-2"><i class="fa-solid fa-list"></i>グループを一覧で見る</button>
             <div class="space-y-2" id="group-management-list"></div>
             <p class="mt-3 text-[10px] text-slate-400 leading-relaxed px-1">
                 グループはライブスケジュールから自動で追加されます。表示・通知の設定は「グループを一覧で見る」から変更できます。
             </p>
-            <button id="notify-toggle-btn" onclick="toggleNotifySetting()" class="mt-3 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
+            </div>
+
+            <!-- 通知と連携 -->
+            <div class="drawer-sec">
+                <p class="fld-label">通知と連携</p>
+            <button id="notify-toggle-btn" onclick="toggleNotifySetting()" class="w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
                 <i class="fa-solid fa-bell mr-1.5"></i> <span id="notify-toggle-label">新着ライブの通知を受け取る</span>
             </button>
             <button id="cal-link-btn" onclick="toggleCalLink()" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
                 <i class="fa-solid fa-calendar-days mr-1.5"></i> <span id="cal-link-label">Googleカレンダー連携：オフ（おすすめ用）</span>
             </button>
             <p class="mt-1.5 text-[10px] text-slate-400 leading-relaxed px-1">連携すると、Googleカレンダーに予定が入っている日のライブが「おすすめライブ」に出なくなります。読み取るのは予定が入っている時間帯だけで、予定の中身（タイトルなど）は取得しません。</p>
-            <button id="tilt-toggle-btn" onclick="toggleTilt()" class="mt-2 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
+            </div>
+
+            <!-- 画面と演出 -->
+            <div class="drawer-sec">
+                <p class="fld-label">画面と演出</p>
+                <div class="seg-bar" style="margin-top:0" id="theme-mode-seg">
+                    <button type="button" data-tmode="light" onclick="setThemeMode('light')" class="seg-btn">ライト</button>
+                    <button type="button" data-tmode="dark" onclick="setThemeMode('dark')" class="seg-btn">ダーク</button>
+                    <button type="button" data-tmode="auto" onclick="setThemeMode('auto')" class="seg-btn">端末に合わせる</button>
+                </div>
+            <button id="tilt-toggle-btn" onclick="toggleTilt()" class="mt-3 w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-2xl hover:bg-slate-100 transition text-xs border border-slate-100">
                 <i class="fa-solid fa-mobile-screen mr-1.5"></i> <span id="tilt-toggle-label">傾き演出：オン</span>
             </button>
             <p class="mt-1.5 text-[10px] text-slate-400 leading-relaxed px-1">スマホを傾けると、次のライブまでのカードの雨・雪の流れや、ヘッダーの光の向きが少し動きます。</p>
-            <div class="grid grid-cols-2 gap-2 mt-2">
+            </div>
+            <div class="drawer-sec">
+                <p class="fld-label">ツール</p>
+            <div class="grid grid-cols-2 gap-2">
                 <button onclick="toggleMenu(); toggleSummary();" class="py-2.5 bg-gradient-to-r from-pink-50 to-purple-50 text-pink-600 font-bold rounded-2xl hover:from-pink-100 hover:to-purple-100 transition text-[11px] border border-pink-100 flex items-center justify-center">
                     <i class="fa-solid fa-chart-simple mr-1"></i> 推し活まとめ
                 </button>
@@ -1718,11 +1737,12 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     <i class="fa-solid fa-comment-dots mr-1"></i> 不具合報告・要望
                 </button>
             </div>
+            </div>
             <button onclick="resetGroupsToDefault()" class="mt-2 w-full py-1.5 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1444</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1501</div>
         </div>
     </div>
 
@@ -6848,6 +6868,51 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             });
         })();
 
+        // ドロワーのスクロール端でパネル全体が少し沈んで跳ね返る（オーバースクロールの感触）
+        (function initDrawerBounce_() {
+            document.querySelectorAll('.drawer-panel').forEach(panel => {
+                let startY = null, scroller = null, off = 0;
+                const findScroller = el => {
+                    let n = el;
+                    while (n && n !== panel.parentElement) {
+                        if (n.scrollHeight > n.clientHeight + 1) {
+                            const oy = getComputedStyle(n).overflowY;
+                            if (oy === 'auto' || oy === 'scroll') return n;
+                        }
+                        if (n === panel) break;
+                        n = n.parentElement;
+                    }
+                    return panel;
+                };
+                panel.addEventListener('touchstart', e => {
+                    startY = e.touches[0].clientY;
+                    scroller = findScroller(e.target);
+                    panel.style.transition = 'none';
+                }, { passive: true });
+                panel.addEventListener('touchmove', e => {
+                    if (startY === null || !scroller) return;
+                    const dy = e.touches[0].clientY - startY;
+                    const max = scroller.scrollHeight - scroller.clientHeight;
+                    let o = 0;
+                    if (scroller.scrollTop <= 0 && dy > 0) o = Math.min(46, dy / 3);
+                    else if (scroller.scrollTop >= max - 1 && dy < 0) o = Math.max(-46, dy / 3);
+                    off = o;
+                    panel.style.translate = o ? `0px ${o}px` : '';
+                }, { passive: true });
+                const end = () => {
+                    if (startY === null) return;
+                    startY = null;
+                    if (off) {
+                        panel.style.transition = 'translate .45s cubic-bezier(.3,1.3,.4,1)';
+                        panel.style.translate = '';
+                        off = 0;
+                    }
+                };
+                panel.addEventListener('touchend', end);
+                panel.addEventListener('touchcancel', end);
+            });
+        })();
+
         sheetDrag_('event-detail-modal', () => closeEventDetail());
         sheetDrag_('group-list-modal', () => closeModal('group-list-modal'));
         sheetDrag_('group-action-modal', () => closeModal('group-action-modal'));
@@ -8671,22 +8736,27 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             if (!filterPresets.length) { bar.innerHTML = ''; return; }
             if (bulkPresetIdx >= filterPresets.length) bulkPresetIdx = 0;
             const opBtn = (kind, icon, label) => `<button class="bulk-op-btn" onclick="bulkGroupOp('${kind}')"><i class="fa-solid ${icon}" style="margin-right:.3rem"></i>${label}</button>`;
+            const cur = filterPresets[bulkPresetIdx];
+            const insideSet = new Set(cur.groups);
+            const inG = groups.filter(g => insideSet.has(g.name));
+            const outG = groups.filter(g => !insideSet.has(g.name));
+            const toggleBtn = (kind, arr, key) => {
+                const allOn = arr.length > 0 && arr.every(g => g[key] !== false);
+                if (key === 'notify') return opBtn(kind, allOn ? 'fa-bell-slash' : 'fa-bell', allOn ? '通知オフ' : '通知オン');
+                return opBtn(kind, allOn ? 'fa-eye-slash' : 'fa-eye', allOn ? '非表示' : '表示');
+            };
             let html = '<p class="fld-label" style="margin-bottom:.4rem">プリセットで一括設定</p><div class="flex flex-wrap gap-1.5 mb-2">';
             filterPresets.forEach((p, i) => {
                 html += `<button class="preset-chip${i === bulkPresetIdx ? ' preset-on' : ''}" onclick="setBulkPreset(${i})">${escapeHtml(p.name)}<span class="opacity-50 font-semibold ml-1">${p.groups.length}</span></button>`;
             });
             html += '</div>'
-                + '<p class="fld-label" style="margin:.35rem 0 .25rem">プリセット内</p><div class="grid bulk-grid-4">'
-                + opBtn('notifyOnInside', 'fa-bell', '通知オン')
-                + opBtn('notifyOffInside', 'fa-bell-slash', '通知オフ')
-                + opBtn('showInside', 'fa-eye', '表示')
-                + opBtn('hideInside', 'fa-eye-slash', '非表示')
+                + '<p class="fld-label" style="margin:.35rem 0 .25rem">プリセット内</p><div class="grid grid-cols-2 gap-1.5">'
+                + toggleBtn('toggleNotifyInside', inG, 'notify')
+                + toggleBtn('toggleVisibleInside', inG, 'visible')
                 + '</div>'
-                + '<p class="fld-label" style="margin:.55rem 0 .25rem">プリセット外</p><div class="grid bulk-grid-4">'
-                + opBtn('notifyOnOutside', 'fa-bell', '通知オン')
-                + opBtn('notifyOffOutside', 'fa-bell-slash', '通知オフ')
-                + opBtn('showOutside', 'fa-eye', '表示')
-                + opBtn('hideOutside', 'fa-eye-slash', '非表示')
+                + '<p class="fld-label" style="margin:.55rem 0 .25rem">プリセット外</p><div class="grid grid-cols-2 gap-1.5">'
+                + toggleBtn('toggleNotifyOutside', outG, 'notify')
+                + toggleBtn('toggleVisibleOutside', outG, 'visible')
                 + '</div>'
                 + '<div class="grid grid-cols-2 gap-1.5" style="margin-top:.55rem">'
                 + opBtn('notifyAllOn', 'fa-bell', 'すべて通知オン')
@@ -8696,30 +8766,23 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         }
         function setBulkPreset(i) { bulkPresetIdx = i; renderGroupBulkBar(); }
         function bulkGroupOp(kind) {
-            const conf = {
-                notifyOnInside: { scope: 'in', key: 'notify', val: true },
-                notifyOffInside: { scope: 'in', key: 'notify', val: false, confirm: true, verb: '通知オフ' },
-                showInside: { scope: 'in', key: 'visible', val: true },
-                hideInside: { scope: 'in', key: 'visible', val: false, confirm: true, verb: '非表示' },
-                notifyOnOutside: { scope: 'out', key: 'notify', val: true },
-                notifyOffOutside: { scope: 'out', key: 'notify', val: false, confirm: true, verb: '通知オフ' },
-                showOutside: { scope: 'out', key: 'visible', val: true },
-                hideOutside: { scope: 'out', key: 'visible', val: false, confirm: true, verb: '非表示' },
-                notifyAllOn: { scope: 'all', key: 'notify', val: true },
-                showAll: { scope: 'all', key: 'visible', val: true }
-            }[kind];
-            if (!conf) return;
-            let targets;
-            if (conf.scope === 'all') {
-                targets = groups;
-            } else {
+            if (kind === 'notifyAllOn' || kind === 'showAll') {
+                const key = kind === 'notifyAllOn' ? 'notify' : 'visible';
+                groups.forEach(g => { g[key] = true; });
+            } else if (kind.startsWith('toggle')) {
                 const p = filterPresets[bulkPresetIdx];
                 if (!p) return;
+                const scopeIn = kind.endsWith('Inside');
+                const key = kind.includes('Notify') ? 'notify' : 'visible';
                 const inside = new Set(p.groups);
-                targets = groups.filter(g => conf.scope === 'in' ? inside.has(g.name) : !inside.has(g.name));
-                if (conf.confirm && !confirm(`プリセット「${p.name}」${conf.scope === 'in' ? 'の' : '以外の'}${targets.length}グループを${conf.verb}にしますか？`)) return;
+                const targets = groups.filter(g => scopeIn ? inside.has(g.name) : !inside.has(g.name));
+                if (!targets.length) return;
+                const val = !targets.every(g => g[key] !== false);
+                if (!val && !confirm(`プリセット「${p.name}」${scopeIn ? 'の' : '以外の'}${targets.length}グループを${key === 'notify' ? '通知オフ' : '非表示'}にしますか？`)) return;
+                targets.forEach(g => { g[key] = val; });
+            } else {
+                return;
             }
-            targets.forEach(g => { g[conf.key] = conf.val; });
             saveUserData();
             renderGroupList();
             renderFilterGroupList();
@@ -8812,8 +8875,10 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                             <span class="block text-[13px] font-bold ${isHidden ? 'text-slate-400' : 'text-slate-800'} truncate">${escapeHtml(g.name)}</span>
                             <span class="block text-[10px] text-slate-400">${(typeof LINK_ONLY_GROUPS !== 'undefined' && LINK_ONLY_GROUPS.has(g.name)) ? '公式リンクのみ（予定は未対応）' : `未来のライブ ${futureCounts[g.name] || 0}件`}${notifyOff ? ' ・ 通知オフ' : ''}</span>
                         </span>
-                        <button type="button" aria-label="通知オン/オフ" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()" onclick="event.stopPropagation(); toggleGroupNotify(${index})" class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${notifyOff ? 'text-slate-300' : 'text-pink-500'}"><i class="fa-${notifyOff ? 'solid fa-bell-slash' : 'solid fa-bell'} text-sm"></i></button>
-                        ${isHidden ? '<i class="fa-regular fa-circle text-slate-300"></i>' : `<i class="fa-solid fa-circle-check" style="color:${g.color}"></i>`}
+                        <span class="flex items-center gap-2.5 flex-shrink-0" style="margin-right:2px">
+                            <button type="button" aria-label="通知オン/オフ" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()" onclick="event.stopPropagation(); toggleGroupNotify(${index})" class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${notifyOff ? 'text-slate-300' : 'text-pink-500'}"><i class="fa-${notifyOff ? 'solid fa-bell-slash' : 'solid fa-bell'} text-sm"></i></button>
+                            ${isHidden ? '<span class="fa-regular fa-circle text-slate-300" style="font-size:19px;line-height:1"></span>' : `<span class="fa-solid fa-circle-check" style="color:${g.color};font-size:19px;line-height:1"></span>`}
+                        </span>
                     </div>`;
             });
             container.innerHTML = rows || `<p class="text-xs text-slate-400 text-center py-6">「${escapeHtml(q)}」に一致するグループがありません</p>`;
