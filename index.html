@@ -1346,6 +1346,10 @@ body.dark .skel-blk { background: linear-gradient(100deg, rgba(255,255,255,.06) 
 .cd-today { font-size: 30px; font-weight: 900; letter-spacing: -.02em; line-height: 1.05; }
 /* --- container transform / sheet drag / pull-to-refresh / snackbar / search (2026-11-25) --- */
 .dlg-card.flip-in { animation: none !important; }
+#event-detail-modal .dlg-card { display: flex; flex-direction: column; overflow: hidden; }
+#event-detail-body { overflow-y: auto; min-height: 0; }
+#group-action-modal .sheet-card { display: flex; flex-direction: column; overflow: hidden; }
+#group-action-body { overflow-y: auto; min-height: 0; }
 .sheet-handle { height: 20px; display: flex; align-items: flex-start; justify-content: center; padding-top: 7px; cursor: grab; touch-action: none; flex: none; position: sticky; top: 0; z-index: 20; background: inherit; border-radius: 1.75rem 1.75rem 0 0; }
 .sheet-handle::after { content: ""; width: 38px; height: 4.5px; border-radius: 999px; background: rgba(120, 90, 110, .35); }
 body.dark .sheet-handle::after { background: rgba(255, 255, 255, .3); }
@@ -1941,7 +1945,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
     <!-- イベント詳細モーダル -->
     <div id="event-detail-modal" class="ovl fixed inset-0 bg-black/50 backdrop-blur-sm z-[65] hidden flex items-end sm:items-center justify-center p-4" onclick="closeEventDetail()">
-        <div class="detail-pop dlg-card relative w-full max-w-md max-h-[88vh] overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="detail-pop dlg-card relative w-full max-w-md max-h-[88vh]" onclick="event.stopPropagation()">
             <button onclick="closeEventDetail()" class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-slate-100/90 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition shadow-sm"><i class="fa-solid fa-xmark"></i></button>
             <div id="event-detail-body"></div>
         </div>
@@ -8389,14 +8393,14 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 ? ev.currentTarget.getBoundingClientRect() : null;
             const modal = document.getElementById('event-detail-modal');
             const keepScroll = detailEventId === eventId && !modal.classList.contains('hidden')
-                ? modal.querySelector(':scope > div').scrollTop : 0;
+                ? document.getElementById('event-detail-body').scrollTop : 0;
             detailEventId = eventId;
             const list = (e0.group ? events.filter(e => favGroupKey(e) === favGroupKey(e0)) : [e0])
                 .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
             document.getElementById('event-detail-body').innerHTML = liveDetailHtml(list);
             modal.classList.remove('hidden');
             const panel = modal.querySelector(':scope > div');
-            panel.scrollTop = keepScroll;
+            document.getElementById('event-detail-body').scrollTop = keepScroll;
             if (srcRect && !keepScroll && srcRect.width > 40 && srcRect.height > 20) flipPanel_(panel, srcRect);
         }
 
