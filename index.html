@@ -1723,7 +1723,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1424</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1425</div>
         </div>
     </div>
 
@@ -8670,48 +8670,56 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             if (!bar) return;
             if (!filterPresets.length) { bar.innerHTML = ''; return; }
             if (bulkPresetIdx >= filterPresets.length) bulkPresetIdx = 0;
+            const opBtn = (kind, icon, label) => `<button class="bulk-op-btn" onclick="bulkGroupOp('${kind}')"><i class="fa-solid ${icon}" style="margin-right:.3rem"></i>${label}</button>`;
             let html = '<p class="fld-label" style="margin-bottom:.4rem">プリセットで一括設定</p><div class="flex flex-wrap gap-1.5 mb-2">';
             filterPresets.forEach((p, i) => {
                 html += `<button class="preset-chip${i === bulkPresetIdx ? ' preset-on' : ''}" onclick="setBulkPreset(${i})">${escapeHtml(p.name)}<span class="opacity-50 font-semibold ml-1">${p.groups.length}</span></button>`;
             });
-            html += '</div><div class="grid grid-cols-2 gap-1.5">'
-                + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'notifyOffOutside\')">プリセット外を通知オフ</button>'
-                + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'notifyOffInside\')">プリセット内を通知オフ</button>'
-                + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'hideOutside\')">プリセット外を非表示</button>'
-                + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'hideInside\')">プリセット内を非表示</button>'
-                + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'notifyAllOn\')">通知をすべてオン</button>'
-                + '<button class="bulk-op-btn" onclick="bulkGroupOp(\'showAll\')">すべて表示</button>'
+            html += '</div>'
+                + '<p class="fld-label" style="margin:.35rem 0 .25rem">プリセット内</p><div class="grid grid-cols-4 gap-1.5">'
+                + opBtn('notifyOnInside', 'fa-bell', '通知オン')
+                + opBtn('notifyOffInside', 'fa-bell-slash', '通知オフ')
+                + opBtn('showInside', 'fa-eye', '表示')
+                + opBtn('hideInside', 'fa-eye-slash', '非表示')
+                + '</div>'
+                + '<p class="fld-label" style="margin:.55rem 0 .25rem">プリセット外</p><div class="grid grid-cols-4 gap-1.5">'
+                + opBtn('notifyOnOutside', 'fa-bell', '通知オン')
+                + opBtn('notifyOffOutside', 'fa-bell-slash', '通知オフ')
+                + opBtn('showOutside', 'fa-eye', '表示')
+                + opBtn('hideOutside', 'fa-eye-slash', '非表示')
+                + '</div>'
+                + '<div class="grid grid-cols-2 gap-1.5" style="margin-top:.55rem">'
+                + opBtn('notifyAllOn', 'fa-bell', 'すべて通知オン')
+                + opBtn('showAll', 'fa-eye', 'すべて表示')
                 + '</div>';
             bar.innerHTML = html;
         }
         function setBulkPreset(i) { bulkPresetIdx = i; renderGroupBulkBar(); }
         function bulkGroupOp(kind) {
-            if (kind === 'notifyAllOn') {
-                groups.forEach(g => { g.notify = true; });
-            } else if (kind === 'showAll') {
-                groups.forEach(g => { g.visible = true; });
+            const conf = {
+                notifyOnInside: { scope: 'in', key: 'notify', val: true },
+                notifyOffInside: { scope: 'in', key: 'notify', val: false, confirm: true, verb: '通知オフ' },
+                showInside: { scope: 'in', key: 'visible', val: true },
+                hideInside: { scope: 'in', key: 'visible', val: false, confirm: true, verb: '非表示' },
+                notifyOnOutside: { scope: 'out', key: 'notify', val: true },
+                notifyOffOutside: { scope: 'out', key: 'notify', val: false, confirm: true, verb: '通知オフ' },
+                showOutside: { scope: 'out', key: 'visible', val: true },
+                hideOutside: { scope: 'out', key: 'visible', val: false, confirm: true, verb: '非表示' },
+                notifyAllOn: { scope: 'all', key: 'notify', val: true },
+                showAll: { scope: 'all', key: 'visible', val: true }
+            }[kind];
+            if (!conf) return;
+            let targets;
+            if (conf.scope === 'all') {
+                targets = groups;
             } else {
                 const p = filterPresets[bulkPresetIdx];
                 if (!p) return;
                 const inside = new Set(p.groups);
-                const outside = groups.filter(g => !inside.has(g.name));
-                const insideGroups = groups.filter(g => inside.has(g.name));
-                if (kind === 'notifyOffOutside') {
-                    if (!confirm(`プリセット「${p.name}」以外の${outside.length}グループを通知オフにしますか？`)) return;
-                    outside.forEach(g => { g.notify = false; });
-                } else if (kind === 'hideOutside') {
-                    if (!confirm(`プリセット「${p.name}」以外の${outside.length}グループを非表示にしますか？`)) return;
-                    outside.forEach(g => { g.visible = false; });
-                } else if (kind === 'notifyOffInside') {
-                    if (!confirm(`プリセット「${p.name}」の${insideGroups.length}グループを通知オフにしますか？`)) return;
-                    insideGroups.forEach(g => { g.notify = false; });
-                } else if (kind === 'hideInside') {
-                    if (!confirm(`プリセット「${p.name}」の${insideGroups.length}グループを非表示にしますか？`)) return;
-                    insideGroups.forEach(g => { g.visible = false; });
-                } else {
-                    return;
-                }
+                targets = groups.filter(g => conf.scope === 'in' ? inside.has(g.name) : !inside.has(g.name));
+                if (conf.confirm && !confirm(`プリセット「${p.name}」${conf.scope === 'in' ? 'の' : '以外の'}${targets.length}グループを${conf.verb}にしますか？`)) return;
             }
+            targets.forEach(g => { g[conf.key] = conf.val; });
             saveUserData();
             renderGroupList();
             renderFilterGroupList();
