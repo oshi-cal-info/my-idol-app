@@ -1300,7 +1300,7 @@ body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, v
 /* theme seg in the drawer: flex button group, gentle grow (long labels) */
 #theme-mode-seg { display: flex; }
 #theme-mode-seg .seg-btn { flex: 1 1 0; }
-#theme-mode-seg .seg-btn.on { flex-grow: 1.25; }
+/* 選択中ボタンを太らせる flex-grow は廃止（幅がアニメーションしてピルの実測がズレるため） */
 
 /* --- animation polish: view fade, card stagger, sheet spring (2026-11-22) --- */
 @keyframes viewIn { from { opacity: 0; } to { opacity: 1; } }
