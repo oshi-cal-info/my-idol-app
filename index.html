@@ -1438,6 +1438,17 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 .gl-fchip { margin: 0; padding: .34rem .62rem; border-radius: 999px; border: 1px solid var(--outline-variant); background: var(--surface-container); color: var(--on-surface-variant); font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; height: 37px; block-size: 37px; min-height: 0; min-block-size: 0; inline-size: auto; min-inline-size: 0; box-sizing: border-box; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; box-shadow: none; }
 .gl-fchip.on { background: var(--primary); color: var(--on-primary); }
 .gl-agency-sel { margin: 0; flex: 1; min-width: 0; height: 32px; block-size: 32px; min-height: 0; border-radius: 999px; border: 1px solid var(--outline-variant); background-color: var(--surface-container); color: var(--on-surface); font-size: 11px; font-weight: 700; padding: 0 1.7rem 0 .8rem; appearance: none; -webkit-appearance: none; box-sizing: border-box; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a08b99' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .65rem center; background-size: 11px 11px; }
+.gl-row { height: 62px; }
+.gl-row .gl-av { width: 40px; height: 40px; }
+.gl-row .gl-name { line-height: 1.3; }
+.gl-row .gl-sub { line-height: 1.35; }
+.gl-size-btn { margin: 0; height: 32px; block-size: 32px; min-height: 0; flex-shrink: 0; border-radius: 999px; border: 1px solid var(--outline-variant); background: var(--surface-container); color: var(--on-surface-variant); font-size: 11px; font-weight: 700; padding: 0 .8rem; box-sizing: border-box; cursor: pointer; box-shadow: none; display: inline-flex; align-items: center; }
+#group-list-rows.gl-big .gl-row { height: 88px; }
+#group-list-rows.gl-big .gl-av { width: 56px; height: 56px; }
+#group-list-rows.gl-big .gl-name { font-size: 15px; }
+#group-list-rows.gl-big .gl-sub { font-size: 12px; }
+#group-list-rows.gl-big .gl-initial { font-size: 22px; }
+#group-list-rows.gl-big .gl-check { font-size: 22px; }
 #gl-filter-chips { flex: 1; min-width: 0; overflow-x: auto; padding: 5px 2px; align-items: center; }
 .bulk-card { border: 1px solid var(--outline-variant); border-radius: 16px; padding: .6rem .7rem .7rem; }
 .bulk-all-sec { border: 1px solid var(--outline-variant); border-radius: 16px; padding: .6rem .7rem .7rem; margin-top: .55rem; }
@@ -1754,7 +1765,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251126-0612</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261126-0625</div>
             </div>
         </div>
     </div>
@@ -1940,6 +1951,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             <div class="flex items-center gap-1.5 mb-2 px-1">
                 <span class="text-[10px] font-bold text-slate-400 flex-shrink-0">事務所</span>
                 <select id="gl-agency-select" class="gl-agency-sel" onchange="setGroupListAgency(this.value)"></select>
+                <button type="button" id="gl-size-btn" class="gl-size-btn" onclick="toggleGroupListSize()"></button>
             </div>
             <div id="group-bulk-bar" class="mb-2"></div>
             <div id="group-list-rows" class="flex-1 overflow-y-auto space-y-1.5 pr-1"></div>
@@ -9102,7 +9114,8 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         let groupListSort = 'name';
         let groupListFilter = 'all';
         let groupListAgency = '';
-        try { groupListSort = localStorage.getItem('oshi_gl_sort') || 'name'; groupListFilter = localStorage.getItem('oshi_gl_filter') || 'all'; groupListAgency = localStorage.getItem('oshi_gl_agency') || ''; } catch (e) {}
+        let groupListSize = 'std';
+        try { groupListSort = localStorage.getItem('oshi_gl_sort') || 'name'; groupListFilter = localStorage.getItem('oshi_gl_filter') || 'all'; groupListAgency = localStorage.getItem('oshi_gl_agency') || ''; groupListSize = localStorage.getItem('oshi_gl_size') || 'std'; } catch (e) {}
         if (groupListAgency && !AGENCY_LIST.some(([n]) => n === groupListAgency)) groupListAgency = '';
         const GL_SORTS = [['name', '名前順'], ['count', 'ライブ多い順'], ['next', '次のライブが近い順']];
         const GL_FILTERS = [['all', 'すべて'], ['visible', '表示中'], ['hidden', '非表示'], ['notify', '通知オン'], ['hasLive', 'ライブあり'], ['linkOnly', 'リンクのみ'], ['inPreset', 'プリセット内']];
@@ -9122,6 +9135,11 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             try { localStorage.setItem('oshi_gl_agency', groupListAgency); } catch (e) {}
             renderGroupList();
         }
+        function toggleGroupListSize() {
+            groupListSize = groupListSize === 'big' ? 'std' : 'big';
+            try { localStorage.setItem('oshi_gl_size', groupListSize); } catch (e) {}
+            renderGroupList();
+        }
         function renderGroupListControls() {
             const sb = document.getElementById('gl-sort-btn');
             if (sb) sb.textContent = '並び替え：' + (GL_SORTS.find(s => s[0] === groupListSort) || GL_SORTS[0])[1];
@@ -9134,10 +9152,13 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 agSel.innerHTML = '<option value="">すべての事務所</option>' + AGENCY_LIST.map(([name, n]) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}（${n}組）</option>`).join('');
                 agSel.value = groupListAgency;
             }
+            const szBtn = document.getElementById('gl-size-btn');
+            if (szBtn) szBtn.textContent = '大きさ：' + (groupListSize === 'big' ? '大' : '標準');
         }
         function renderGroupList() {
             const container = document.getElementById('group-list-rows');
             if (!container) return;
+            container.classList.toggle('gl-big', groupListSize === 'big');
             renderGroupBulkBar();
             renderGroupListControls();
             const q = (document.getElementById('group-list-search')?.value || '').trim().toLowerCase();
@@ -9182,21 +9203,21 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 const notifyOff = g.notify === false;
                 const img = (typeof GROUP_IMAGES !== 'undefined' && GROUP_IMAGES[g.name]) ? GROUP_IMAGES[g.name] : '';
                 rows += `
-                    <div class="flex items-center gap-3 p-2.5 rounded-2xl border shadow-sm cursor-pointer select-none min-w-0 ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}10;border-color:${g.color}80;`}"
+                    <div class="gl-row flex items-center gap-3 p-2.5 rounded-2xl border shadow-sm cursor-pointer select-none min-w-0 ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}10;border-color:${g.color}80;`}"
                         onpointerdown="chipPointerDown(${index})" onpointerup="chipPointerEnd()" onpointerleave="chipPointerEnd()" onpointercancel="chipPointerEnd()" oncontextmenu="return false" onclick="glRowClick(${index})">
-                        <span class="relative w-10 h-10 flex-shrink-0">
-                            <span class="block w-10 h-10 rounded-xl overflow-hidden shadow-sm relative" style="background-color:${g.color}">
-                                <span class="absolute inset-0 flex items-center justify-center text-white text-base font-black">${escapeHtml(groupInitial(g.name))}</span>
+                        <span class="gl-av relative w-10 h-10 flex-shrink-0">
+                            <span class="gl-av block w-10 h-10 rounded-xl overflow-hidden shadow-sm relative" style="background-color:${g.color}">
+                                <span class="gl-initial absolute inset-0 flex items-center justify-center text-white text-base font-black">${escapeHtml(groupInitial(g.name))}</span>
                                 ${img ? `<img src="${img}" alt="" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover" onerror="this.remove()">` : ''}
                             </span>
                         </span>
                         <span class="flex-1 min-w-0">
-                            <span class="block text-[13px] font-bold ${isHidden ? 'text-slate-400' : 'text-slate-800'} truncate">${escapeHtml(g.name)}</span>
-                            <span class="block text-[10px] text-slate-400 truncate">${(typeof LINK_ONLY_GROUPS !== 'undefined' && LINK_ONLY_GROUPS.has(g.name)) ? '公式リンクのみ（予定は未対応）' : `未来のライブ ${futureCounts[g.name] || 0}件`}${notifyOff ? ' ・ 通知オフ' : ''}${agencyText_(g.name) ? ` ・ ${escapeHtml(agencyText_(g.name))}` : ''}</span>
+                            <span class="gl-name block text-[13px] font-bold ${isHidden ? 'text-slate-400' : 'text-slate-800'} truncate">${escapeHtml(g.name)}</span>
+                            <span class="gl-sub block text-[10px] text-slate-400 truncate">${(typeof LINK_ONLY_GROUPS !== 'undefined' && LINK_ONLY_GROUPS.has(g.name)) ? '公式リンクのみ（予定は未対応）' : `未来のライブ ${futureCounts[g.name] || 0}件`}${notifyOff ? ' ・ 通知オフ' : ''}${agencyText_(g.name) ? ` ・ ${escapeHtml(agencyText_(g.name))}` : ''}</span>
                         </span>
                         <span class="flex items-center gap-2.5 flex-shrink-0" style="margin-right:6px">
-                            <button type="button" aria-label="通知オン/オフ" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()" onclick="event.stopPropagation(); toggleGroupNotify(${index})" class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${notifyOff ? 'text-slate-300' : 'text-pink-500'}"><i class="fa-${notifyOff ? 'solid fa-bell-slash' : 'solid fa-bell'} text-sm"></i></button>
-                            ${isHidden ? '<span class="fa-regular fa-circle text-slate-300" style="font-size:19px;line-height:1"></span>' : `<span class="fa-solid fa-circle-check" style="color:${g.color};font-size:19px;line-height:1"></span>`}
+                            <button type="button" aria-label="通知オン/オフ" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()" onclick="event.stopPropagation(); toggleGroupNotify(${index})" class="gl-bell flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${notifyOff ? 'text-slate-300' : 'text-pink-500'}"><i class="fa-${notifyOff ? 'solid fa-bell-slash' : 'solid fa-bell'} text-sm"></i></button>
+                            ${isHidden ? '<span class="w-8 h-8 flex items-center justify-center flex-shrink-0"><span class="gl-check fa-regular fa-circle text-slate-300" style="font-size:19px;line-height:1"></span></span>' : `<span class="w-8 h-8 flex items-center justify-center flex-shrink-0"><span class="gl-check fa-solid fa-circle-check" style="color:${g.color};font-size:19px;line-height:1"></span></span>`}
                         </span>
                     </div>`;
             });
