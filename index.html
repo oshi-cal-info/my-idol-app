@@ -1153,7 +1153,7 @@ input[type="color"].fld { padding: .3rem; height: 2.75rem; cursor: pointer; }
 .event-card.snapback { transition: transform .32s cubic-bezier(.32,1.16,.3,1); }
 
 /* ページ全体の横パン禁止（横スワイプ時にサイト自体が左右に動かないように） */
-html, body { overflow-x: clip; }
+html, body { overflow-x: clip; overscroll-behavior-y: none; }
 
 /* --- venue map (Leaflet guards) --- */
 .leaflet-pane img, .leaflet-tile { max-width: none !important; }
@@ -1722,7 +1722,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1441</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1444</div>
         </div>
     </div>
 
@@ -6811,6 +6811,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             document.addEventListener('touchstart', e => {
                 if (refreshing || window.scrollY > 0) { startY = null; return; }
                 if (document.querySelector('[id$="-modal"]:not(.hidden)')) { startY = null; return; }
+                if (!e.target.closest('main')) { startY = null; return; }
                 if (e.target.closest('input, textarea, select')) { startY = null; return; }
                 const el = ind();
                 if (el) { el.classList.add('drag'); el.classList.remove('done'); }
@@ -6830,7 +6831,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 startY = null;
                 const el = ind(); if (!el) return;
                 el.classList.remove('drag');
-                if (pull >= 55 && !refreshing) {
+                if (pull >= 64 && !refreshing) {
                     refreshing = true;
                     el.style.transform = 'translate(-50%, 10px)';
                     try { await fetchSheetData(); } catch (e) {}
