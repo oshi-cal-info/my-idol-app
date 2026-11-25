@@ -1456,7 +1456,7 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 }
 
 /* --- group list panel sizing (compat.cssに無い任意値クラスを使わないための専用定義) --- */
-.group-list-panel { height: 92vh; height: 92svh; width: calc(100% - 20px); margin: 0 auto; }
+.group-list-panel { height: 92vh; height: 92svh; width: calc(100% - 20px); margin: 0 auto; padding-top: 1.8rem; }
 .drawer-sec { margin-top: 1.15rem; }
 .drawer-sec > .fld-label { margin-bottom: .45rem; }
 @media (min-width: 640px) {
@@ -1750,7 +1750,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1633</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1634</div>
             </div>
         </div>
     </div>
@@ -1921,7 +1921,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
     <!-- グループ一覧モーダル -->
     <div id="group-list-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center sm:p-4" onclick="if(event.target===this) closeModal('group-list-modal')">
         <div class="sheet-card group-list-panel w-full max-w-md flex flex-col p-5">
-            <div class="flex justify-between items-center mb-3">
+            <div class="flex justify-between items-center mb-3" style="margin-left:.45rem">
                 <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-list text-pink-500 mr-2"></i>推しグループ一覧<span id="group-list-count" class="ml-2 text-[11px] font-bold text-slate-400"></span></h3>
                 <button onclick="closeModal('group-list-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
