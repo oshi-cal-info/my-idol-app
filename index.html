@@ -1413,6 +1413,7 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 #fab-main-btn i { transition: transform .32s cubic-bezier(.32,1.16,.3,1); }
 .fab-stack.open #fab-main-btn i { transform: rotate(45deg); }
 .preset-chip {
+  margin: 0;
   border: 1px solid var(--outline-variant); background: var(--surface-container);
   color: var(--on-surface); font-size: .68rem; font-weight: 700;
   padding: .45rem .8rem; border-radius: 9999px; cursor: pointer;
@@ -1423,6 +1424,7 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 .preset-add { border-style: dashed; color: var(--primary); background: transparent; }
 .preset-chip.preset-on { background: var(--primary); border-color: var(--primary); color: var(--on-primary, #fff); }
 .bulk-op-btn {
+  margin: 0;
   border: 1px solid var(--outline-variant); background: var(--surface-container);
   color: var(--on-surface); font-size: .68rem; font-weight: 700;
   padding: .5rem .4rem; border-radius: 12px; cursor: pointer;
@@ -1430,6 +1432,11 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 }
 .bulk-op-btn:active { transform: scale(.96); }
 .bulk-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .375rem; }
+#group-list-modal button { margin: 0; }
+.bulk-op-btn.st-on { background: var(--primary); border-color: var(--primary); color: var(--on-primary, #fff); }
+.bulk-op-btn.st-mixed { border-color: var(--primary); color: var(--primary); }
+.bulk-card { border: 1px solid var(--outline-variant); border-radius: 16px; padding: .6rem .7rem .7rem; }
+.bulk-all-sec { border-top: 1px solid var(--outline-variant); margin-top: .6rem; padding-top: .55rem; }
 .bulk-op-btn { white-space: nowrap; overflow: hidden; }
 .bulk-op-btn i { font-size: .8rem; min-inline-size: 0; min-block-size: 0; inline-size: auto; block-size: auto; }
 .load-ind {
@@ -1743,7 +1750,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1530</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1540</div>
             </div>
         </div>
     </div>
@@ -8756,40 +8763,57 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
         // ==== プリセット単位の一括設定（グループ一覧モーダル） ====
         let bulkPresetIdx = 0;
+        let bulkBarOpen = true;
         function renderGroupBulkBar() {
             const bar = document.getElementById('group-bulk-bar');
             if (!bar) return;
             if (!filterPresets.length) { bar.innerHTML = ''; return; }
             if (bulkPresetIdx >= filterPresets.length) bulkPresetIdx = 0;
-            const opBtn = (kind, icon, label) => `<button class="bulk-op-btn" onclick="bulkGroupOp('${kind}')"><i class="fa-solid ${icon}" style="margin-right:.3rem"></i>${label}</button>`;
+            const opBtn = (kind, icon, label, cls = '') => `<button class="bulk-op-btn ${cls}" onclick="bulkGroupOp('${kind}')"><i class="fa-solid ${icon}" style="margin-right:.3rem"></i>${label}</button>`;
             const cur = filterPresets[bulkPresetIdx];
             const insideSet = new Set(cur.groups);
             const inG = groups.filter(g => insideSet.has(g.name));
             const outG = groups.filter(g => !insideSet.has(g.name));
-            const toggleBtn = (kind, arr, key) => {
-                const allOn = arr.length > 0 && arr.every(g => g[key] !== false);
-                if (key === 'notify') return opBtn(kind, allOn ? 'fa-bell-slash' : 'fa-bell', allOn ? '通知オフ' : '通知オン');
-                return opBtn(kind, allOn ? 'fa-eye-slash' : 'fa-eye', allOn ? '非表示' : '表示');
+            const stateOf = (arr, key) => {
+                if (!arr.length) return 'off';
+                const on = arr.filter(g => g[key] !== false).length;
+                return on === arr.length ? 'on' : (on === 0 ? 'off' : 'mixed');
             };
-            let html = '<p class="fld-label" style="margin-bottom:.4rem">プリセットで一括設定</p><div class="flex flex-wrap gap-1.5 mb-2">';
-            filterPresets.forEach((p, i) => {
-                html += `<button class="preset-chip${i === bulkPresetIdx ? ' preset-on' : ''}" onclick="setBulkPreset(${i})">${escapeHtml(p.name)}<span class="opacity-50 font-semibold ml-1">${p.groups.length}</span></button>`;
-            });
+            const toggleBtn = (kind, arr, key) => {
+                const st = stateOf(arr, key);
+                const cls = st === 'on' ? 'st-on' : (st === 'mixed' ? 'st-mixed' : '');
+                if (key === 'notify') {
+                    const label = st === 'on' ? '通知オン' : (st === 'off' ? '通知オフ' : '通知：一部オン');
+                    return opBtn(kind, st === 'off' ? 'fa-bell-slash' : 'fa-bell', label, cls);
+                }
+                const label = st === 'on' ? '表示中' : (st === 'off' ? '非表示' : '一部表示');
+                return opBtn(kind, st === 'off' ? 'fa-eye-slash' : 'fa-eye', label, cls);
+            };
+            let html = '<div class="bulk-card">'
+                + `<button type="button" onclick="toggleBulkBar()" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;cursor:pointer;padding:0;color:inherit;height:auto;min-height:0;min-width:0;border-radius:0"><span class="fld-label" style="margin:0">プリセットで一括設定</span><i class="fa-solid fa-chevron-${bulkBarOpen ? 'up' : 'down'} text-slate-400" style="font-size:.65rem"></i></button>`;
+            if (bulkBarOpen) {
+                html += '<div class="flex flex-wrap gap-1.5" style="margin:.5rem 0 .2rem">';
+                filterPresets.forEach((p, i) => {
+                    html += `<button class="preset-chip${i === bulkPresetIdx ? ' preset-on' : ''}" onclick="setBulkPreset(${i})">${escapeHtml(p.name)}<span class="opacity-50 font-semibold ml-1">${p.groups.length}</span></button>`;
+                });
+                html += '</div>'
+                    + '<p class="fld-label" style="margin:.45rem 0 .25rem">プリセット内</p><div class="grid grid-cols-2 gap-1.5">'
+                    + toggleBtn('toggleNotifyInside', inG, 'notify')
+                    + toggleBtn('toggleVisibleInside', inG, 'visible')
+                    + '</div>'
+                    + '<p class="fld-label" style="margin:.55rem 0 .25rem">プリセット外</p><div class="grid grid-cols-2 gap-1.5">'
+                    + toggleBtn('toggleNotifyOutside', outG, 'notify')
+                    + toggleBtn('toggleVisibleOutside', outG, 'visible')
+                    + '</div>';
+            }
             html += '</div>'
-                + '<p class="fld-label" style="margin:.35rem 0 .25rem">プリセット内</p><div class="grid grid-cols-2 gap-1.5">'
-                + toggleBtn('toggleNotifyInside', inG, 'notify')
-                + toggleBtn('toggleVisibleInside', inG, 'visible')
-                + '</div>'
-                + '<p class="fld-label" style="margin:.55rem 0 .25rem">プリセット外</p><div class="grid grid-cols-2 gap-1.5">'
-                + toggleBtn('toggleNotifyOutside', outG, 'notify')
-                + toggleBtn('toggleVisibleOutside', outG, 'visible')
-                + '</div>'
-                + '<div class="grid grid-cols-2 gap-1.5" style="margin-top:.55rem">'
+                + '<div class="bulk-all-sec"><p class="fld-label" style="margin:0 0 .3rem">すべてのグループ</p><div class="grid grid-cols-2 gap-1.5">'
                 + opBtn('notifyAllOn', 'fa-bell', 'すべて通知オン')
                 + opBtn('showAll', 'fa-eye', 'すべて表示')
-                + '</div>';
+                + '</div></div>';
             bar.innerHTML = html;
         }
+        function toggleBulkBar() { bulkBarOpen = !bulkBarOpen; renderGroupBulkBar(); }
         function setBulkPreset(i) { bulkPresetIdx = i; renderGroupBulkBar(); }
         function bulkGroupOp(kind) {
             if (kind === 'notifyAllOn' || kind === 'showAll') {
