@@ -1750,7 +1750,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1634</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20251125-1638</div>
             </div>
         </div>
     </div>
@@ -1922,11 +1922,11 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
     <div id="group-list-modal" class="ovl fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center sm:p-4" onclick="if(event.target===this) closeModal('group-list-modal')">
         <div class="sheet-card group-list-panel w-full max-w-md flex flex-col p-5">
             <div class="flex justify-between items-center mb-3" style="margin-left:.45rem">
-                <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-list text-pink-500 mr-2"></i>推しグループ一覧<span id="group-list-count" class="ml-2 text-[11px] font-bold text-slate-400"></span></h3>
-                <button onclick="closeModal('group-list-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                <h3 class="font-bold text-base text-slate-800 flex items-center"><span class="fa-solid fa-list text-pink-500 mr-2"></span>推しグループ一覧<span id="group-list-count" class="ml-2 text-[11px] font-bold text-slate-400"></span></h3>
+                <button onclick="closeModal('group-list-modal')" class="text-slate-400 hover:text-slate-600"><span class="fa-solid fa-xmark"></span></button>
             </div>
             <div class="relative mb-2">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
+                <span class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></span>
                 <input id="group-list-search" type="text" placeholder="グループ名で検索" oninput="renderGroupList()" class="fld" style="padding-left:2.3rem">
             </div>
             <p class="text-[10px] text-slate-400 px-1 mb-2">タップで表示オン/オフ・長押しで通知や色などの設定が開きます</p>
