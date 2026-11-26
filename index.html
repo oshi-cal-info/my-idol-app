@@ -1776,7 +1776,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261126-1032</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-0624</div>
             </div>
         </div>
     </div>
@@ -10726,7 +10726,21 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             label.textContent = 'Googleカレンダー連携：オン' + (c && c.fetchedAt ? '（' + dayjs(c.fetchedAt).format('M/D') + '更新）' : '');
         }
 
-        // 起動時：連携済みでキャッシュが6時間以上古ければ、静かに更新を試みる
+        // 起動直後に認可を取り直すと、Googleのセッションが切れている時にログイン画面が
+        // 一瞬見えてしまう（2026-11-27 岩崎の報告）。自動更新は起動時には行わず、
+        // ユーザーの最初の操作（タップ/スクロール）をきっかけに1回だけ試みる。
+        let calBusyRefreshArmed_ = false;
+        function armCalBusyRefreshOnInteract_() {
+            if (calBusyRefreshArmed_) return;
+            calBusyRefreshArmed_ = true;
+            const fire = () => {
+                window.removeEventListener('pointerdown', fire, true);
+                maybeRefreshCalBusy_();
+            };
+            window.addEventListener('pointerdown', fire, true);
+        }
+
+        // 連携済みでキャッシュが6時間以上古ければ、静かに更新を試みる
         function maybeRefreshCalBusy_() {
             if (!calLinkEnabled()) return;
             const c = calBusyCache_();
@@ -12550,7 +12564,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             loadAiData(); // AI構造化データも並行して読み始める
             loadHighlightData(); // 週間ハイライトも並行して読み始める
             updateCalLinkUI();
-            maybeRefreshCalBusy_(); // カレンダー連携済みなら古いキャッシュを静かに更新
+            armCalBusyRefreshOnInteract_(); // カレンダー連携の自動更新は起動直後ではなく最初の操作時に試みる（起動時のGoogle画面チラつき防止）
             updateTiltUI();
             startTilt_(); // 傾き演出（許可が要る端末ではトグルを押すまで始まらない）
             await fetchSheetData();
