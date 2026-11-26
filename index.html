@@ -1449,6 +1449,17 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 #group-list-rows.gl-big .gl-sub { font-size: 12px; }
 #group-list-rows.gl-big .gl-initial { font-size: 22px; }
 #group-list-rows.gl-big .gl-check { font-size: 22px; }
+#group-list-rows.gl-small { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-content: start; }
+#group-list-rows.gl-small > div:not(.gl-row) { grid-column: 1 / -1; }
+#group-list-rows.gl-small .gl-row { height: 54px; margin-top: 0 !important; padding: 8px; gap: 8px; }
+#group-list-rows.gl-small .gl-av { width: 32px; height: 32px; }
+#group-list-rows.gl-small .gl-name { font-size: 12px; }
+#group-list-rows.gl-small .gl-sub { font-size: 9px; }
+#group-list-rows.gl-small .gl-initial { font-size: 14px; }
+#group-list-rows.gl-small .gl-bell { display: none; }
+#group-list-rows.gl-small .gl-cluster { margin-right: 0 !important; gap: 0; }
+#group-list-rows.gl-small .gl-checkbox { width: 24px; height: 24px; }
+#group-list-rows.gl-small .gl-check { font-size: 16px; }
 #gl-filter-chips { flex: 1; min-width: 0; overflow-x: auto; padding: 5px 2px; align-items: center; }
 .bulk-card { border: 1px solid var(--outline-variant); border-radius: 16px; padding: .6rem .7rem .7rem; }
 .bulk-all-sec { border: 1px solid var(--outline-variant); border-radius: 16px; padding: .6rem .7rem .7rem; margin-top: .55rem; }
@@ -1478,7 +1489,7 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
   #group-list-modal { padding: 1rem; }
   .group-list-panel { height: auto; max-height: 85vh; max-height: 85svh; }
 }
-#group-list-rows { min-height: 0; padding: 6px 0 10px; }
+#group-list-rows { min-height: 0; padding: 20px 0 10px; }
 .font-extrabold { font-weight: 800; }
 
 /* --- 時間帯で変わるヘッダー（Expressive Weather 参考: 朝=青空／夕=茜／夜=星空） --- */
@@ -1765,7 +1776,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261126-0649</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261126-1032</div>
             </div>
         </div>
     </div>
@@ -9136,7 +9147,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             renderGroupList();
         }
         function toggleGroupListSize() {
-            groupListSize = groupListSize === 'big' ? 'std' : 'big';
+            groupListSize = groupListSize === 'std' ? 'big' : (groupListSize === 'big' ? 'small' : 'std');
             try { localStorage.setItem('oshi_gl_size', groupListSize); } catch (e) {}
             renderGroupList();
         }
@@ -9153,12 +9164,13 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 agSel.value = groupListAgency;
             }
             const szBtn = document.getElementById('gl-size-btn');
-            if (szBtn) szBtn.textContent = '大きさ：' + (groupListSize === 'big' ? '大' : '標準');
+            if (szBtn) szBtn.textContent = '大きさ：' + (groupListSize === 'big' ? '大' : (groupListSize === 'small' ? '小' : '標準'));
         }
         function renderGroupList() {
             const container = document.getElementById('group-list-rows');
             if (!container) return;
             container.classList.toggle('gl-big', groupListSize === 'big');
+            container.classList.toggle('gl-small', groupListSize === 'small');
             renderGroupBulkBar();
             renderGroupListControls();
             const q = (document.getElementById('group-list-search')?.value || '').trim().toLowerCase();
@@ -9203,7 +9215,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 const notifyOff = g.notify === false;
                 const img = (typeof GROUP_IMAGES !== 'undefined' && GROUP_IMAGES[g.name]) ? GROUP_IMAGES[g.name] : '';
                 rows += `
-                    <div class="gl-row flex items-center gap-3 p-2.5 rounded-2xl cursor-pointer select-none min-w-0 ${isHidden ? 'bg-white opacity-50' : ''}" style="${isHidden ? 'box-shadow:inset 0 0 0 1px #f1f5f9;' : `background-color:${g.color}10;box-shadow:inset 0 0 0 1px ${g.color}80;`}"
+                    <div class="gl-row flex items-center gap-3 p-2.5 rounded-2xl border shadow-sm cursor-pointer select-none min-w-0 ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}10;border-color:${g.color}80;`}"
                         onpointerdown="chipPointerDown(${index})" onpointerup="chipPointerEnd()" onpointerleave="chipPointerEnd()" onpointercancel="chipPointerEnd()" oncontextmenu="return false" onclick="glRowClick(${index})">
                         <span class="gl-av relative w-10 h-10 flex-shrink-0">
                             <span class="gl-av block w-10 h-10 rounded-xl overflow-hidden shadow-sm relative" style="background-color:${g.color}">
@@ -9215,9 +9227,9 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                             <span class="gl-name block text-[13px] font-bold ${isHidden ? 'text-slate-400' : 'text-slate-800'} truncate">${escapeHtml(g.name)}</span>
                             <span class="gl-sub block text-[10px] text-slate-400 truncate">${(typeof LINK_ONLY_GROUPS !== 'undefined' && LINK_ONLY_GROUPS.has(g.name)) ? '公式リンクのみ（予定は未対応）' : `未来のライブ ${futureCounts[g.name] || 0}件`}${notifyOff ? ' ・ 通知オフ' : ''}${agencyText_(g.name) ? ` ・ ${escapeHtml(agencyText_(g.name))}` : ''}</span>
                         </span>
-                        <span class="flex items-center gap-2.5 flex-shrink-0" style="margin-right:6px">
+                        <span class="gl-cluster flex items-center gap-2.5 flex-shrink-0" style="margin-right:6px">
                             <button type="button" aria-label="通知オン/オフ" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()" onclick="event.stopPropagation(); toggleGroupNotify(${index})" class="gl-bell flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${notifyOff ? 'text-slate-300' : 'text-pink-500'}"><i class="fa-${notifyOff ? 'solid fa-bell-slash' : 'solid fa-bell'} text-sm"></i></button>
-                            ${isHidden ? '<span class="w-8 h-8 flex items-center justify-center flex-shrink-0"><span class="gl-check fa-regular fa-circle text-slate-300" style="font-size:19px;line-height:1"></span></span>' : `<span class="w-8 h-8 flex items-center justify-center flex-shrink-0"><span class="gl-check fa-solid fa-circle-check" style="color:${g.color};font-size:19px;line-height:1"></span></span>`}
+                            ${isHidden ? '<span class="gl-checkbox w-8 h-8 flex items-center justify-center flex-shrink-0"><span class="gl-check fa-regular fa-circle text-slate-300" style="font-size:19px;line-height:1"></span></span>' : `<span class="gl-checkbox w-8 h-8 flex items-center justify-center flex-shrink-0"><span class="gl-check fa-solid fa-circle-check" style="color:${g.color};font-size:19px;line-height:1"></span></span>`}
                         </span>
                     </div>`;
             });
