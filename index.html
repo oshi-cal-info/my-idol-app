@@ -1351,7 +1351,7 @@ body.dark .skel-blk { background: linear-gradient(100deg, rgba(255,255,255,.06) 
 #group-action-modal .sheet-card { display: flex; flex-direction: column; overflow: hidden; }
 #group-action-body { overflow-y: auto; min-height: 0; }
 #group-links-modal .dlg-card { display: flex; flex-direction: column; overflow: hidden; max-height: 88svh; }
-#group-links-list { overflow-y: auto; min-height: 0; flex: 1; }
+#group-links-list { overflow-y: auto; min-height: 0; flex: 1; padding-top: 20px; }
 .sheet-handle { height: 22px; display: flex; align-items: flex-start; justify-content: center; padding-top: 8px; cursor: grab; touch-action: none; flex: none; position: sticky; top: 0; z-index: 20; }
 .sheet-handle::after { content: ""; width: 46px; height: 5.5px; border-radius: 999px; background: #9c8694; }
 /* バーの色はテーマ変数を使わず固定色（ライト/ダーク両背景で視認できる中間色） */
@@ -1485,6 +1485,7 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 
 /* --- group list panel sizing (compat.cssに無い任意値クラスを使わないための専用定義) --- */
 .group-list-panel { height: 92vh; height: 92svh; width: calc(100% - 20px); margin: 0 auto; padding-top: 0; }
+.group-list-panel > .sheet-handle { margin-bottom: 1.8rem; }
 .drawer-sec { margin-top: 1.15rem; }
 .drawer-sec > .fld-label { margin-bottom: .45rem; }
 @media (min-width: 640px) {
@@ -1778,7 +1779,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-0634</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-0640</div>
             </div>
         </div>
     </div>
