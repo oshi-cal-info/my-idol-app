@@ -1785,7 +1785,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-2231</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-2249</div>
             </div>
         </div>
     </div>
@@ -7425,6 +7425,42 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         }
         function markPastMonthDone_(ym) { markPastMonthsDone_([ym]); }
 
+        // 月ごとのキャッシュ本体は IndexedDB に置く。localStorage は容量上限が小さく、
+        // 履歴の全件保存が上限を超えると保存自体が失敗して、開き直すたびに取り直しになるため。
+        let pastMonthDbPromise_ = null;
+        function pastMonthDb_() {
+            if (pastMonthDbPromise_) return pastMonthDbPromise_;
+            pastMonthDbPromise_ = new Promise((resolve, reject) => {
+                if (typeof indexedDB === 'undefined') { reject(new Error('no indexedDB')); return; }
+                const req = indexedDB.open('oshi-cal-cache', 1);
+                req.onupgradeneeded = () => { req.result.createObjectStore('pastMonths'); };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+            return pastMonthDbPromise_;
+        }
+        async function idbGetPastMonth_(ym) {
+            try {
+                const db = await pastMonthDb_();
+                return await new Promise((resolve, reject) => {
+                    const r = db.transaction('pastMonths', 'readonly').objectStore('pastMonths').get(ym);
+                    r.onsuccess = () => resolve(r.result || null);
+                    r.onerror = () => reject(r.error);
+                });
+            } catch (e) { return null; }
+        }
+        async function idbPutPastMonth_(ym, evts) {
+            try {
+                const db = await pastMonthDb_();
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction('pastMonths', 'readwrite');
+                    tx.objectStore('pastMonths').put({ events: evts, savedAt: Date.now() }, ym);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject(tx.error);
+                });
+            } catch (e) { /* キャッシュ保存の失敗は取得自体の失敗にしない */ }
+        }
+
         // 過去分イベントを現在の予定へマージする（月取得・履歴復元の共通処理）
         function mergePastEvents_(newEvents) {
             const known = new Set(events.filter(e => e.isSheet).map(e => e.id));
@@ -7500,12 +7536,21 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         }
 
         async function loadPastMonth_(ym) {
-            // 一度まるごと取得した月は端末内の履歴に全件残っているので、通信せず履歴から組み立てる
+            // 一度取得した月は IndexedDB のキャッシュから通信なしで組み立てる
+            const cached = await idbGetPastMonth_(ym);
+            if (cached && Array.isArray(cached.events) && cached.events.length) {
+                mergePastEvents_(cached.events);
+                pastMonthsLoaded_.add(ym);
+                render();
+                return;
+            }
+            // 旧経路: 履歴に全件残っている月はそこから出し、ついでに IndexedDB へ移す
             if (pastMonthsDone_().has(ym)) {
                 const fromHistory = Object.values(eventHistory).filter(e => e && e.date && e.date.startsWith(ym));
                 if (fromHistory.length) {
                     mergePastEvents_(fromHistory);
                     pastMonthsLoaded_.add(ym);
+                    idbPutPastMonth_(ym, fromHistory);
                     render();
                     return;
                 }
@@ -7524,6 +7569,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             mergePastEvents_(newEvents);
             pastMonthsLoaded_.add(ym);
             markPastMonthDone_(ym);
+            await idbPutPastMonth_(ym, newEvents);
             render();
         }
 
