@@ -1286,6 +1286,8 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
 .wave-progress.ind { margin-top: 0; }
 .wave-progress.ind .wp-fill { stroke-dasharray: 26 74; animation: wp-dash 1.3s linear infinite; }
 @keyframes wp-dash { to { stroke-dashoffset: -100; } }
+/* 全データ（過去分）読み込み中の波インジケーター: ヘッダー下端に重ねる */
+#full-load-wave { position: absolute; left: 1rem; right: 1rem; bottom: 3px; margin: 0; pointer-events: none; }
 .morph-blob { width: 74px; height: 74px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px;
   background: linear-gradient(135deg, var(--primary), var(--tertiary));
   border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
@@ -1583,6 +1585,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             </button>
         </div>
         </div>
+        <div id="full-load-wave" class="wave-progress ind hidden" aria-hidden="true"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path class="wp-track" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/><path class="wp-fill" pathLength="100" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/></svg></div>
     </header>
 
     <!-- メインコンテンツ -->
@@ -1779,7 +1782,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-2147</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-2158</div>
             </div>
         </div>
     </div>
@@ -7345,9 +7348,16 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         let fullDataLoaded = false;
         let fullDataPromise = null;
         let suppressNewEventCheck = false;
+        // 全データ読み込み中はヘッダー下端に波インジケーターを出す（読み込みの可視化）
+        function setFullLoadWave_(on) {
+            const el = document.getElementById('full-load-wave');
+            if (el) el.classList.toggle('hidden', !on);
+        }
+
         async function ensureFullData() {
             if (fullDataLoaded) return;
             if (fullDataPromise) return fullDataPromise;
+            setFullLoadWave_(true);
             fullDataPromise = (async () => {
                 try {
                     const response = await fetch(FULL_SYNC_CSV_URL);
@@ -7365,6 +7375,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     console.log('Full data load failed:', e);
                 } finally {
                     fullDataPromise = null;
+                    setFullLoadWave_(false);
                 }
             })();
             return fullDataPromise;
