@@ -1288,6 +1288,7 @@ body.dark .today-live-banner .text-white\/70 { color: #fff; }
 @keyframes wp-dash { to { stroke-dashoffset: -100; } }
 /* 全データ（過去分）読み込み中の波インジケーター: ヘッダー下端に重ねる */
 #full-load-wave { position: absolute; left: 1rem; right: 1rem; bottom: 3px; margin: 0; pointer-events: none; }
+#full-load-msg { position: absolute; right: 0; bottom: 14px; font-size: 10px; font-weight: 700; letter-spacing: .02em; color: var(--primary); white-space: nowrap; }
 .morph-blob { width: 74px; height: 74px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px;
   background: linear-gradient(135deg, var(--primary), var(--tertiary));
   border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
@@ -1585,7 +1586,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             </button>
         </div>
         </div>
-        <div id="full-load-wave" class="wave-progress ind hidden" aria-hidden="true"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path class="wp-track" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/><path class="wp-fill" pathLength="100" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/></svg></div>
+        <div id="full-load-wave" class="wave-progress ind hidden" aria-hidden="true"><span id="full-load-msg"></span><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path class="wp-track" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/><path class="wp-fill" pathLength="100" d="M0,6 Q6.25,1 12.5,6 T25,6 T37.5,6 T50,6 T62.5,6 T75,6 T87.5,6 T100,6"/></svg></div>
     </header>
 
     <!-- メインコンテンツ -->
@@ -1782,7 +1783,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-2158</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-2208</div>
             </div>
         </div>
     </div>
@@ -7348,16 +7349,21 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         let fullDataLoaded = false;
         let fullDataPromise = null;
         let suppressNewEventCheck = false;
-        // 全データ読み込み中はヘッダー下端に波インジケーターを出す（読み込みの可視化）
-        function setFullLoadWave_(on) {
+        // 全データ読み込み中はヘッダー下端に波インジケーター＋文言を出す（読み込みの可視化）
+        function setFullLoadWave_(on, msg) {
             const el = document.getElementById('full-load-wave');
-            if (el) el.classList.toggle('hidden', !on);
+            if (!el) return;
+            if (msg) {
+                const m = document.getElementById('full-load-msg');
+                if (m) m.textContent = msg;
+            }
+            el.classList.toggle('hidden', !on);
         }
 
         async function ensureFullData() {
             if (fullDataLoaded) return;
             if (fullDataPromise) return fullDataPromise;
-            setFullLoadWave_(true);
+            setFullLoadWave_(true, '過去のスケジュールを取得中…');
             fullDataPromise = (async () => {
                 try {
                     const response = await fetch(FULL_SYNC_CSV_URL);
@@ -7379,6 +7385,81 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 }
             })();
             return fullDataPromise;
+        }
+
+        // ==== 過去分の月ごと読み込み ====
+        // 全件CSV（約39MB・6.3万件）の一括取り込みは、通信量に加えて端末側の解析と
+        // 重複チェックが重く、画面が固まる。過去分は「見たい月」だけをシート側の
+        // クエリ（gviz）で絞って取り、既存の予定へマージする。
+        const GVIZ_BASE_ = 'https://docs.google.com/spreadsheets/d/1Pl3WUmqOdgE6IHMxNsOiemRu_A-EDk6xmIino4CKaEQ/gviz/tq?tqx=out:csv&gid=0&tq=';
+        const pastMonthsLoaded_ = new Set();
+        const pastMonthsInFlight_ = new Set();
+
+        // parseCSV の行→予定変換と同じ規則（列位置で読む）。重複排除は Set で線形に。
+        function sheetEventsFromRows_(rows) {
+            const out = [];
+            const seen = new Set();
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i].map(c => c.trim());
+                if (!cols.some(c => c)) continue;
+                if (cols.length < 4) continue;
+                const rawDate = cols[0];
+                let parsedDate = dayjs(rawDate);
+                if (!parsedDate.isValid() || parsedDate.year() < 2025) {
+                    const currentYear = dayjs().year();
+                    parsedDate = dayjs(`${currentYear}-${rawDate.replace(/\//g, '-')}`);
+                }
+                const date = parsedDate.isValid() ? parsedDate.format('YYYY-MM-DD') : rawDate;
+                const time = cols[1] || '00:00';
+                const groupName = cols[2];
+                const title = cols[3];
+                if (!date || !groupName || !title) continue;
+                if (!groups.find(g => g.name === groupName)) {
+                    groups.push({ name: groupName, color: getRandomColor(), visible: true });
+                }
+                const stableId = stableSheetId(date, groupName, title);
+                if (seen.has(stableId)) continue;
+                seen.add(stableId);
+                out.push({
+                    id: stableId, date: date, time: time, group: groupName, title: title,
+                    location: cols[4] || '', regulation: cols[5] || '', isSheet: true
+                });
+            }
+            return out;
+        }
+
+        async function ensurePastMonth(ym) {
+            if (!/^\d{4}-\d{2}$/.test(ym)) return;
+            if (fullDataLoaded || pastMonthsLoaded_.has(ym) || pastMonthsInFlight_.has(ym)) return;
+            pastMonthsInFlight_.add(ym);
+            setFullLoadWave_(true, dayjs(ym + '-01').format('YYYY年M月') + 'の過去のスケジュールを取得中…');
+            try {
+                const start = ym + '-01';
+                const next = dayjs(start).add(1, 'month').format('YYYY-MM-DD');
+                const tq = `select * where A >= date '${start}' and A < date '${next}'`;
+                const res = await fetch(GVIZ_BASE_ + encodeURIComponent(tq));
+                if (!res.ok) return;
+                const csvText = await res.text();
+                const groupCountBefore = groups.length;
+                const newEvents = sheetEventsFromRows_(parseCSVRows(csvText));
+                if (groups.length !== groupCountBefore) { ensureLinkGroups_(); saveUserData(); }
+                const known = new Set(events.filter(e => e.isSheet).map(e => e.id));
+                const add = newEvents.filter(e => !known.has(e.id));
+                if (add.length) {
+                    add.forEach(e => { eventHistory[e.id] = e; });
+                    saveEventHistory();
+                    const manualEvents = events.filter(e => !e.isSheet);
+                    const sheetAll = events.filter(e => e.isSheet).concat(add);
+                    events = applyEventOverrides([...manualEvents, ...sheetAll]);
+                }
+                pastMonthsLoaded_.add(ym);
+                render();
+            } catch (e) {
+                console.log('Past month load failed:', e);
+            } finally {
+                pastMonthsInFlight_.delete(ym);
+                if (pastMonthsInFlight_.size === 0 && !fullDataPromise) setFullLoadWave_(false);
+            }
         }
 
         function loadCachedSheetData() {
@@ -12228,7 +12309,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         function changeMonth(direction) {
             currentMonth = currentMonth.add(direction, 'month');
             renderMonthView();
-            if (!fullDataLoaded && currentMonth.isBefore(dayjs().startOf('month'))) ensureFullData();
+            if (!fullDataLoaded && currentMonth.isBefore(dayjs().startOf('month'))) ensurePastMonth(currentMonth.format('YYYY-MM'));
         }
 
         function toggleMenu() {
@@ -12358,9 +12439,12 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         function togglePastEvents() {
             showPastEvents = !showPastEvents;
             updatePastToggleUI();
-            // 過去分は通常読み込み（未来分CSV）に入っていないので、オンにしたら全データを取りに行く
-            // （ensureFullData は読み込み完了後に render() し直す）
-            if (showPastEvents) ensureFullData();
+            // 過去分は通常読み込み（未来分CSV）に入っていないので、オンにしたら
+            // 今月と表示中の月だけ月単位で取りに行く（全件一括は重すぎて固まるため）
+            if (showPastEvents) {
+                ensurePastMonth(dayjs().format('YYYY-MM'));
+                ensurePastMonth(currentMonth.format('YYYY-MM'));
+            }
             render();
         }
 
