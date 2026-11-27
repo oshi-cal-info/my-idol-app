@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>表示幅チェック</title>
+<style>
+  body { font-family: sans-serif; margin: 0; padding: 24px; background: #1b1020; color: #fff; }
+  .big { font-size: 64px; font-weight: 900; line-height: 1.2; }
+  .row { font-size: 20px; margin-top: 16px; }
+  .ok { color: #7ee2a8; } .ng { color: #ff9db0; }
+</style>
+</head>
+<body>
+<div class="row">このブラウザの表示幅（CSS px）</div>
+<div class="big" id="w">…</div>
+<div class="row" id="mq"></div>
+<div class="row" id="ua" style="font-size:12px; opacity:.7; word-break: break-all;"></div>
+<script>
+  function show() {
+    document.getElementById('w').textContent = window.innerWidth + ' × ' + window.innerHeight;
+    const m980 = matchMedia('(min-width: 980px)').matches;
+    const m920 = matchMedia('(min-width: 920px)').matches;
+    const m900 = matchMedia('(min-width: 900px)').matches;
+    document.getElementById('mq').innerHTML =
+      '980px以上: <span class="' + (m980 ? 'ok' : 'ng') + '">' + (m980 ? 'はい' : 'いいえ') + '</span><br>' +
+      '920px以上: <span class="' + (m920 ? 'ok' : 'ng') + '">' + (m920 ? 'はい' : 'いいえ') + '</span><br>' +
+      '900px以上: <span class="' + (m900 ? 'ok' : 'ng') + '">' + (m900 ? 'はい' : 'いいえ') + '</span>';
+    document.getElementById('ua').textContent = navigator.userAgent;
+  }
+  show();
+  addEventListener('resize', show);
+</script>
+</body>
+</html>
