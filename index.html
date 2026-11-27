@@ -1401,6 +1401,8 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
   #view-list:not(.hidden), #going-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; align-items: start; }
   #view-list > *, #going-list > * { margin-top: 0 !important; min-width: 0; }
   #view-list > [data-date], #view-list > .xl-span, #going-list > .xl-span, #list-sentinel { grid-column: 1 / -1; }
+  #view-list > .xl-half { grid-column: auto; align-self: stretch; }
+  #view-list > .xl-roulette.xl-half { display: flex; flex-direction: column; justify-content: center; }
   #view-month:not(.hidden), #view-week:not(.hidden) { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
   #view-month > *, #view-week > * { margin-top: 0 !important; }
   #view-month > .seg-bar { flex: 0 0 100%; }
@@ -1800,7 +1802,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-0006</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-0020</div>
             </div>
         </div>
     </div>
@@ -11323,7 +11325,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 `;
             }
             return `
-                <div class="xl-span bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-3xl px-4 py-3.5 shadow-sm">
+                <div class="xl-span xl-roulette bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-3xl px-4 py-3.5 shadow-sm">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
                             <span class="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-dice text-[10px]"></i></span>
@@ -11965,6 +11967,13 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             hydrateWeather();
         }
 
+        // 大画面2カラム時、カウントダウンとルーレットが両方ある場合だけ半幅で横並びにする（単独なら全幅のまま）
+        function pairSpecialCards_(container) {
+            const cd = container.querySelector('.cd-card');
+            const rl = container.querySelector('.xl-roulette');
+            if (cd && rl) { cd.classList.add('xl-half'); rl.classList.add('xl-half'); }
+        }
+
         function renderListView() {
             const container = document.getElementById('view-list');
 
@@ -11988,6 +11997,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     </div>
                 ` : skeletonCardsHtml_(3);
                 container.innerHTML = countdownCardHtml() + recoCardHtml() + rouletteCardHtml() + highlightCardHtml() + todayLiveCardHtml() + emptyBox;
+                pairSpecialCards_(container);
                 fixTodayBannerOffset();
                 hydrateWeather();
                 return;
@@ -12000,6 +12010,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const hasMore = listSegIdx < listSegments.length;
             container.innerHTML = countdownCardHtml() + recoCardHtml() + rouletteCardHtml() + highlightCardHtml() + todayLiveCardHtml() + firstHtml
                 + (hasMore ? '<div id="list-sentinel" class="py-5 text-center text-[11px] text-slate-300"><i class="fa-solid fa-ellipsis"></i></div>' : '');
+            pairSpecialCards_(container);
             if (hasMore) {
                 const sentinel = document.getElementById('list-sentinel');
                 if ('IntersectionObserver' in window) {
