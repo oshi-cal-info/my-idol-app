@@ -1409,6 +1409,10 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
   #view-list > .xl-roulette.xl-half > div:first-child > div:first-child > span:first-child { width: 2.75rem; height: 2.75rem; }
   #view-list > .xl-roulette.xl-half .fa-dice { font-size: 1.125rem; }
   #view-list > .xl-roulette.xl-half > div:first-child p:first-of-type { font-size: .9375rem; }
+  #view-list > * { order: 10; }
+  #view-list > .cd-card { order: 1; }
+  #view-list > .xl-roulette { order: 2; }
+  #view-list > .xl-reco { order: 3; }
   #view-month:not(.hidden), #view-week:not(.hidden) { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
   #view-month > *, #view-week > * { margin-top: 0 !important; }
   #view-month > .seg-bar { flex: 0 0 100%; }
@@ -1808,7 +1812,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-0115</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-0125</div>
             </div>
         </div>
     </div>
@@ -11084,7 +11088,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 `;
             }).join('');
             return `
-                <div class="xl-span bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm">
+                <div class="xl-span xl-reco bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm">
                     <div class="flex items-center space-x-2">
                         <span class="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-thumbs-up text-[10px]"></i></span>
                         <div>
@@ -11973,12 +11977,11 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             hydrateWeather();
         }
 
-        // 大画面2カラム時、ルーレットとその直前の特集カード（おすすめライブ／カウントダウン）を半幅で横並びにする（単独なら全幅のまま）
+        // 大画面2カラム時、カウントダウンとルーレットが両方ある場合だけ半幅で横並びにする（並び順はCSSのorderで カウントダウン→ルーレット→おすすめ に組み替える）
         function pairSpecialCards_(container) {
+            const cd = container.querySelector('.cd-card');
             const rl = container.querySelector('.xl-roulette');
-            if (!rl) return;
-            const prev = rl.previousElementSibling;
-            if (prev && prev.classList.contains('xl-span')) { prev.classList.add('xl-half'); rl.classList.add('xl-half'); }
+            if (cd && rl) { cd.classList.add('xl-half'); rl.classList.add('xl-half'); }
         }
 
         function renderListView() {
