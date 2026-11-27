@@ -1393,6 +1393,21 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
    上に少し余白を空けて密着を避ける */
 #search-results { padding-top: 8px; }
 .ovl.flipping { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+/* --- 大画面（980px以上）: 2カラム表示。980px未満には一切効かない --- */
+@media (min-width: 980px) {
+  main.max-w-md, footer.max-w-md { max-width: 64rem; }
+  .app-header { max-width: 64rem; margin-inline: auto; }
+  .fab-stack { right: max(1rem, calc(50% - 31rem)); }
+  #view-list:not(.hidden), #going-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; align-items: start; }
+  #view-list > *, #going-list > * { margin-top: 0 !important; min-width: 0; }
+  #view-list > [data-date], #view-list > .xl-span, #going-list > .xl-span, #list-sentinel { grid-column: 1 / -1; }
+  #view-month:not(.hidden), #view-week:not(.hidden) { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
+  #view-month > *, #view-week > * { margin-top: 0 !important; }
+  #view-month > .seg-bar { flex: 0 0 100%; }
+  #view-month > .xl-cal, #view-week > .xl-cal { flex: 1 1 26rem; min-width: 0; }
+  #selected-day-events, #week-day-events { flex: 1 1 20rem; min-width: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .view-in, .card-in, .ovl:not(.hidden), .ovl:not(.hidden) > .dlg-card, .ovl:not(.hidden) > .sheet-card, .detail-pop { animation: none !important; }
 }
@@ -1636,7 +1651,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <button id="month-mode-all-btn" onclick="setMonthShowFavoritesOnly(false)" class="seg-btn on">すべて</button>
                 <button id="month-mode-going-btn" onclick="setMonthShowFavoritesOnly(true)" class="seg-btn">行く予定だけ</button>
             </div>
-            <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/60">
+            <div class="xl-cal bg-white rounded-3xl p-4 shadow-sm border border-pink-100/60">
                 <div class="flex justify-between items-center mb-4 px-2">
                     <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 hover:bg-pink-100 transition"><i class="fa-solid fa-chevron-left text-xs"></i></button>
                     <h3 id="calendar-title" class="font-bold text-slate-800 text-sm">2026年 9月</h3>
@@ -1652,7 +1667,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
         <!-- 週表示ビュー -->
         <div id="view-week" class="hidden space-y-4">
-            <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/60">
+            <div class="xl-cal bg-white rounded-3xl p-4 shadow-sm border border-pink-100/60">
                 <div class="flex justify-between items-center mb-3 px-2">
                     <button onclick="changeWeek(-1)" class="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 hover:bg-pink-100 transition"><i class="fa-solid fa-chevron-left text-xs"></i></button>
                     <div class="flex flex-col items-center">
@@ -1785,7 +1800,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-2249</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-2356</div>
             </div>
         </div>
     </div>
@@ -9687,7 +9702,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             if (hlData.to && today > hlData.to) return '';
             const items = hlData.bullets.map(b => `<div class="flex items-start space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0"></span><p class="text-[11px] font-semibold text-slate-600 leading-relaxed">${escapeHtml(b)}</p></div>`).join('');
             return `
-                <div class="bg-gradient-to-r from-amber-50 to-pink-50 border border-amber-100 rounded-3xl px-4 py-3.5 shadow-sm">
+                <div class="xl-span bg-gradient-to-r from-amber-50 to-pink-50 border border-amber-100 rounded-3xl px-4 py-3.5 shadow-sm">
                     <div class="flex items-center space-x-2 mb-2">
                         <span class="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-fire text-[10px]"></i></span>
                         <p class="text-xs font-black text-slate-800">${escapeHtml(hlData.title)}</p>
@@ -10224,7 +10239,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 : `<span class="inline-flex items-baseline text-pink-500"><span class="text-[11px] font-black mr-0.5">あと</span><span class="cd-big">${t.daysLeft}</span><span class="text-xs font-black ml-0.5">日</span></span>`;
             const wp = t.daysLeft === 0 ? 1 : Math.max(.06, Math.min(1, 1 - t.daysLeft / 30));
             return `
-                <div onclick="jumpToEvent('${e.id}')" class="cd-card cursor-pointer bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm">
+                <div onclick="jumpToEvent('${e.id}')" class="cd-card xl-span cursor-pointer bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm">
                     <div class="flex items-center space-x-3">
                     <div class="flex-shrink-0 w-[76px] text-center">
                         ${big}
@@ -11061,7 +11076,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 `;
             }).join('');
             return `
-                <div class="bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm">
+                <div class="xl-span bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm">
                     <div class="flex items-center space-x-2">
                         <span class="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-thumbs-up text-[10px]"></i></span>
                         <div>
@@ -11308,7 +11323,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 `;
             }
             return `
-                <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-3xl px-4 py-3.5 shadow-sm">
+                <div class="xl-span bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-3xl px-4 py-3.5 shadow-sm">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
                             <span class="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-dice text-[10px]"></i></span>
@@ -11338,7 +11353,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             if (lives.length === 0) return '';
 
             return `
-                <div onclick="openTodayLiveModal()" class="today-live-banner sticky top-[92px] z-20 cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl px-4 py-3.5 shadow-md shadow-pink-500/40 flex items-center justify-between">
+                <div onclick="openTodayLiveModal()" class="today-live-banner xl-span sticky top-[92px] z-20 cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl px-4 py-3.5 shadow-md shadow-pink-500/40 flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                         <span class="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-white flex-shrink-0"><i class="fa-solid fa-star text-[10px]"></i></span>
                         <span class="text-white font-black text-sm">今日の現場</span>
@@ -11967,7 +11982,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 listSegments = null;
                 listSegIdx = 0;
                 const emptyBox = sheetDataReady ? `
-                    <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
+                    <div class="xl-span text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
                         <div class="morph-blob mx-auto mb-4"><i class="fa-regular fa-calendar-xmark"></i></div>
                         <p class="text-xs text-slate-400 font-medium">予定がありません</p>
                     </div>
@@ -12020,7 +12035,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     return;
                 }
                 container.innerHTML = `
-                    <div class="text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
+                    <div class="xl-span text-center py-12 bg-white rounded-3xl border border-pink-100/60 p-8 shadow-sm">
                         <div class="morph-blob mx-auto mb-4"><i class="fa-solid fa-heart"></i></div>
                         <p class="text-xs text-slate-400 font-medium">まだ「行く予定」がありません</p>
                         <p class="text-[10px] text-slate-400 mt-1.5">リストの♡をタップすると、ここに追加されるよ</p>
