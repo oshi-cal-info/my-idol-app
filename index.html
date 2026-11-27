@@ -1413,6 +1413,8 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
   #view-list > .cd-card { order: 1; }
   #view-list > .xl-roulette { order: 2; }
   #view-list > .xl-reco { order: 3; }
+  #view-list .event-card > .flex-1, #going-list .event-card > .flex-1 { display: flex; flex-direction: column; }
+  #view-list .event-card > .flex-1 > div:last-child, #going-list .event-card > .flex-1 > div:last-child { margin-top: auto; }
   #view-month:not(.hidden), #view-week:not(.hidden) { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
   #view-month > *, #view-week > * { margin-top: 0 !important; }
   #view-month > .seg-bar { flex: 0 0 100%; }
@@ -1812,7 +1814,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-0125</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-0142</div>
             </div>
         </div>
     </div>
