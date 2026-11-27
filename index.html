@@ -1398,7 +1398,9 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
   main.max-w-md, footer.max-w-md { max-width: 64rem; }
   .app-header { max-width: 64rem; margin-inline: auto; }
   .fab-stack { right: max(1rem, calc(50% - 31rem)); }
-  #view-list:not(.hidden), #going-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; align-items: start; }
+  #view-list:not(.hidden), #going-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; align-items: stretch; }
+  #view-list > .swipe-wrap, #going-list > .swipe-wrap { display: flex; flex-direction: column; }
+  #view-list > .swipe-wrap > .event-card, #going-list > .swipe-wrap > .event-card { flex: 1 1 auto; }
   #view-list > *, #going-list > * { margin-top: 0 !important; min-width: 0; }
   #view-list > [data-date], #view-list > .xl-span, #going-list > .xl-span, #list-sentinel { grid-column: 1 / -1; }
   #view-list > .xl-half { grid-column: auto; align-self: stretch; }
@@ -1806,7 +1808,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-0040</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-0115</div>
             </div>
         </div>
     </div>
@@ -11971,11 +11973,12 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             hydrateWeather();
         }
 
-        // 大画面2カラム時、カウントダウンとルーレットが両方ある場合だけ半幅で横並びにする（単独なら全幅のまま）
+        // 大画面2カラム時、ルーレットとその直前の特集カード（おすすめライブ／カウントダウン）を半幅で横並びにする（単独なら全幅のまま）
         function pairSpecialCards_(container) {
-            const cd = container.querySelector('.cd-card');
             const rl = container.querySelector('.xl-roulette');
-            if (cd && rl) { cd.classList.add('xl-half'); rl.classList.add('xl-half'); }
+            if (!rl) return;
+            const prev = rl.previousElementSibling;
+            if (prev && prev.classList.contains('xl-span')) { prev.classList.add('xl-half'); rl.classList.add('xl-half'); }
         }
 
         function renderListView() {
