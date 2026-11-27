@@ -1785,7 +1785,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-2219</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261127-2231</div>
             </div>
         </div>
     </div>
@@ -7379,6 +7379,8 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     currentMonth = savedMonth;
                     selectedDate = savedDate;
                     fullDataLoaded = true;
+                    // 全件が履歴に入ったので、含まれる月は次回から履歴で出せるよう記録する
+                    markPastMonthsDone_(new Set(events.map(e => e && e.date ? e.date.slice(0, 7) : '').filter(s => /^\d{4}-\d{2}$/.test(s))));
                     render();
                 } catch (e) {
                     console.log('Full data load failed:', e);
@@ -7405,6 +7407,34 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         function saveEventHistorySoon_() {
             if (historySaveTimer_) return;
             historySaveTimer_ = setTimeout(() => { historySaveTimer_ = null; saveEventHistory(); }, 800);
+        }
+
+        // 「まるごと取得が完了した月」の記録。完了した月は端末内の履歴に全件残るので、
+        // 次回からは通信せず履歴から出せる（部分的にしか入っていない月は記録しない）
+        const PAST_MONTHS_KEY_ = 'oshi_cal_past_months_done';
+        function pastMonthsDone_() {
+            try { return new Set(JSON.parse(localStorage.getItem(PAST_MONTHS_KEY_) || '[]')); } catch (e) { return new Set(); }
+        }
+        function markPastMonthsDone_(yms) {
+            try {
+                const s = pastMonthsDone_();
+                let changed = false;
+                yms.forEach(ym => { if (!s.has(ym)) { s.add(ym); changed = true; } });
+                if (changed) localStorage.setItem(PAST_MONTHS_KEY_, JSON.stringify([...s]));
+            } catch (e) {}
+        }
+        function markPastMonthDone_(ym) { markPastMonthsDone_([ym]); }
+
+        // 過去分イベントを現在の予定へマージする（月取得・履歴復元の共通処理）
+        function mergePastEvents_(newEvents) {
+            const known = new Set(events.filter(e => e.isSheet).map(e => e.id));
+            const add = newEvents.filter(e => !known.has(e.id));
+            if (!add.length) return;
+            add.forEach(e => { eventHistory[e.id] = e; });
+            saveEventHistorySoon_();
+            const manualEvents = events.filter(e => !e.isSheet);
+            const sheetAll = events.filter(e => e.isSheet).concat(add);
+            events = applyEventOverrides([...manualEvents, ...sheetAll]);
         }
 
         // parseCSV の行→予定変換と同じ規則（列位置で読む）。重複排除は Set で線形に。
@@ -7470,6 +7500,17 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         }
 
         async function loadPastMonth_(ym) {
+            // 一度まるごと取得した月は端末内の履歴に全件残っているので、通信せず履歴から組み立てる
+            if (pastMonthsDone_().has(ym)) {
+                const fromHistory = Object.values(eventHistory).filter(e => e && e.date && e.date.startsWith(ym));
+                if (fromHistory.length) {
+                    mergePastEvents_(fromHistory);
+                    pastMonthsLoaded_.add(ym);
+                    render();
+                    return;
+                }
+                // 履歴が欠けていたら取り直す
+            }
             setFullLoadWave_(true, dayjs(ym + '-01').format('YYYY年M月') + 'の過去のスケジュールを取得中…');
             const start = ym + '-01';
             const next = dayjs(start).add(1, 'month').format('YYYY-MM-DD');
@@ -7480,16 +7521,9 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const groupCountBefore = groups.length;
             const newEvents = sheetEventsFromRows_(parseCSVRows(csvText));
             if (groups.length !== groupCountBefore) { ensureLinkGroups_(); saveUserData(); }
-            const known = new Set(events.filter(e => e.isSheet).map(e => e.id));
-            const add = newEvents.filter(e => !known.has(e.id));
-            if (add.length) {
-                add.forEach(e => { eventHistory[e.id] = e; });
-                saveEventHistorySoon_();
-                const manualEvents = events.filter(e => !e.isSheet);
-                const sheetAll = events.filter(e => e.isSheet).concat(add);
-                events = applyEventOverrides([...manualEvents, ...sheetAll]);
-            }
+            mergePastEvents_(newEvents);
             pastMonthsLoaded_.add(ym);
+            markPastMonthDone_(ym);
             render();
         }
 
