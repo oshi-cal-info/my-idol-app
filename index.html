@@ -1402,7 +1402,11 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
   #view-list > *, #going-list > * { margin-top: 0 !important; min-width: 0; }
   #view-list > [data-date], #view-list > .xl-span, #going-list > .xl-span, #list-sentinel { grid-column: 1 / -1; }
   #view-list > .xl-half { grid-column: auto; align-self: stretch; }
-  #view-list > .xl-roulette.xl-half { display: flex; flex-direction: column; justify-content: center; }
+  #view-list > .xl-roulette.xl-half { display: flex; flex-direction: column; justify-content: flex-start; position: relative; overflow: hidden; }
+  #view-list > .xl-roulette.xl-half::after { content: "\f522"; font-family: "Font Awesome 6 Free"; font-weight: 900; position: absolute; right: 10px; bottom: -30px; font-size: 118px; line-height: 1; color: rgba(168, 85, 247, .10); transform: rotate(-12deg); pointer-events: none; }
+  #view-list > .xl-roulette.xl-half > div:first-child > div:first-child > span:first-child { width: 2.75rem; height: 2.75rem; }
+  #view-list > .xl-roulette.xl-half .fa-dice { font-size: 1.125rem; }
+  #view-list > .xl-roulette.xl-half > div:first-child p:first-of-type { font-size: .9375rem; }
   #view-month:not(.hidden), #view-week:not(.hidden) { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
   #view-month > *, #view-week > * { margin-top: 0 !important; }
   #view-month > .seg-bar { flex: 0 0 100%; }
@@ -1802,7 +1806,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-0020</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-0030</div>
             </div>
         </div>
     </div>
