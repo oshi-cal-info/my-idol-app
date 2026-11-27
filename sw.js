@@ -25,6 +25,8 @@ messaging.onBackgroundMessage((payload) => {
         body: body,
         icon: './icon-192.png',
         badge: './icon-192.png',
+        // 締切通知だけ、タップするまで残す（プッシュ強化 2026-11-27）
+        requireInteraction: data.type === 'deadline',
         tag: data.eventId ? 'oshi-cal-' + (data.type || 'event') + '-' + data.eventId : 'oshi-cal-new-event',
         data: { url: data.url || './index.html', eventId: data.eventId || '' }
     });
