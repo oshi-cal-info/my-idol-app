@@ -1817,7 +1817,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2126</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2137</div>
             </div>
         </div>
     </div>
@@ -9839,7 +9839,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                                 <span id="agency-peers-chev-${pi}" class="fa-solid fa-chevron-down text-[10px] text-slate-400" style="transition:transform .2s"></span>
                             </span>
                         </button>
-                        <div id="agency-peers-${pi}" class="hidden px-3 pb-3">
+                        <div id="agency-peers-${pi}" class="hidden px-3 pt-2 pb-3">
                             <div class="flex flex-wrap" style="gap:6px">
                                 ${peers.map((n, ni) => { const c = (groups.find(g => g.name === n) || {}).color || '#94a3b8'; return `<span onclick="openAgencyPeer_(${pi}, ${ni})" class="inline-flex items-center px-2.5 py-1.5 rounded-full bg-white border border-slate-200 text-[11px] font-bold text-slate-700 cursor-pointer"><span class="w-2 h-2 rounded-full inline-block flex-shrink-0" style="background-color:${c};margin-right:6px"></span>${escapeHtml(n)}</span>`; }).join('')}
                             </div>
