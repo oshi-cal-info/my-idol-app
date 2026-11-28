@@ -699,6 +699,9 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 .t-controls{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.5rem .9rem;background:var(--surface-container-high);border-bottom:1px solid var(--outline-variant);font-size:.75rem;font-weight:700}
 .t-toggle{border:1px solid var(--outline-variant);background:var(--surface-container-lowest);color:var(--on-surface);border-radius:999px;padding:.45rem .9rem;font-size:.72rem;font-weight:700;cursor:pointer}
 .t-main{max-width:28rem;margin:0 auto;padding:1rem 1rem 2rem;display:flex;flex-direction:column;gap:1.1rem}
+/* ===== 3.13.3対策（この版のみ・本番に上げる場合も同じ対策が要る）: Beer 3.13の「直下にmainがある親を3列グリッド化する」規則と main の overflow を打ち消す ===== */
+body:has(>main){display:block}
+main.t-main{overflow:visible}
 .t-h{font-size:.78rem;font-weight:800;color:var(--on-surface-variant);margin:0}
 .t-note{font-size:.7rem;color:var(--on-surface-variant);line-height:1.6;margin:0}
 .t-row{display:flex;align-items:center}
