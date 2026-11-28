@@ -1474,6 +1474,7 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 .cal-refresh-btn { margin: 0 0 0 auto; padding: .3rem .6rem; border-radius: 999px; border: 1px solid rgba(236,72,153,.4); background: #fdf2f8; color: #db2777; font-size: 10px; font-weight: 800; white-space: nowrap; cursor: pointer; block-size: auto; min-block-size: 0; inline-size: auto; min-inline-size: 0; box-sizing: border-box; flex: none; display: inline-flex; align-items: center; gap: 4px; box-shadow: none; }
 .cal-refresh-btn:active { transform: scale(.96); }
 .gl-fchip.on { background: var(--primary); color: var(--on-primary); }
+.agency-row-btn { margin: 0; padding: .75rem; background: none; background-color: transparent; color: inherit; border: none; border-radius: 0; block-size: auto; min-block-size: 0; min-height: 0; inline-size: 100%; min-inline-size: 0; box-sizing: border-box; box-shadow: none; gap: 0; }
 .gl-agency-sel { margin: 0; flex: 1; min-width: 0; height: 32px; block-size: 32px; min-height: 0; border-radius: 999px; border: 1px solid var(--outline-variant); background-color: var(--surface-container); color: var(--on-surface); font-size: 11px; font-weight: 700; padding: 0 1.7rem 0 .8rem; appearance: none; -webkit-appearance: none; box-sizing: border-box; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a08b99' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .65rem center; background-size: 11px 11px; }
 .gl-row { height: 62px; }
 .gl-row .gl-av { width: 40px; height: 40px; }
@@ -1816,7 +1817,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2054</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2126</div>
             </div>
         </div>
     </div>
@@ -9831,7 +9832,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 linksModalPeers_.push(peers);
                 return `
                     <div class="bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden">
-                        <button type="button" onclick="toggleAgencyPeers_(${pi})" class="w-full flex items-center p-3 text-left">
+                        <button type="button" onclick="toggleAgencyPeers_(${pi})" class="agency-row-btn w-full flex items-center text-left">
                             <span class="flex items-center space-x-2 flex-1 min-w-0">${head}</span>
                             <span class="flex items-center space-x-1 flex-shrink-0 pl-2">
                                 <span class="text-[10px] font-bold text-slate-400">同じ事務所 ${peers.length}組</span>
