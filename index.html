@@ -1817,7 +1817,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2145</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2217</div>
             </div>
         </div>
     </div>
@@ -3825,7 +3825,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 spotify: "https://open.spotify.com/artist/6YronPZruM6tYUeh2kaMhV?si=l-1DLNbpTWmjsNocGuW1ZA&utm_source=copy-link",
                 fanclub: ""
             },
-            "Merry BAD TUNE": {
+            "Merry BAD TUNE.": {
                 x: "https://x.com/merrybadtune",
                 instagram: "",
                 tiktok: "",
@@ -6516,7 +6516,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             "SUNNY PARADE": "https://yt3.googleusercontent.com/xETxW6nkjkLQcTHuwhq4D5i44smEck8yK7ETxvF54zNQpQ7VblTWyh3SugXsiMolDttpNShf=s176-c-k-c0x00ffffff-no-rj",
             "AKANECLUB": "https://yt3.googleusercontent.com/otp5hmUEdHL4GeDGZ-SbI_KnvEV1MJamqP1tlGBiDjUsO1ySvtw1LQKiwtxY33EMbvcFgGgmFg=s176-c-k-c0x00ffffff-no-rj",
             "FULIT BOX": "https://yt3.googleusercontent.com/lwtYZ_DKfcwLu4yjo6-Kdfno5FdtfSVHZZuRm60D0ko9SAIT-ww-6SkTXADucdneZmy76Fn58lA=s176-c-k-c0x00ffffff-no-rj",
-            "Merry BAD TUNE": "https://yt3.googleusercontent.com/MWmeWLCrqCw7F9n1tyBTeHNOd-HIXLegVavNOgLEHIaCk5ALQfhZkuYwMyGvzV97UoZeceJZqQ=s176-c-k-c0x00ffffff-no-rj",
+            "Merry BAD TUNE.": "https://yt3.googleusercontent.com/MWmeWLCrqCw7F9n1tyBTeHNOd-HIXLegVavNOgLEHIaCk5ALQfhZkuYwMyGvzV97UoZeceJZqQ=s176-c-k-c0x00ffffff-no-rj",
             "STARNOTE": "https://yt3.googleusercontent.com/FB_CpNPL4OROIhMFgnah7fK15P9ys8vTkMDYUhvgqcyIIz9DPhNyi3oXpmXPG5V4iuZgltrcKw=s176-c-k-c0x00ffffff-no-rj",
             "かすみ草とステラ": "https://yt3.googleusercontent.com/4BMYTJ8F58TBXP0HbUnNHCGFszHxojxj5ZJRavG-houHua22RqaH0jjEuYzz3_vAiWLXLBD865GiCTsh=s176-c-k-c0x00ffffff-no-rj",
             "ハルニシオン": "https://yt3.googleusercontent.com/-M6Oin_1CbiLd1qBLZxUjBC_Bw5x-RLUDlVU_6wLdRXKPIPs8GiGQpQ6zOhg1lOgsbwGIbwiwp5MziqpvQ=s176-c-k-c0x00ffffff-no-rj",
@@ -6875,6 +6875,10 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         let monthShowFavoritesOnly = false; // 月表示で「行く予定だけ」表示するかどうか
         let currentView = 'list';
         let currentMonth = dayjs().startOf('month');
+        // グループ名の表記ゆれ統一（同期元の表記 → 公式表記）。予定IDは元の表記で計算するので、ここでは表示名だけを寄せる。
+        const GROUP_NAME_CANON = { 'Merry BAD TUNE': 'Merry BAD TUNE.' };
+        function canonGroupName_(name) { return GROUP_NAME_CANON[name] || name; }
+
         let selectedDate = dayjs().format('YYYY-MM-DD');
         let currentWeek = startOfWeekSunday(dayjs());
 
@@ -6883,6 +6887,19 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             if (savedPresets) { try { const p = JSON.parse(savedPresets); if (Array.isArray(p)) filterPresets = p; } catch (e) {} }
             const savedGroups = localStorage.getItem('oshi_cal_groups');
             if (savedGroups) { try { groups = JSON.parse(savedGroups); } catch(e) {} }
+            // 表記ゆれで分かれた同名グループを統一する（正規名があれば旧名を捨て、無ければ改名）
+            {
+                const before = groups.length;
+                groups = groups.filter(g => {
+                    const cn = canonGroupName_(g.name);
+                    if (cn === g.name) return true;
+                    if (groups.some(x => x.name === cn)) return false;
+                    g.name = cn;
+                    return true;
+                });
+                filterPresets.forEach(p => { if (Array.isArray(p.groups)) p.groups = [...new Set(p.groups.map(canonGroupName_))]; });
+                if (groups.length !== before) setTimeout(() => saveUserData(), 0);
+            }
             const savedEvents = localStorage.getItem('oshi_cal_manual_events');
             if (savedEvents) { try { events = JSON.parse(savedEvents); } catch(e) {} }
             const savedFavorites = localStorage.getItem('oshi_cal_favorites');
@@ -7523,13 +7540,14 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 }
                 const date = parsedDate.isValid() ? parsedDate.format('YYYY-MM-DD') : rawDate;
                 const time = cols[1] || '00:00';
-                const groupName = cols[2];
+                const rawGroupName = cols[2];
+                const groupName = canonGroupName_(rawGroupName);
                 const title = cols[3];
                 if (!date || !groupName || !title) continue;
                 if (!groups.find(g => g.name === groupName)) {
                     groups.push({ name: groupName, color: getRandomColor(), visible: true });
                 }
-                const stableId = stableSheetId(date, groupName, title);
+                const stableId = stableSheetId(date, rawGroupName, title);
                 if (seen.has(stableId)) continue;
                 seen.add(stableId);
                 out.push({
@@ -7734,7 +7752,8 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     const date = parsedDate.isValid() ? parsedDate.format('YYYY-MM-DD') : rawDate;
 
                     const time = cols[1] || "00:00";
-                    const groupName = cols[2];
+                    const rawGroupName = cols[2];
+                    const groupName = canonGroupName_(rawGroupName);
                     const title = cols[3];
                     const location = cols[4] || "";
                     const regulation = cols[5] || "";
@@ -7746,7 +7765,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                             newGroupsFound = true;
                         }
 
-                        const stableId = stableSheetId(date, groupName, title);
+                        const stableId = stableSheetId(date, rawGroupName, title);
                         if (sheetEvents.some(se => se.id === stableId)) continue; // 同じ予定の重複行はスキップ
                         sheetEvents.push({
                             id: stableId,
