@@ -1471,6 +1471,8 @@ body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-schem
 .bulk-op-btn.st-on { background: var(--primary); border-color: var(--primary); color: var(--on-primary, #fff); }
 .bulk-op-btn.st-mixed { border-color: var(--primary); color: var(--primary); }
 .gl-fchip { margin: 0; padding: .34rem .62rem; border-radius: 999px; border: 1px solid var(--outline-variant); background: var(--surface-container); color: var(--on-surface-variant); font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; height: 37px; block-size: 37px; min-height: 0; min-block-size: 0; inline-size: auto; min-inline-size: 0; box-sizing: border-box; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; box-shadow: none; }
+.cal-refresh-btn { margin: 0 0 0 auto; padding: .3rem .6rem; border-radius: 999px; border: 1px solid rgba(236,72,153,.4); background: #fdf2f8; color: #db2777; font-size: 10px; font-weight: 800; white-space: nowrap; cursor: pointer; block-size: auto; min-block-size: 0; inline-size: auto; min-inline-size: 0; box-sizing: border-box; flex: none; display: inline-flex; align-items: center; gap: 4px; box-shadow: none; }
+.cal-refresh-btn:active { transform: scale(.96); }
 .gl-fchip.on { background: var(--primary); color: var(--on-primary); }
 .gl-agency-sel { margin: 0; flex: 1; min-width: 0; height: 32px; block-size: 32px; min-height: 0; border-radius: 999px; border: 1px solid var(--outline-variant); background-color: var(--surface-container); color: var(--on-surface); font-size: 11px; font-weight: 700; padding: 0 1.7rem 0 .8rem; appearance: none; -webkit-appearance: none; box-sizing: border-box; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a08b99' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .65rem center; background-size: 11px 11px; }
 .gl-row { height: 62px; }
@@ -1814,7 +1816,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-0142</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-1758</div>
             </div>
         </div>
     </div>
@@ -10962,26 +10964,24 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             label.textContent = 'Googleカレンダー連携：オン' + (c && c.fetchedAt ? '（' + dayjs(c.fetchedAt).format('M/D') + '更新）' : '');
         }
 
-        // 起動直後に認可を取り直すと、Googleのセッションが切れている時にログイン画面が
-        // 一瞬見えてしまう（2026-11-27 岩崎の報告）。自動更新は起動時には行わず、
-        // ユーザーの最初の操作（タップ/スクロール）をきっかけに1回だけ試みる。
-        let calBusyRefreshArmed_ = false;
-        function armCalBusyRefreshOnInteract_() {
-            if (calBusyRefreshArmed_) return;
-            calBusyRefreshArmed_ = true;
-            const fire = () => {
-                window.removeEventListener('pointerdown', fire, true);
-                maybeRefreshCalBusy_();
-            };
-            window.addEventListener('pointerdown', fire, true);
+        // 自動更新は起動時の読み込み（スプラッシュ表示中）に含めて静かに試みる。
+        // 当初は起動直後を避けて最初の操作のタイミングにずらしたが（2026-11-27）、
+        // 操作の途中で認可処理が出るのが気になるという岩崎の報告（2026-11-28）を受けて
+        // 方式を変更した。認可は prompt:'' のサイレント取得のみで、失敗したらその回は
+        // 諦める（画面は出さない）。データが古い間はおすすめカードに手動の更新ボタンを出す。
+        // 連携済みでキャッシュが6時間以上古ければ更新を始め、true を返す
+        function maybeRefreshCalBusy_() {
+            if (!calLinkEnabled()) return false;
+            const c = calBusyCache_();
+            if (c && c.fetchedAt && Date.now() - c.fetchedAt < 6 * 60 * 60 * 1000) return false;
+            refreshCalBusy_(false);
+            return true;
         }
 
-        // 連携済みでキャッシュが6時間以上古ければ、静かに更新を試みる
-        function maybeRefreshCalBusy_() {
-            if (!calLinkEnabled()) return;
-            const c = calBusyCache_();
-            if (c && c.fetchedAt && Date.now() - c.fetchedAt < 6 * 60 * 60 * 1000) return;
-            refreshCalBusy_(false);
+        // おすすめカードの更新ボタン用: 明示操作なので対話つきで更新する（Googleの画面が出てよい）
+        async function refreshCalBusyManual() {
+            const ok = await refreshCalBusy_(true);
+            if (!ok) showSnackbar_('カレンダーを更新できませんでした');
         }
 
         function recoCandidates() {
@@ -11089,6 +11089,9 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     </div>
                 `;
             }).join('');
+            const calCache_ = calBusyCache_();
+            const calStale = calLinkEnabled() && (!calCache_ || !calCache_.fetchedAt || Date.now() - calCache_.fetchedAt >= 6 * 60 * 60 * 1000);
+            const calBtn = calStale ? `<button type="button" class="cal-refresh-btn" onclick="refreshCalBusyManual()"><span class="fa-solid fa-rotate"></span>カレンダー更新</button>` : '';
             return `
                 <div class="xl-span xl-reco bg-white border-2 border-pink-200 rounded-3xl px-4 py-3.5 shadow-sm">
                     <div class="flex items-center space-x-2">
@@ -11097,6 +11100,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                             <p class="text-xs font-black text-slate-800">おすすめライブ</p>
                             <p class="text-[10px] text-slate-400 font-semibold">空き日に行けそうな、向こう2週間のライブ</p>
                         </div>
+                        ${calBtn}
                     </div>
                     ${rows}
                 </div>
@@ -12815,7 +12819,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             loadAiData(); // AI構造化データも並行して読み始める
             loadHighlightData(); // 週間ハイライトも並行して読み始める
             updateCalLinkUI();
-            armCalBusyRefreshOnInteract_(); // カレンダー連携の自動更新は起動直後ではなく最初の操作時に試みる（起動時のGoogle画面チラつき防止）
+            if (maybeRefreshCalBusy_()) { const cap = document.querySelector('#boot-splash .bs-cap'); if (cap) cap.textContent = 'データ確認中…'; } // カレンダー連携の自動更新は起動時の読み込み中に含める（2026-11-28 岩崎の案）
             updateTiltUI();
             startTilt_(); // 傾き演出（許可が要る端末ではトグルを押すまで始まらない）
             await fetchSheetData();
