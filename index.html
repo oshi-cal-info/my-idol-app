@@ -1817,7 +1817,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2217</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2224</div>
             </div>
         </div>
     </div>
@@ -2286,6 +2286,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     const data = doc.data();
                     if (data.groups) groups = data.groups;
                     if (Array.isArray(data.filterPresets)) filterPresets = data.filterPresets;
+                    canonGroupsInPlace_();
                     if (data.favorites) favorites = new Set(data.favorites.map(migrateId));
                     if (data.personalMemos) personalMemos = migrateIdKeyedObject(data.personalMemos);
                     if (data.attendLogs) attendLogs = migrateIdKeyedObject(data.attendLogs);
@@ -6878,6 +6879,26 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         // グループ名の表記ゆれ統一（同期元の表記 → 公式表記）。予定IDは元の表記で計算するので、ここでは表示名だけを寄せる。
         const GROUP_NAME_CANON = { 'Merry BAD TUNE': 'Merry BAD TUNE.' };
         function canonGroupName_(name) { return GROUP_NAME_CANON[name] || name; }
+        // groups / filterPresets の表記ゆれをその場で統一する。変更したら true。
+        function canonGroupsInPlace_() {
+            const beforeLen = groups.length;
+            let changed = false;
+            groups = groups.filter(g => {
+                const cn = canonGroupName_(g.name);
+                if (cn === g.name) return true;
+                changed = true;
+                if (groups.some(x => x.name === cn)) return false;
+                g.name = cn;
+                return true;
+            });
+            filterPresets.forEach(p => {
+                if (!Array.isArray(p.groups)) return;
+                const mapped = [...new Set(p.groups.map(canonGroupName_))];
+                if (mapped.length !== p.groups.length || mapped.some((n, i) => n !== p.groups[i])) changed = true;
+                p.groups = mapped;
+            });
+            return changed || groups.length !== beforeLen;
+        }
 
         let selectedDate = dayjs().format('YYYY-MM-DD');
         let currentWeek = startOfWeekSunday(dayjs());
@@ -6888,18 +6909,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const savedGroups = localStorage.getItem('oshi_cal_groups');
             if (savedGroups) { try { groups = JSON.parse(savedGroups); } catch(e) {} }
             // 表記ゆれで分かれた同名グループを統一する（正規名があれば旧名を捨て、無ければ改名）
-            {
-                const before = groups.length;
-                groups = groups.filter(g => {
-                    const cn = canonGroupName_(g.name);
-                    if (cn === g.name) return true;
-                    if (groups.some(x => x.name === cn)) return false;
-                    g.name = cn;
-                    return true;
-                });
-                filterPresets.forEach(p => { if (Array.isArray(p.groups)) p.groups = [...new Set(p.groups.map(canonGroupName_))]; });
-                if (groups.length !== before) setTimeout(() => saveUserData(), 0);
-            }
+            if (canonGroupsInPlace_()) setTimeout(() => saveUserData(), 0);
             const savedEvents = localStorage.getItem('oshi_cal_manual_events');
             if (savedEvents) { try { events = JSON.parse(savedEvents); } catch(e) {} }
             const savedFavorites = localStorage.getItem('oshi_cal_favorites');
@@ -6910,6 +6920,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             if (savedLogs) { try { attendLogs = JSON.parse(savedLogs); } catch(e) {} }
             const savedHistory = localStorage.getItem('oshi_cal_event_history');
             if (savedHistory) { try { eventHistory = JSON.parse(savedHistory); } catch(e) {} }
+            Object.values(eventHistory).forEach(e => { if (e && e.group) e.group = canonGroupName_(e.group); });
             const savedOverrides = localStorage.getItem('oshi_cal_event_overrides');
             if (savedOverrides) { try { eventOverrides = JSON.parse(savedOverrides); } catch(e) {} }
             groups.forEach(g => {
