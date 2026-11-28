@@ -1817,7 +1817,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2137</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2145</div>
             </div>
         </div>
     </div>
@@ -2046,7 +2046,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         <div class="dlg-card w-full max-w-sm p-6 space-y-4">
             <div class="flex justify-between items-center">
                 <h3 id="group-links-title" class="font-bold text-base text-slate-800 flex items-center"></h3>
-                <button onclick="closeModal('group-links-modal')" class="text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center flex-shrink-0"><span class="fa-solid fa-xmark"></span></button>
+                <button onclick="closeModal('group-links-modal')" class="text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center flex-shrink-0" style="margin:6px 6px 0 0"><span class="fa-solid fa-xmark"></span></button>
             </div>
             <div id="group-links-list" class="space-y-2"></div>
         </div>
@@ -9479,12 +9479,12 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             if (cnt) cnt.textContent = (q || groupListFilter !== 'all' || groupListAgency) ? `${shown}件表示（全${groups.length}）` : `全${groups.length}グループ`;
         }
         function glRowClick(index) {
-            if (chipLongPressed) { chipLongPressed = false; renderGroupList(); return; }
-            toggleGroupVisible(index);
-            renderGroupList();
+            if (chipLongPressed) { chipLongPressed = false; return; }
+            const g = groups[index];
+            if (g) openGroupLinksModal(g.name);
         }
 
-        // ==== グループ管理チップ（タップで表示切替・長押しで操作シート） ====
+        // ==== グループ管理チップ（タップで公式リンク・長押しで表示/非表示の切替） ====
         function groupInitial(name) {
             const s = (name || '').replace(/^[^\p{L}\p{N}]+/u, '');
             const ch = s.charAt(0) || (name || '').charAt(0) || '?';
@@ -9511,7 +9511,11 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             clearTimeout(chipPressTimer);
             chipPressTimer = setTimeout(() => {
                 chipLongPressed = true;
-                openGroupActionSheet(index);
+                const g = groups[index];
+                if (!g) return;
+                toggleGroupVisible(index);
+                renderGroupList();
+                showSnackbar_(g.visible === false ? `「${g.name}」を非表示にしました` : `「${g.name}」を表示しました`);
             }, 450);
         }
         function chipPointerEnd() {
@@ -9536,7 +9540,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const notifyOn = g.notify !== false;
             const rowCls = 'w-full flex items-center space-x-3 p-3 rounded-2xl hover:bg-pink-50/60 transition text-left';
             document.getElementById('group-action-body').innerHTML = `
-                <div class="flex items-center justify-between mb-2 px-1">
+                <div class="flex items-center justify-between px-1" style="margin:10px 10px 8px">
                     <span class="flex items-center space-x-2.5 min-w-0">
                         ${groupAvatarHtml(g, false)}
                         <span class="font-bold text-sm text-slate-800 break-words">${escapeHtml(g.name)}</span>
@@ -9886,12 +9890,78 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const agencyHtml = agencyLineHtml(groupName);
             const tokutenHtml = tokutenCardHtml(groupName) || tokutenFlagHtml(groupName);
             const buppanHtml = buppanCardHtml(groupName);
+            const actionsHtml = linksModalActionsHtml_(groupName);
             container.innerHTML = agencyHtml + tokutenHtml + buppanHtml + (rows.length > 0
                 ? rows.join('')
-                : ((agencyHtml || tokutenHtml || buppanHtml) ? '' : `<p class="text-xs text-slate-400 text-center py-6">公式リンクはまだ登録されていません</p>`));
+                : ((agencyHtml || tokutenHtml || buppanHtml) ? '' : `<p class="text-xs text-slate-400 text-center py-6">公式リンクはまだ登録されていません</p>`)) + actionsHtml;
 
             container.scrollTop = 0;
             document.getElementById('group-links-modal').classList.remove('hidden');
+        }
+
+        let linksModalGroupIndex_ = -1;
+        function linksModalActionsHtml_(groupName) {
+            const idx = groups.findIndex(g => g.name === groupName);
+            linksModalGroupIndex_ = idx;
+            if (idx < 0) return '';
+            const g = groups[idx];
+            const isHidden = g.visible === false;
+            const notifyOn = g.notify !== false;
+            const rowCls = 'flex items-center space-x-3 p-3 bg-white/60 border border-slate-200/80 rounded-2xl cursor-pointer';
+            const icon = (cls, color) => `<span class="${cls} w-5 text-center flex-shrink-0" style="color:${color}"></span>`;
+            return `
+                <div class="pt-2">
+                    <p class="text-[10px] font-black text-slate-400 mb-2 px-1">グループの操作</p>
+                    <div class="space-y-2">
+                        <div onclick="linksModalToggleVisible_()" class="${rowCls}">
+                            ${icon(isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye', '#94a3b8')}
+                            <span class="text-xs font-bold text-slate-700">${isHidden ? 'スケジュールに表示する' : 'スケジュールで非表示にする'}</span>
+                        </div>
+                        <div onclick="linksModalToggleNotify_()" class="${rowCls}">
+                            ${icon(notifyOn ? 'fa-solid fa-bell' : 'fa-solid fa-bell-slash', notifyOn ? '#ec4899' : '#cbd5e1')}
+                            <span class="text-xs font-bold text-slate-700">新着ライブの通知：${notifyOn ? 'オン' : 'オフ'}</span>
+                        </div>
+                        <div onclick="linksModalSubscribe_()" class="${rowCls}">
+                            ${icon('fa-solid fa-calendar-plus', '#94a3b8')}
+                            <span class="text-xs font-bold text-slate-700">Googleカレンダーで購読</span>
+                        </div>
+                        <div onclick="linksModalEdit_()" class="${rowCls}">
+                            ${icon('fa-solid fa-palette', '#94a3b8')}
+                            <span class="text-xs font-bold text-slate-700">表示設定（色の変更）</span>
+                        </div>
+                        <div onclick="linksModalDelete_()" class="${rowCls}">
+                            ${icon('fa-solid fa-trash', '#f87171')}
+                            <span class="text-xs font-bold text-red-500">グループを削除</span>
+                        </div>
+                    </div>
+                </div>`;
+        }
+        function linksModalToggleVisible_() {
+            const g = groups[linksModalGroupIndex_];
+            if (!g) return;
+            toggleGroupVisible(linksModalGroupIndex_);
+            openGroupLinksModal(g.name);
+        }
+        function linksModalToggleNotify_() {
+            const g = groups[linksModalGroupIndex_];
+            if (!g) return;
+            toggleGroupNotify(linksModalGroupIndex_);
+            openGroupLinksModal(g.name);
+        }
+        function linksModalSubscribe_() {
+            const idx = linksModalGroupIndex_;
+            closeModal('group-links-modal');
+            subscribeGroupCalendar(idx);
+        }
+        function linksModalEdit_() {
+            const idx = linksModalGroupIndex_;
+            closeModal('group-links-modal');
+            openGroupEditModal(idx);
+        }
+        function linksModalDelete_() {
+            const idx = linksModalGroupIndex_;
+            closeModal('group-links-modal');
+            deleteGroupFromManagement(idx);
         }
 
         // ==== ⑥ 今日の現場（常に上部に小さく固定表示、タップで詳細パネル） ====
