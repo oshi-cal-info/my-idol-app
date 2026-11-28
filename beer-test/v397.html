@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beer CSS 3.9.7 テスト | Oshi-Cal</title>
+<meta name="theme-color" content="#f9a8d4">
+<style>html{background:#fff8fb}html.dark{background:#171017}</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/beercss@3.9.7/dist/cdn/beer.min.css" rel="stylesheet">
+<script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.9.7/dist/cdn/beer.min.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
+<script>
+function applyBeerTheme(){ try{ if(typeof ui === 'function'){ ui('theme', '#f9a8d4'); return true; } }catch(e){} return false; }
+document.addEventListener('DOMContentLoaded', function(){ if(!applyBeerTheme()){ var n=0; var iv=setInterval(function(){ if(applyBeerTheme() || ++n>20) clearInterval(iv); }, 150); } });
+</script>
+<style>
+/* テーマ生成前の初期色: JSが種色から配色を作るまでの間、変数が空で白く点滅しないように。
+   生成された変数（:rootへのインライン指定）が来たらそちらが優先される */
+:root{--background:#fff8fb;--surface:#fff8fb;--surface-container-lowest:#ffffff;--surface-container-low:#fef3f9;--surface-container:#fdeef6;--surface-container-high:#fae4f0;--on-background:#241a20;--on-surface:#241a20;--on-surface-variant:#554349;--outline:#847077;--outline-variant:#d7c1cb}
+body.dark{--background:#171017;--surface:#171017;--surface-container-lowest:#120c11;--surface-container-low:#1e141c;--surface-container:#241722;--surface-container-high:#2f1e2a;--on-background:#f3e4ec;--on-surface:#f3e4ec;--on-surface-variant:#cdb9c4;--outline:#9d8a94;--outline-variant:#524149}
+html{background:#fff8fb}html.dark{background:#171017}
+
+/* ===== Oshi-Cal MD3 (Beer CSS) + Expressive component layer ===== */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", sans-serif;
+  background-color: var(--background);
+  color: var(--on-surface);
+  min-height: 100vh;
+  padding-bottom: 9.5rem;
+  margin: 0;
+}
+::selection { background: var(--primary-container); }
+* { scrollbar-width: thin; scrollbar-color: var(--outline-variant) transparent; }
+*::-webkit-scrollbar { width: 5px; height: 5px; }
+*::-webkit-scrollbar-thumb { background: var(--outline-variant); border-radius: 99px; }
+a { color: var(--primary); }
+input, textarea, select, button { font: inherit; }
+img { max-width: 100%; }
+
+/* --- header --- */
+.app-header {
+  position: sticky; top: 0; z-index: 30;
+  padding: 1rem 1rem 1.1rem;
+  background: linear-gradient(calc(120deg + var(--tilt-deg, 0deg)), color-mix(in srgb, var(--primary-container) 55%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 55%, var(--surface-container-lowest)));
+  border-radius: 0 0 2rem 2rem;
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+.logo-mark {
+  width: 2.5rem; height: 2.5rem; border-radius: 9999px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--primary), var(--tertiary));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 1.05rem; box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+.logo-title {
+  font-size: 1.12rem; font-weight: 900; letter-spacing: .02em; line-height: 1; white-space: nowrap; flex-shrink: 0;
+  color: var(--primary); display: flex; align-items: center; height: 2.5rem; margin: 0 0 0 .3rem;
+}
+.icon-btn {
+  width: 2.5rem; height: 2.5rem; border-radius: 9999px; flex-shrink: 0;
+  background: var(--surface-container-lowest); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; position: relative;
+  font-size: .95rem; box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 14%, transparent);
+  transition: transform .25s cubic-bezier(.32,1.16,.3,1), background .2s;
+}
+.icon-btn:active { transform: scale(.94); }
+.icon-btn .bdg {
+  position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 9999px; background: #f59e0b; color: #fff; font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* --- view tabs (expressive segmented) --- */
+.seg-bar {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: .25rem; margin-top: .8rem; padding: .3rem;
+  background: color-mix(in srgb, var(--primary-container) 55%, var(--surface-container-lowest));
+  border-radius: 9999px;
+}
+.seg-btn {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; gap: .3rem; padding: .5rem .25rem; border: none; background: transparent; cursor: pointer;
+  border-radius: 9999px; font-size: .72rem; font-weight: 700; white-space: nowrap;
+  color: var(--on-surface-variant);
+  transition: all .3s cubic-bezier(.32,1.16,.3,1);
+}
+.seg-btn.on {
+  background: var(--primary); color: var(--on-primary);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 38%, transparent);
+}
+.seg-bar.mini { width: fit-content; margin: 0 auto; padding: .25rem; }
+.seg-bar.mini .seg-btn { flex: none; padding: .45rem 1rem; font-size: .68rem; }
+
+/* --- seg-bar sliding pill (same motion as the bottom nav) --- */
+.seg-bar { position: relative; }
+.seg-bar .seg-btn { position: relative; z-index: 1; }
+.seg-bar .seg-btn.on { background: transparent; box-shadow: none; }
+.seg-ind {
+  position: absolute; z-index: 0; border-radius: 9999px; background: var(--primary);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 38%, transparent);
+  pointer-events: none;
+  transition: left .5s cubic-bezier(.32,1.16,.3,1), top .5s cubic-bezier(.32,1.16,.3,1), width .5s cubic-bezier(.32,1.16,.3,1), height .5s cubic-bezier(.32,1.16,.3,1);
+}
+.seg-ind.no-anim { transition: none; }
+@media (prefers-reduced-motion: reduce) { .seg-ind { transition: none; } }
+
+/* --- filter bar --- */
+.filter-bar {
+  display: flex; align-items: center; gap: .5rem;
+  background: var(--surface-container-lowest); padding: .6rem;
+  border-radius: 1.5rem; border: 1px solid var(--outline-variant);
+  box-shadow: 0 1px 3px rgb(0 0 0/.06);
+}
+.filter-main {
+  flex: 1; display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  padding: .55rem .8rem .55rem .9rem; border-radius: 1.1rem; cursor: pointer;
+  background: color-mix(in srgb, var(--primary-container) 45%, var(--surface-container-lowest));
+  border: 1px solid var(--outline-variant);
+  font-size: .72rem; font-weight: 600; color: var(--on-surface); text-align: left;
+}
+.mini-btn {
+  width: 2.25rem; height: 2.25rem; border-radius: 1.1rem; flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--primary-container) 45%, var(--surface-container-lowest));
+  border: 1px solid var(--outline-variant); color: var(--on-surface-variant); font-size: .72rem;
+  transition: all .2s;
+}
+.mini-btn.on { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+
+/* --- FAB stack --- */
+.fab-sub {
+  width: 2.75rem; height: 2.75rem; border-radius: 9999px; border: none; cursor: pointer;
+  background: var(--surface-container-lowest); color: var(--primary);
+  display: flex; align-items: center; justify-content: center; font-size: .85rem;
+  box-shadow: 0 4px 14px rgb(0 0 0/.14);
+  transition: transform .25s cubic-bezier(.32,1.16,.3,1);
+}
+.fab-sub:active { transform: scale(.93); }
+.fab-main {
+  width: 3.6rem; height: 3.6rem; border: none; cursor: pointer;
+  border-radius: 1.4rem;
+  background: linear-gradient(135deg, var(--primary), var(--tertiary));
+  color: #fff; font-size: 1.25rem;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--primary) 42%, transparent);
+  transition: transform .3s cubic-bezier(.32,1.16,.3,1), border-radius .3s;
+}
+.fab-main:active { transform: scale(.94); border-radius: 9999px; }
+
+/* --- event cards --- */
+.event-card {
+  content-visibility: auto; contain-intrinsic-size: auto 130px;
+  border-radius: 1.75rem !important;
+  transition: transform .25s cubic-bezier(.32,1.16,.3,1);
+}
+.event-card:active { transform: scale(.985); }
+
+/* --- dialogs & sheets --- */
+@keyframes detailPop { from { transform: scale(.94) translateY(14px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+.detail-pop { animation: detailPop .38s cubic-bezier(.32,1.16,.3,1); }
+.ovl:not(.hidden) > .dlg-card { animation: detailPop .38s cubic-bezier(.32,1.16,.3,1); }
+.dlg-card {
+  background: var(--surface-container-high) !important;
+  border-radius: 1.75rem !important;
+  border: 1px solid var(--outline-variant);
+}
+.sheet-card {
+  background: var(--surface-container-high) !important;
+  border-radius: 2rem 2rem 0 0 !important;
+  border: 1px solid var(--outline-variant); border-bottom: none;
+}
+@media (min-width:640px){ .sheet-card { border-radius: 2rem !important; border-bottom: 1px solid var(--outline-variant); } }
+.drawer-panel {
+  background: var(--surface-container-low) !important;
+  box-shadow: -18px 0 44px rgb(0 0 0/.22);
+}
+
+/* --- form fields (MD3 filled, expressive radius) --- */
+.fld {
+  width: 100%; padding: .75rem .9rem; border-radius: 1.1rem;
+  background: var(--surface-container-highest);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  font-size: .75rem; font-weight: 600;
+  outline: none; transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box; appearance: none;
+}
+.fld:focus { border-color: var(--primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 45%, transparent); }
+.fld::placeholder { color: var(--on-surface-variant); opacity: .75; font-weight: 500; }
+textarea.fld { resize: none; }
+input[type="color"].fld { padding: .3rem; height: 2.75rem; cursor: pointer; }
+.fld-label { display: block; font-size: .68rem; font-weight: 700; color: var(--on-surface-variant); margin-bottom: .3rem; }
+
+/* --- buttons --- */
+.btn-primary {
+  width: 100%; padding: .9rem; border: none; cursor: pointer;
+  background: linear-gradient(90deg, var(--primary), var(--tertiary));
+  color: #fff; font-weight: 700; font-size: .75rem;
+  border-radius: 1.25rem; box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 32%, transparent);
+  transition: transform .25s cubic-bezier(.32,1.16,.3,1), opacity .2s;
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+}
+.btn-primary:active { transform: scale(.97); }
+.btn-tonal {
+  width: 100%; padding: .8rem; border: 1px solid var(--outline-variant); cursor: pointer;
+  background: var(--surface-container); color: var(--on-surface-variant);
+  font-weight: 700; font-size: .72rem; border-radius: 1.25rem;
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+  transition: background .2s;
+}
+.btn-tonal:active { background: var(--surface-container-high); }
+
+/* --- chips --- */
+.gchip {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .45rem .8rem; border-radius: 9999px; cursor: pointer;
+  font-size: .7rem; font-weight: 700; border: 1px solid var(--outline-variant);
+  background: var(--surface-container-lowest); color: var(--on-surface-variant);
+  transition: all .25s cubic-bezier(.32,1.16,.3,1);
+}
+.gchip.on { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
+.gchip:active { transform: scale(.96); }
+
+/* --- calendar / week cells --- */
+.cal-cell {
+  aspect-ratio: 1/1.08; border-radius: 1rem; border: none; cursor: pointer;
+  background: var(--surface-container-low); color: var(--on-surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  font-size: .72rem; font-weight: 700; position: relative; padding: 2px;
+  transition: all .25s cubic-bezier(.32,1.16,.3,1);
+}
+.cal-cell.dim { background: transparent; color: var(--on-surface-variant); opacity: .45; }
+.cal-cell.today { box-shadow: inset 0 0 0 2px var(--primary); color: var(--primary); }
+.cal-cell.sel { background: var(--primary); color: var(--on-primary); border-radius: 1.4rem; }
+.cal-cell.sel.today { box-shadow: inset 0 0 0 2px var(--on-primary); }
+.wk-cell {
+  border-radius: 1.1rem; border: none; cursor: pointer; padding: .5rem 2px;
+  background: var(--surface-container-low); color: var(--on-surface);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  transition: all .25s cubic-bezier(.32,1.16,.3,1);
+}
+.wk-cell.today { box-shadow: inset 0 0 0 2px var(--primary); }
+.wk-cell.sel { background: var(--primary); color: var(--on-primary); border-radius: 1.5rem; }
+
+/* --- month cells as individual containers (Google Calendar 2025 style, 2026-11-25) --- */
+.mcell {
+  min-height: 3.35rem; border-radius: 1.05rem; border: none; cursor: pointer;
+  background: var(--surface-container-low); color: var(--on-surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  gap: 3px; font-size: .74rem; font-weight: 700; position: relative; padding: 5px 2px 4px;
+  transition: all .25s cubic-bezier(.32,1.16,.3,1);
+}
+.mcell:active { transform: scale(.96); }
+.mcell.dim { background: transparent; color: var(--on-surface-variant); opacity: .42; }
+.mcell.today { box-shadow: inset 0 0 0 2px var(--primary); color: var(--primary); }
+.mcell.sel { background: linear-gradient(135deg, #ec4899, #a855f7); color: #fff; box-shadow: 0 4px 10px rgba(236,72,153,.30); }
+.mcell.sel.today { box-shadow: inset 0 0 0 2px #fff, 0 4px 10px rgba(236,72,153,.30); }
+.mcell .dots { display: flex; gap: 2.5px; align-items: center; justify-content: center; min-height: 6px; }
+.mcell .dots .cdot { width: 5px; height: 5px; min-width: 5px; min-height: 5px; border-radius: 9999px; display: block; flex: none; }
+.mcell.sel .dots .cdot { background: #fff !important; }
+
+/* --- card swipe actions (right = 行く / left = 外す, 2026-11-25) --- */
+.swipe-wrap { position: relative; }
+.swipe-bg {
+  position: absolute; inset: 0; border-radius: 1.5rem; display: flex; align-items: center;
+  gap: 6px; padding: 0 22px; font-size: 12px; font-weight: 800; color: #fff;
+  opacity: 0; pointer-events: none;
+}
+.swipe-bg-add { background: linear-gradient(135deg, #ec4899, #f472b6); justify-content: flex-start; }
+.swipe-bg-del { background: #64748b; justify-content: flex-end; }
+.event-card { position: relative; z-index: 1; }
+.event-card.swiping { transition: none !important; }
+.event-card.snapback { transition: transform .32s cubic-bezier(.32,1.16,.3,1); }
+
+/* ページ全体の横パン禁止（横スワイプ時にサイト自体が左右に動かないように） */
+html, body { overflow-x: clip; overscroll-behavior-y: none; }
+
+/* --- venue map (Leaflet guards) --- */
+.leaflet-pane img, .leaflet-tile { max-width: none !important; }
+.vpin { width: 30px; height: 30px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid var(--surface-container-lowest); box-shadow: 0 2px 6px rgba(0,0,0,.3); cursor: pointer; }
+.vpin-sel { background: var(--tertiary); transform: scale(1.25); }
+
+/* --- summary card keeps its brand gradient --- */
+.summary-shell {
+  background: linear-gradient(135deg, var(--primary), var(--tertiary)) !important;
+  border-radius: 2rem !important;
+}
+
+/* --- misc --- */
+.today-live-banner { border-radius: 1.75rem; }
+.wx-badge { white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  .detail-pop, .ovl:not(.hidden) > .dlg-card { animation: none; }
+  * { transition-duration: .01s !important; }
+}
+
+/* --- Beer CSS bare-button defaults neutralizer ---
+   Beer CSS styles every bare <button> with box-sizing:content-box, padding:0 1.5rem,
+   block-size:2.5rem and color:var(--on-primary), which inflates fixed-size icon
+   buttons into wide ovals and breaks the header layout. Reset them here; every
+   app button gets its real look from its own classes. */
+button {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  gap: .35rem;
+  min-inline-size: 0;
+  block-size: auto;
+  color: inherit;
+  background: none;
+}
+
+#theme-mode-seg .seg-btn { font-size: .64rem; padding: .55rem .1rem; }
+.drawer-panel { overflow-x: hidden; }
+#filter-group-list { padding: .2rem .15rem; }
+.frow {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .55rem .8rem; border-radius: 1.1rem; cursor: pointer;
+  border: 1px solid var(--outline-variant); background: var(--surface-container-low);
+}
+
+/* --- bottom floating view nav (Expressive toolbar) --- */
+.view-nav {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(.85rem + env(safe-area-inset-bottom)); z-index: 45;
+  width: min(27rem, calc(100vw - 1.5rem));
+  display: flex; gap: .25rem;
+  padding: .35rem; border-radius: 9999px;
+  background: color-mix(in srgb, var(--surface-container-high) 88%, transparent);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border: 1px solid var(--outline-variant);
+  box-shadow: 0 14px 34px rgb(0 0 0/.28);
+}
+.view-nav .seg-btn { flex: 1 1 0; padding: .68rem .1rem; font-size: .72rem; border-radius: 9999px; position: relative; z-index: 1; background: transparent; box-shadow: none; transition: color .35s ease, transform .25s cubic-bezier(.32,1.16,.3,1); }
+.view-nav .seg-btn.on { background: transparent; box-shadow: none; }
+/* sliding pill indicator (Google Photos style): buttons stay put, only the pill moves */
+.vnav-ind {
+  position: absolute; top: .35rem; bottom: .35rem; left: 0; width: 0; z-index: 0;
+  border-radius: 9999px; background: var(--primary);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 38%, transparent);
+  transform: translateX(0);
+  transition: transform .55s cubic-bezier(.32,1.16,.3,1), width .55s cubic-bezier(.32,1.16,.3,1);
+}
+.vnav-ind.no-anim { transition: none; }
+@media (prefers-reduced-motion: reduce) { .vnav-ind { transition: none; } }
+.fab-stack { bottom: calc(5.7rem + env(safe-area-inset-bottom)); right: 1rem; }
+
+/* flex column scroll areas must be allowed to shrink */
+#group-management-list, #filter-group-list { min-height: 0; }
+
+/* going-count badge: compact pill glued to its label */
+#going-count-badge {
+  background: var(--primary); color: var(--on-primary);
+  border-radius: 9999px; padding: .1rem .38rem; line-height: 1.25;
+  font-size: 9px; font-weight: 800;
+}
+.seg-btn.on #going-count-badge { background: var(--on-primary); color: var(--primary); }
+/* Expressive spring on the bottom nav */
+.view-nav .seg-btn:active { transform: scale(.97); }
+.seg-btn.on { animation: nav-pop .45s cubic-bezier(.32,1.16,.3,1); }
+/* 下部ナビでは幅アニメーションとポップを重ねるとカクつくので、ポップは止める */
+.view-nav .seg-btn.on { animation: none; }
+@keyframes nav-pop { 0% { transform: scale(.94); } 55% { transform: scale(1.025); } 100% { transform: scale(1); } }
+/* subtle spring press feedback on every button */
+button { transition: transform .35s cubic-bezier(.32,1.16,.3,1); }
+button:active { transform: scale(.965); }
+/* drawer: nothing inside may widen the panel */
+#group-management-list { overflow-x: hidden; min-width: 0; }
+.drawer-panel > * { min-width: 0; }
+
+/* Beer gives button>icon a -0.5rem margin (Material compensation) which pulls
+   text onto icons across the whole app. Cancel it: spacing comes from gap. */
+:is(button, .button, .chip) > :is(i, img, svg) { margin: 0; }
+
+/* --- dark mode: calm the luminous spots --- */
+body.dark .logo-mark {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 80%, var(--surface-container-high)), color-mix(in srgb, var(--tertiary) 80%, var(--surface-container-high)));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+body.dark .fab-main {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 80%, var(--surface-container-high)), color-mix(in srgb, var(--tertiary) 80%, var(--surface-container-high)));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+body.dark .btn-primary {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 85%, var(--surface-container-high)), color-mix(in srgb, var(--tertiary) 85%, var(--surface-container-high)));
+}
+body.dark .seg-btn.on { box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 16%, transparent); }
+body.dark .app-header { box-shadow: 0 6px 24px color-mix(in srgb, var(--primary) 7%, transparent); }
+body.dark .from-pink-500 { --gf: color-mix(in srgb, var(--primary) 64%, var(--surface-container-high)); }
+body.dark .to-purple-500 { --gt: color-mix(in srgb, var(--tertiary) 64%, var(--surface-container-high)); }
+body.dark .from-pink-400 { --gf: color-mix(in srgb, var(--primary) 55%, var(--surface-container-high)); }
+body.dark .to-rose-400 { --gt: color-mix(in srgb, #fb7185 60%, var(--surface-container-high)); }
+body.dark .from-amber-400 { --gf: color-mix(in srgb, #fbbf24 72%, var(--surface-container-high)); }
+body.dark .to-yellow-500 { --gt: color-mix(in srgb, #eab308 72%, var(--surface-container-high)); }
+
+/* today banner: deepest stops + full-opacity subtext in dark mode */
+body.dark .today-live-banner { --gf: color-mix(in srgb, var(--primary) 52%, var(--surface-container-high)); --gt: color-mix(in srgb, var(--tertiary) 52%, var(--surface-container-high)); }
+body.dark .today-live-banner .text-white\/70 { color: #fff; }
+
+/* --- expressive round 4: wavy progress + morphing shape --- */
+.wave-progress { position: relative; height: 12px; margin-top: 10px; }
+.wave-progress svg { display: block; width: 100%; height: 12px; overflow: visible; }
+.wave-progress path { fill: none; stroke-width: 3.5; stroke-linecap: round; }
+.wave-progress .wp-track { stroke: color-mix(in srgb, var(--wc, var(--primary)) 20%, transparent); }
+.wave-progress .wp-fill { stroke: var(--wc, var(--primary)); stroke-dasharray: calc(var(--wp, 0) * 100) 100; }
+.wave-progress.ind { margin-top: 0; }
+.wave-progress.ind .wp-fill { stroke-dasharray: 26 74; animation: wp-dash 1.3s linear infinite; }
+@keyframes wp-dash { to { stroke-dashoffset: -100; } }
+/* 全データ（過去分）読み込み中の波インジケーター: ヘッダー下端に重ねる */
+#full-load-wave { position: absolute; left: 1rem; right: 1rem; bottom: 3px; margin: 0; pointer-events: none; }
+/* 取得中メッセージはヘッダーと被らないよう、画面中央の独立ピルで出す */
+#full-load-pill { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 120; background: var(--surface-container-high); color: var(--on-surface); font-size: 12px; font-weight: 700; letter-spacing: .02em; padding: .6rem 1rem; border-radius: 999px; box-shadow: 0 10px 30px rgba(60, 20, 45, .28); white-space: nowrap; pointer-events: none; }
+.morph-blob { width: 74px; height: 74px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px;
+  background: linear-gradient(135deg, var(--primary), var(--tertiary));
+  border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+  animation: morph 7s ease-in-out infinite; }
+.morph-blob.sm { width: 46px; height: 46px; font-size: 17px; }
+@keyframes morph { 0%,100% { border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%; } 33% { border-radius: 62% 38% 40% 60% / 55% 62% 38% 45%; } 66% { border-radius: 45% 55% 58% 42% / 38% 40% 60% 62%; } }
+body.dark .morph-blob { background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 72%, var(--surface-container-high)), color-mix(in srgb, var(--tertiary) 72%, var(--surface-container-high))); }
+
+/* --- expressive round 5: button group on the other seg bars --- */
+/* month view mini toggle (fit-content bar): active button grows via padding */
+/* mini seg: selected button no longer stretches (sliding pill instead) */
+/* theme seg in the drawer: flex button group, gentle grow (long labels) */
+#theme-mode-seg { display: flex; }
+#theme-mode-seg .seg-btn { flex: 1 1 0; }
+/* 選択中ボタンを太らせる flex-grow は廃止（幅がアニメーションしてピルの実測がズレるため） */
+
+/* --- animation polish: view fade, card stagger, sheet spring (2026-11-22) --- */
+@keyframes viewIn { from { opacity: 0; } to { opacity: 1; } }
+.view-in { animation: viewIn .18s ease-out; }
+@keyframes cardIn { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.card-in { animation: cardIn .36s cubic-bezier(.22,1,.36,1) both; }
+@keyframes sheetUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.ovl:not(.hidden) > .sheet-card { animation: sheetUp .48s cubic-bezier(.32,1.16,.3,1); }
+@keyframes ovlIn { from { opacity: 0; } to { opacity: 1; } }
+.ovl:not(.hidden) { animation: ovlIn .18s ease-out; }
+.drawer-panel { transition-duration: .38s !important; transition-timing-function: cubic-bezier(.3,1.08,.64,1) !important; }
+.buppan-card { background: linear-gradient(135deg, #f0f9ff, rgba(204,251,241,.45)); border: 1px solid rgba(125,211,252,.45); }
+body.dark .buppan-card { background: linear-gradient(135deg, rgba(8,47,73,.85), rgba(19,78,94,.55)); border-color: rgba(56,189,248,.35); }
+.buppan-card .buppan-head { color: #0284c7; }
+body.dark .buppan-card .buppan-head { color: #38bdf8; }
+/* --- boot splash / skeleton / refresh wave (2026-11-25) --- */
+#boot-splash { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: linear-gradient(160deg, #fff8fb, #fdeef7); transition: opacity .38s ease; }
+#boot-splash.done { opacity: 0; pointer-events: none; }
+body.dark #boot-splash { background: linear-gradient(160deg, #2a1a26, #171019); }
+#boot-splash .bs-icon { width: 88px; height: 88px; border-radius: 26px; box-shadow: 0 12px 32px rgba(221,91,157,.35); animation: bsBreathe 2.2s ease-in-out infinite; }
+@keyframes bsBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.055); } }
+#boot-splash .bs-name { font-size: 26px; font-weight: 900; letter-spacing: .02em; color: #402b3d; }
+body.dark #boot-splash .bs-name { color: #f6e3ef; }
+#boot-splash .bs-wave { width: 148px; }
+#boot-splash .bs-cap { font-size: 11px; color: #a06a8d; font-weight: 700; }
+body.dark #boot-splash .bs-cap { color: #c39bb6; }
+.skel-card { border-radius: 1.5rem; padding: 14px 16px; background: #fff; border: 1px solid rgba(249,168,212,.35); display: flex; gap: 12px; }
+body.dark .skel-card { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.07); }
+.skel-blk { border-radius: 10px; background: linear-gradient(100deg, #f6e0ee 40%, #fbeff7 50%, #f6e0ee 60%); background-size: 200% 100%; animation: skelShimmer 1.4s linear infinite; }
+body.dark .skel-blk { background: linear-gradient(100deg, rgba(255,255,255,.06) 40%, rgba(255,255,255,.13) 50%, rgba(255,255,255,.06) 60%); background-size: 200% 100%; }
+@keyframes skelShimmer { from { background-position: 120% 0; } to { background-position: -80% 0; } }
+@media (prefers-reduced-motion: reduce) { #boot-splash .bs-icon, .skel-blk { animation: none !important; } }
+/* --- expressive micro-interactions: press morph / toggle shape swap / emphasized type (2026-11-25) --- */
+.gchip { transition: all .38s cubic-bezier(.32,1.16,.3,1); }
+.gchip.on { border-radius: 12px; }
+.gchip:active { border-radius: 10px; }
+.preset-chip { transition: all .38s cubic-bezier(.32,1.16,.3,1); }
+.preset-chip:active { border-radius: 10px; }
+.btn-primary { transition: all .35s cubic-bezier(.32,1.16,.3,1); }
+.btn-primary:active { border-radius: 14px; }
+.view-nav .seg-btn:active { border-radius: 18px; }
+.cd-big { font-size: 46px; font-weight: 900; letter-spacing: -.03em; line-height: 1; }
+.cd-today { font-size: 30px; font-weight: 900; letter-spacing: -.02em; line-height: 1.05; }
+/* --- container transform / sheet drag / pull-to-refresh / snackbar / search (2026-11-25) --- */
+.dlg-card.flip-in { animation: none !important; }
+#event-detail-modal .dlg-card { display: flex; flex-direction: column; overflow: hidden; max-height: 88svh; }
+#event-detail-body { overflow-y: auto; min-height: 0; }
+#group-action-modal .sheet-card { display: flex; flex-direction: column; overflow: hidden; }
+#group-action-body { overflow-y: auto; min-height: 0; }
+#group-links-modal .dlg-card { display: flex; flex-direction: column; overflow: hidden; max-height: 88svh; }
+#group-links-list { overflow-y: auto; min-height: 0; flex: 1; padding: 20px 0; }
+.sheet-handle { height: 22px; display: flex; align-items: flex-start; justify-content: center; padding-top: 8px; cursor: grab; touch-action: none; flex: none; position: sticky; top: 0; z-index: 20; }
+.sheet-handle::after { content: ""; width: 46px; height: 5.5px; border-radius: 999px; background: #9c8694; }
+/* バーの色はテーマ変数を使わず固定色（ライト/ダーク両背景で視認できる中間色） */
+#ptr-ind { position: fixed; top: 0; left: 50%; transform: translate(-50%, -70px); z-index: 130; width: 44px; height: 44px; border-radius: 999px; background: #fff; box-shadow: 0 6px 20px rgba(190, 90, 145, .3); display: flex; align-items: center; justify-content: center; pointer-events: none; transition: transform .38s cubic-bezier(.3, 1.15, .4, 1), opacity .3s ease; }
+#ptr-ind.drag { transition: none; }
+#ptr-ind.done { transform: translate(-50%, -78px) scale(.5); opacity: 0; }
+body.dark #ptr-ind { background: #33222e; }
+#ptr-ind .load-ind { transform: scale(.62); }
+#snackbar { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translate(-50%, 16px); z-index: 140; background: #372430; color: #fdf3f8; font-size: 12px; font-weight: 600; padding: 11px 8px 11px 16px; border-radius: 999px; display: flex; align-items: center; gap: 6px; box-shadow: 0 10px 28px rgba(40, 10, 30, .35); opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .3s cubic-bezier(.32,1.16,.3,1); max-width: calc(100vw - 32px); }
+#snackbar.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+#snackbar button { color: #f9a8d4; font-weight: 800; font-size: 12px; padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+#snackbar button:active { background: rgba(249, 168, 212, .18); }
+@media (max-width: 639px) {
+  #search-modal { padding: 0 !important; align-items: stretch !important; }
+  #search-modal .search-panel { max-width: none !important; width: 100%; height: 100dvh; max-height: none !important; border-radius: 0 !important; }
+}
+/* --- date/time inputs: appearance:none で消えていたネイティブ表示を戻す (BUG #35, 2026-11-25) --- */
+/* Beer CSS は :not(.field)>input[type^=date/time] 本体を opacity:0 + position:absolute にする（.field 前提の設計）。
+   .fld は .field の外で使うため、本体ごと透明・絶対配置になって値が見えなくなる。ここで通常表示へ完全に戻す（BUG#35 本原因） */
+input[type="date"].fld, input[type="time"].fld {
+  -webkit-appearance: auto; appearance: auto;
+  opacity: 1 !important; position: relative !important; inset: auto !important;
+  inline-size: 100% !important; block-size: auto !important; height: auto; min-height: 2.9rem;
+  margin: 0; z-index: auto !important;
+  /* Beer の同規則は padding:0 / border:0 も含むため、.fld の余白と枠もここで戻す（文字が左端に張り付く・枠が消える対策） */
+  padding: .75rem .9rem .75rem 1rem !important; border: 1px solid var(--outline-variant) !important;
+}
+input[type="date"].fld::-webkit-calendar-picker-indicator, input[type="time"].fld::-webkit-calendar-picker-indicator {
+  opacity: .6; position: static; inline-size: auto; block-size: auto; width: auto; height: auto; margin: 0; cursor: pointer;
+}
+input[type="date"].fld::-webkit-datetime-edit, input[type="time"].fld::-webkit-datetime-edit { color: var(--on-surface); }
+body.dark input[type="date"].fld, body.dark input[type="time"].fld { color-scheme: dark; }
+/* 検索結果の先頭カードは、スクロール領域の上端に密着すると左上の枠線の弧が描画されず欠けて見える
+   （パネルの出現アニメーション×スクロールレイヤーの描画都合。テストページで切り分け済み 2026-11-25）。
+   上に少し余白を空けて密着を避ける */
+#search-results { padding-top: 8px; }
+.ovl.flipping { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+/* --- 大画面（980px以上）: 2カラム表示。980px未満には一切効かない --- */
+@media (min-width: 920px) {
+  main.max-w-md, footer.max-w-md { max-width: 64rem; }
+  .app-header { max-width: 64rem; margin-inline: auto; }
+  .fab-stack { right: max(1rem, calc(50% - 31rem)); }
+  #view-list:not(.hidden), #going-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; align-items: stretch; }
+  #view-list > .swipe-wrap, #going-list > .swipe-wrap { display: flex; flex-direction: column; }
+  #view-list > .swipe-wrap > .event-card, #going-list > .swipe-wrap > .event-card { flex: 1 1 auto; }
+  #view-list > *, #going-list > * { margin-top: 0 !important; min-width: 0; }
+  #view-list > [data-date], #view-list > .xl-span, #going-list > .xl-span, #list-sentinel { grid-column: 1 / -1; }
+  #view-list > .xl-half { grid-column: auto; align-self: stretch; }
+  #view-list > .xl-roulette.xl-half { display: flex; flex-direction: column; justify-content: flex-start; position: relative; overflow: hidden; }
+  #view-list > .xl-roulette.xl-half::after { content: "\f522"; font-family: "Font Awesome 6 Free"; font-weight: 900; position: absolute; right: 10px; bottom: -30px; font-size: 118px; line-height: 1; color: rgba(168, 85, 247, .10); transform: rotate(-12deg); pointer-events: none; }
+  #view-list > .xl-roulette.xl-half > div:first-child > div:first-child > span:first-child { width: 2.75rem; height: 2.75rem; }
+  #view-list > .xl-roulette.xl-half .fa-dice { font-size: 1.125rem; }
+  #view-list > .xl-roulette.xl-half > div:first-child p:first-of-type { font-size: .9375rem; }
+  #view-list > * { order: 10; }
+  #view-list > .cd-card { order: 1; }
+  #view-list > .xl-roulette { order: 2; }
+  #view-list > .xl-reco { order: 3; }
+  #view-list .event-card > .flex-1, #going-list .event-card > .flex-1 { display: flex; flex-direction: column; }
+  #view-list .event-card > .flex-1 > div:last-child, #going-list .event-card > .flex-1 > div:last-child { margin-top: auto; }
+  #view-month:not(.hidden), #view-week:not(.hidden) { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
+  #view-month > *, #view-week > * { margin-top: 0 !important; }
+  #view-month > .seg-bar { flex: 0 0 100%; }
+  #view-month > .xl-cal, #view-week > .xl-cal { flex: 1 1 26rem; min-width: 0; }
+  #selected-day-events, #week-day-events { flex: 1 1 20rem; min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-in, .card-in, .ovl:not(.hidden), .ovl:not(.hidden) > .dlg-card, .ovl:not(.hidden) > .sheet-card, .detail-pop { animation: none !important; }
+}
+
+/* --- FAB menu / presets / group list / loading indicator (2026-11-23) --- */
+.fab-menu { display: flex; flex-direction: column; align-items: flex-end; gap: .55rem; margin-bottom: .65rem; }
+.fab-item {
+  display: flex; align-items: center; gap: .55rem; cursor: pointer;
+  border: 1px solid var(--outline-variant); background: var(--surface-container-high); color: var(--on-surface);
+  font-size: .72rem; font-weight: 700; padding: .42rem .5rem .42rem .9rem; border-radius: 9999px;
+  box-shadow: 0 6px 18px rgb(0 0 0/.16);
+  opacity: 0; transform: translateY(10px) scale(.85); pointer-events: none;
+  transition: opacity .2s ease, transform .32s cubic-bezier(.32,1.16,.3,1);
+}
+.fab-item i {
+  width: 1.7rem; height: 1.7rem; border-radius: 9999px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-container); color: var(--primary); font-size: .78rem;
+}
+.fab-stack.open .fab-item { opacity: 1; transform: none; pointer-events: auto; }
+.fab-stack.open .fab-item:nth-child(3) { transition-delay: .02s; }
+.fab-stack.open .fab-item:nth-child(2) { transition-delay: .07s; }
+.fab-stack.open .fab-item:nth-child(1) { transition-delay: .12s; }
+#fab-main-btn i { transition: transform .32s cubic-bezier(.32,1.16,.3,1); }
+.fab-stack.open #fab-main-btn i { transform: rotate(45deg); }
+.preset-chip {
+  margin: 0;
+  border: 1px solid var(--outline-variant); background: var(--surface-container);
+  color: var(--on-surface); font-size: .68rem; font-weight: 700;
+  padding: .45rem .8rem; border-radius: 9999px; cursor: pointer;
+  -webkit-touch-callout: none; user-select: none;
+  transition: transform .2s cubic-bezier(.32,1.16,.3,1), background .2s;
+}
+.preset-chip:active { transform: scale(.94); }
+.preset-add { border-style: dashed; color: var(--primary); background: transparent; }
+.preset-chip.preset-on { background: var(--primary); border-color: var(--primary); color: var(--on-primary, #fff); }
+.bulk-op-btn {
+  margin: 0;
+  border: 1px solid var(--outline-variant); background: var(--surface-container);
+  color: var(--on-surface); font-size: .68rem; font-weight: 700;
+  padding: .45rem .4rem; border-radius: 12px; cursor: pointer;
+  transition: transform .2s cubic-bezier(.32,1.16,.3,1);
+}
+.bulk-op-btn:active { transform: scale(.96); }
+.bulk-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .375rem; }
+#group-list-modal button { margin: 0; }
+.bulk-op-btn.st-on { background: var(--primary); border-color: var(--primary); color: var(--on-primary, #fff); }
+.bulk-op-btn.st-mixed { border-color: var(--primary); color: var(--primary); }
+.gl-fchip { margin: 0; padding: .34rem .62rem; border-radius: 999px; border: 1px solid var(--outline-variant); background: var(--surface-container); color: var(--on-surface-variant); font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; height: 37px; block-size: 37px; min-height: 0; min-block-size: 0; inline-size: auto; min-inline-size: 0; box-sizing: border-box; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; box-shadow: none; }
+.cal-refresh-btn { margin: 0 0 0 auto; padding: .3rem .6rem; border-radius: 999px; border: 1px solid rgba(236,72,153,.4); background: #fdf2f8; color: #db2777; font-size: 10px; font-weight: 800; white-space: nowrap; cursor: pointer; block-size: auto; min-block-size: 0; inline-size: auto; min-inline-size: 0; box-sizing: border-box; flex: none; display: inline-flex; align-items: center; gap: 4px; box-shadow: none; }
+.cal-refresh-btn:active { transform: scale(.96); }
+.gl-fchip.on { background: var(--primary); color: var(--on-primary); }
+.agency-row-btn { margin: 0; padding: .75rem; background: none; background-color: transparent; color: inherit; border: none; border-radius: 0; block-size: auto; min-block-size: 0; min-height: 0; inline-size: 100%; min-inline-size: 0; box-sizing: border-box; box-shadow: none; gap: 0; }
+.gl-agency-sel { margin: 0; flex: 1; min-width: 0; height: 32px; block-size: 32px; min-height: 0; border-radius: 999px; border: 1px solid var(--outline-variant); background-color: var(--surface-container); color: var(--on-surface); font-size: 11px; font-weight: 700; padding: 0 1.7rem 0 .8rem; appearance: none; -webkit-appearance: none; box-sizing: border-box; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a08b99' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .65rem center; background-size: 11px 11px; }
+.gl-row { height: 62px; }
+.gl-row .gl-av { width: 40px; height: 40px; }
+.gl-row .gl-name { line-height: 1.5; }
+.gl-row .gl-sub { line-height: 1.45; }
+.gl-size-btn { margin: 0; height: 32px; block-size: 32px; min-height: 0; flex-shrink: 0; border-radius: 999px; border: 1px solid var(--outline-variant); background: var(--surface-container); color: var(--on-surface-variant); font-size: 11px; font-weight: 700; padding: 0 .8rem; box-sizing: border-box; cursor: pointer; box-shadow: none; display: inline-flex; align-items: center; }
+#group-list-rows.gl-big .gl-row { height: 88px; }
+#group-list-rows.gl-big .gl-av { width: 56px; height: 56px; }
+#group-list-rows.gl-big .gl-name { font-size: 15px; }
+#group-list-rows.gl-big .gl-sub { font-size: 12px; }
+#group-list-rows.gl-big .gl-initial { font-size: 22px; }
+#group-list-rows.gl-big .gl-check { font-size: 22px; }
+#group-list-rows.gl-small { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-content: start; }
+#group-list-rows.gl-small > div:not(.gl-row) { grid-column: 1 / -1; }
+#group-list-rows.gl-small .gl-row { height: 54px; margin-top: 0 !important; padding: 8px; gap: 8px; }
+#group-list-rows.gl-small .gl-av { width: 32px; height: 32px; }
+#group-list-rows.gl-small .gl-name { font-size: 12px; }
+#group-list-rows.gl-small .gl-sub { font-size: 9px; }
+#group-list-rows.gl-small .gl-initial { font-size: 14px; }
+#group-list-rows.gl-small .gl-bell { display: none; }
+#group-list-rows.gl-small .gl-cluster { margin-right: 0 !important; gap: 0; }
+#group-list-rows.gl-small .gl-checkbox { width: 24px; height: 24px; }
+#group-list-rows.gl-small .gl-check { font-size: 16px; }
+#gl-filter-chips { flex: 1; min-width: 0; overflow-x: auto; padding: 5px 2px; align-items: center; }
+.bulk-card { border: 1px solid var(--outline-variant); border-radius: 16px; padding: .6rem .7rem .7rem; }
+.bulk-all-sec { border: 1px solid var(--outline-variant); border-radius: 16px; padding: .6rem .7rem .7rem; margin-top: .55rem; }
+.bulk-op-btn { white-space: nowrap; overflow: hidden; }
+.bulk-op-btn i { font-size: .8rem; min-inline-size: 0; min-block-size: 0; inline-size: auto; block-size: auto; }
+.load-ind {
+  width: 42px; height: 42px; margin: 0 auto;
+  background: linear-gradient(135deg, var(--primary), var(--tertiary));
+  animation: loadMorph 1.9s cubic-bezier(.4, 0, .2, 1) infinite;
+}
+@keyframes loadMorph {
+  0%, 100% { border-radius: 50%; transform: rotate(0deg); }
+  20% { border-radius: 34% 66% 62% 38% / 46% 36% 64% 54%; transform: rotate(72deg); }
+  40% { border-radius: 24% 24% 24% 24% / 24% 24% 24% 24%; transform: rotate(144deg); }
+  60% { border-radius: 50% 50% 50% 50% / 64% 64% 36% 36%; transform: rotate(216deg); }
+  80% { border-radius: 64% 36% 30% 70% / 60% 30% 70% 40%; transform: rotate(288deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .load-ind, .fab-item, #fab-main-btn i { animation: none !important; transition: none !important; }
+}
+
+/* --- group list panel sizing (compat.cssに無い任意値クラスを使わないための専用定義) --- */
+.group-list-panel { height: 92vh; height: 92svh; width: calc(100% - 20px); margin: 0 auto; padding-top: 0; }
+.group-list-panel > .sheet-handle { margin-bottom: 1.8rem; }
+.drawer-sec { margin-top: 1.15rem; }
+.drawer-sec > .fld-label { margin-bottom: .45rem; }
+@media (min-width: 640px) {
+  #group-list-modal { padding: 1rem; }
+  .group-list-panel { height: auto; max-height: 85vh; max-height: 85svh; }
+}
+#group-list-rows { min-height: 0; padding: 20px 0 10px; }
+.font-extrabold { font-weight: 800; }
+
+/* --- 時間帯で変わるヘッダー（Expressive Weather 参考: 朝=青空／夕=茜／夜=星空） --- */
+html.tod-asa .app-header { background: linear-gradient(calc(120deg + var(--tilt-deg, 0deg)), color-mix(in srgb, #38bdf8 26%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 55%, var(--surface-container-lowest))); }
+html.tod-yu .app-header { background: linear-gradient(calc(120deg + var(--tilt-deg, 0deg)), color-mix(in srgb, #fb923c 24%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, #f472b6 26%, var(--surface-container-lowest))); }
+html.tod-yoru .app-header { background: linear-gradient(calc(120deg + var(--tilt-deg, 0deg)), color-mix(in srgb, #a78bfa 22%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 45%, var(--surface-container-lowest))); }
+html.dark.tod-yoru .app-header {
+  background-image: radial-gradient(1.5px 1.5px at 18% 32%, rgba(255,255,255,.55) 50%, transparent 51%), radial-gradient(1px 1px at 64% 58%, rgba(255,255,255,.4) 50%, transparent 51%), radial-gradient(1.3px 1.3px at 84% 22%, rgba(255,255,255,.45) 50%, transparent 51%), radial-gradient(1px 1px at 42% 74%, rgba(255,255,255,.35) 50%, transparent 51%), linear-gradient(calc(120deg + var(--tilt-deg, 0deg)), color-mix(in srgb, #a78bfa 22%, var(--surface-container-lowest)), var(--surface-container-lowest) 55%, color-mix(in srgb, var(--tertiary-container) 45%, var(--surface-container-lowest)));
+  background-size: 170px 90px, 130px 80px, 210px 100px, 150px 95px, cover;
+}
+
+/* --- カウントダウンカードの天気の雰囲気演出（雨・雪） --- */
+.cd-card { position: relative; overflow: hidden; }
+.cd-card.wx-fx-rain::before, .cd-card.wx-fx-snow::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+}
+.cd-card.wx-fx-rain::before {
+  background-image: repeating-linear-gradient(105deg, transparent 0 14px, rgba(56,189,248,.10) 14px 15px, transparent 15px 29px);
+  background-size: 120px 120px;
+  animation: wxRain 1.1s linear infinite;
+}
+@keyframes wxRain { from { background-position: 0 -120px; } to { background-position: -34px 0; } }
+.cd-card.wx-fx-snow::before {
+  background-image: radial-gradient(2px 2px at 15% 20%, rgba(125,211,252,.25) 50%, transparent 51%), radial-gradient(1.6px 1.6px at 55% 60%, rgba(125,211,252,.2) 50%, transparent 51%), radial-gradient(2.2px 2.2px at 82% 30%, rgba(125,211,252,.22) 50%, transparent 51%);
+  background-size: 140px 140px, 180px 180px, 220px 220px;
+  animation: wxSnow 7s linear infinite;
+}
+@keyframes wxSnow { from { background-position: 0 -140px, 0 -180px, 0 -220px; } to { background-position: 18px 0, -14px 0, 10px 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .cd-card.wx-fx-rain::before, .cd-card.wx-fx-snow::before { animation: none; }
+}
+/* --- 傾き演出（Expressive Weather 参考・2026-11-24）: html.tilt-on のときだけ効く --- */
+html.tilt-on .cd-card.wx-fx-rain::before { inset: -12% -25%; transform: skewX(calc(var(--tilt-x, 0) * -10deg)); }
+html.tilt-on .cd-card.wx-fx-snow::before { transform: translateX(calc(var(--tilt-x, 0) * 14px)); }
+html.tilt-on .cd-card::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(calc(100deg + var(--tilt-x, 0) * 40deg), transparent 32%, rgba(255,255,255,.10) 48%, transparent 64%); }
+html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x, 0) * 6px) calc(var(--tilt-y, 0) * 3px), calc(var(--tilt-x, 0) * -9px) calc(var(--tilt-y, 0) * -4px), calc(var(--tilt-x, 0) * 12px) calc(var(--tilt-y, 0) * 5px), calc(var(--tilt-x, 0) * -5px) calc(var(--tilt-y, 0) * -2px), 0 0; }
+@media (prefers-reduced-motion: reduce) {
+  html.tilt-on .cd-card::after { display: none; }
+  html.tilt-on .cd-card.wx-fx-rain::before, html.tilt-on .cd-card.wx-fx-snow::before { transform: none; }
+}
+
+
+/* --- ドロワー再設計: チップ一覧が潰れないように（2026-11-23） --- */
+.drawer-panel { overflow-y: auto; }
+#group-management-list { flex: 0 0 auto; }
+
+
+/* ===== テストページ専用スキャフォールド（本番CSSではない・2版共通） ===== */
+.t-controls{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.5rem .9rem;background:var(--surface-container-high);border-bottom:1px solid var(--outline-variant);font-size:.75rem;font-weight:700}
+.t-toggle{border:1px solid var(--outline-variant);background:var(--surface-container-lowest);color:var(--on-surface);border-radius:999px;padding:.45rem .9rem;font-size:.72rem;font-weight:700;cursor:pointer}
+.t-main{max-width:28rem;margin:0 auto;padding:1rem 1rem 2rem;display:flex;flex-direction:column;gap:1.1rem}
+.t-h{font-size:.78rem;font-weight:800;color:var(--on-surface-variant);margin:0}
+.t-note{font-size:.7rem;color:var(--on-surface-variant);line-height:1.6;margin:0}
+.t-row{display:flex;align-items:center}
+.t-between{justify-content:space-between}
+.t-grow{flex:1}
+.t-col{display:flex;flex-direction:column;gap:.6rem}
+.t-head-actions{display:flex;align-items:center;gap:.4rem}
+.t-card-inner{padding:1rem;display:flex;flex-direction:column;gap:.45rem}
+.t-time{font-size:1.5rem;font-weight:900;color:var(--on-surface);letter-spacing:.01em}
+.t-title{font-size:.85rem;font-weight:700;color:var(--on-surface);line-height:1.45}
+.t-meta{font-size:.7rem;font-weight:600;color:var(--on-surface-variant);display:flex;align-items:center;gap:.35rem}
+.t-chiprow{display:flex;flex-wrap:wrap;gap:.45rem}
+.t-fab-wrap{position:relative;height:11rem;background:var(--surface-container-low);border:1px dashed var(--outline-variant);border-radius:1.25rem}
+.t-fab-col{position:absolute;right:1rem;bottom:1rem;display:flex;flex-direction:column;align-items:center;gap:.6rem}
+.t-snack-wrap{position:relative;height:4rem}
+.t-snack-wrap #snackbar{position:absolute;bottom:0;opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.t-expr{background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:1.25rem;padding:1rem;display:flex;flex-direction:column;gap:1rem;align-items:flex-start}
+.t-fabmenu-wrap{position:relative;display:inline-block;margin-top:9rem}
+
+</style>
+</head>
+<body>
+
+<div class="t-controls">
+  <span>Beer CSS 3.9.7 版（テスト）</span>
+  <button class="t-toggle" id="theme-toggle" type="button">🌙 ダーク切替</button>
+</div>
+
+<header class="app-header">
+  <div class="t-row t-between">
+    <div class="t-row">
+      <div class="logo-mark"><i class="fa-solid fa-calendar-days"></i></div>
+      <h1 class="logo-title">Oshi-Cal</h1>
+    </div>
+    <div class="t-head-actions">
+      <button class="icon-btn" type="button" style="color:var(--tertiary)"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <button class="icon-btn" type="button" style="color:var(--primary)"><i class="fa-solid fa-bars"></i></button>
+    </div>
+  </div>
+  <div class="seg-bar" id="head-seg">
+    <span class="seg-ind" aria-hidden="true"></span>
+    <button class="seg-btn on" type="button">リスト</button>
+    <button class="seg-btn" type="button">行く予定</button>
+    <button class="seg-btn" type="button">週表示</button>
+    <button class="seg-btn" type="button">月表示</button>
+  </div>
+</header>
+
+<main class="t-main">
+
+  <p class="t-h">1. フィルターバー</p>
+  <div class="filter-bar">
+    <button class="filter-main" type="button">
+      <span><i class="fa-solid fa-filter" style="color:var(--primary);margin-right:.5rem"></i>すべてのグループ</span>
+      <i class="fa-solid fa-chevron-down" style="font-size:10px;color:var(--primary)"></i>
+    </button>
+    <button class="mini-btn" type="button"><i class="fa-solid fa-rotate-right"></i></button>
+    <button class="mini-btn" type="button"><i class="fa-solid fa-clock-rotate-left"></i></button>
+  </div>
+
+  <p class="t-h">2. イベントカード（静的・ダミー）</p>
+  <div class="event-card" style="background:var(--surface-container-lowest);border:1px solid var(--outline-variant)">
+    <div class="t-card-inner">
+      <div class="t-row t-between">
+        <span class="t-time">18:00</span>
+        <span class="t-meta"><i class="fa-solid fa-heart" style="color:var(--primary)"></i></span>
+      </div>
+      <div class="t-title">テストライブ 2026 〜サンプル公演〜</div>
+      <div class="t-meta"><i class="fa-solid fa-location-dot"></i>Zepp Shinjuku（ダミー会場）</div>
+      <div class="t-meta"><i class="fa-solid fa-users"></i>サンプルグループA</div>
+    </div>
+  </div>
+  <div class="event-card" style="background:var(--surface-container-lowest);border:1px solid var(--outline-variant)">
+    <div class="t-card-inner">
+      <div class="t-row t-between">
+        <span class="t-time">13:30</span>
+        <span class="t-meta"><i class="fa-solid fa-chevron-right" style="font-size:10px"></i></span>
+      </div>
+      <div class="t-title">サンプルフェス vol.2（ダミー）</div>
+      <div class="t-meta"><i class="fa-solid fa-location-dot"></i>品川ステラボール（ダミー会場）</div>
+      <div class="t-meta"><i class="fa-solid fa-users"></i>サンプルグループB</div>
+    </div>
+  </div>
+
+  <p class="t-h">3. グループチップ</p>
+  <div class="t-chiprow">
+    <button class="gchip on" type="button">選択中のグループ</button>
+    <button class="gchip" type="button">未選択のグループ</button>
+    <button class="gchip" type="button">グループC</button>
+  </div>
+
+  <p class="t-h">4. 入力欄（日付・時刻が透明になっていないか確認）</p>
+  <div class="t-col">
+    <div>
+      <label class="fld-label">テキスト入力</label>
+      <input class="fld" type="text" placeholder="グループ名で検索（ダミー）">
+    </div>
+    <div>
+      <label class="fld-label">日付</label>
+      <input class="fld" type="date" value="2026-12-24">
+    </div>
+    <div>
+      <label class="fld-label">時刻</label>
+      <input class="fld" type="time" value="18:00">
+    </div>
+    <div>
+      <label class="fld-label">セレクト</label>
+      <select class="fld">
+        <option>すべてのグループ</option>
+        <option>サンプルグループA</option>
+        <option>サンプルグループB</option>
+      </select>
+    </div>
+  </div>
+
+  <p class="t-h">5. ボタン</p>
+  <div class="t-col">
+    <button class="btn-primary" type="button"><i class="fa-solid fa-check"></i>プライマリボタン</button>
+    <button class="btn-tonal" type="button"><i class="fa-solid fa-share-nodes"></i>トーナルボタン</button>
+  </div>
+
+  <p class="t-h">6. FAB</p>
+  <div class="t-fab-wrap">
+    <div class="t-fab-col">
+      <button class="fab-sub" type="button"><i class="fa-solid fa-map-location-dot"></i></button>
+      <button class="fab-sub" type="button"><i class="fa-solid fa-arrow-up"></i></button>
+      <button class="fab-main" type="button"><i class="fa-solid fa-plus"></i></button>
+    </div>
+  </div>
+
+  <p class="t-h">7. スナックバー（静的表示）</p>
+  <div class="t-snack-wrap">
+    <div id="snackbar" role="status"><span>テストメッセージです</span><button type="button">閉じる</button></div>
+  </div>
+
+
+
+  <p class="t-note">下部ナビは画面下に固定表示されています。ピルの滑りと、ボタンを押した時の縮み方も確認してください。</p>
+</main>
+
+<div class="view-nav" role="navigation" aria-label="表示切替">
+  <span class="vnav-ind" aria-hidden="true"></span>
+  <button class="seg-btn on" type="button">リスト</button>
+  <button class="seg-btn" type="button">行く予定</button>
+  <button class="seg-btn" type="button">週表示</button>
+  <button class="seg-btn" type="button">月表示</button>
+</div>
+
+
+<script>
+(function(){
+  function placeSeg(bar){
+    if(!bar) return;
+    var ind = bar.querySelector('.seg-ind');
+    var on = bar.querySelector('.seg-btn.on');
+    if(!on) return;
+    if(ind){
+      ind.style.left = on.offsetLeft + 'px';
+      ind.style.top = on.offsetTop + 'px';
+      ind.style.width = on.offsetWidth + 'px';
+      ind.style.height = on.offsetHeight + 'px';
+    }
+  }
+  function placeVnav(nav){
+    var ind = nav.querySelector('.vnav-ind');
+    var on = nav.querySelector('.seg-btn.on');
+    if(!ind || !on) return;
+    ind.style.width = on.offsetWidth + 'px';
+    ind.style.transform = 'translateX(' + on.offsetLeft + 'px)';
+  }
+  function initBar(bar, isNav){
+    bar.querySelectorAll('.seg-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        bar.querySelectorAll('.seg-btn').forEach(function(b){ b.classList.remove('on'); });
+        btn.classList.add('on');
+        if(isNav) placeVnav(bar); else placeSeg(bar);
+      });
+    });
+    if(isNav) placeVnav(bar); else placeSeg(bar);
+  }
+  function init(){
+    initBar(document.getElementById('head-seg'), false);
+    initBar(document.querySelector('.view-nav'), true);
+  }
+  window.addEventListener('load', init);
+  window.addEventListener('resize', init);
+  setTimeout(init, 300);
+  var t = document.getElementById('theme-toggle');
+  if(t){ t.addEventListener('click', function(){
+    document.documentElement.classList.toggle('dark');
+    document.body.classList.toggle('dark');
+    setTimeout(init, 60);
+  }); }
+})();
+</script>
+
+</body>
+</html>

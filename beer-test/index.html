@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beer CSS バージョン比較テスト | Oshi-Cal</title>
+<style>
+  body{font-family:Roboto,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic UI",sans-serif;margin:0;background:#fff8fb;color:#241a20;line-height:1.7}
+  main{max-width:32rem;margin:0 auto;padding:1.2rem 1rem 3rem}
+  h1{font-size:1.15rem;margin:.2rem 0 .6rem}
+  h2{font-size:.95rem;margin:1.6rem 0 .4rem}
+  p,li{font-size:.85rem}
+  .links{display:flex;flex-direction:column;gap:.7rem;margin:1rem 0}
+  .links a{display:block;padding:1rem 1.1rem;border-radius:1rem;background:#fff;border:1px solid #e8cfe0;text-decoration:none;color:#241a20;font-weight:700}
+  .links a span{display:block;font-weight:500;font-size:.75rem;color:#7a6470;margin-top:.2rem}
+  ul{padding-left:1.2rem}
+  .note{background:#fdf0f6;border:1px solid #e8cfe0;border-radius:1rem;padding:.8rem 1rem;font-size:.78rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>Beer CSS バージョン比較テスト</h1>
+  <p>Oshi-Calの土台（Beer CSS）を、いま固定している <strong>3.9.7</strong> から、最終の3系 <strong>3.13.3</strong> へ上げる価値とリスクを、実機で見比べるためのテストページです。2つのページは中身が完全に同じで、読み込むBeer CSSの版だけが違います。各ページの上のボタンでダークモードにも切り替えられます。</p>
+
+  <div class="links">
+    <a href="./v397.html">① Beer CSS 3.9.7 版（現在の本番と同じ）<span>まずこちらで「いつもの見た目」を確認</span></a>
+    <a href="./v3133.html">② Beer CSS 3.13.3 版（上げる候補）<span>同じ部品がどう変わるか＋3.13だけの新部品の節があります</span></a>
+  </div>
+
+  <h2>判定チェックリスト</h2>
+  <ul>
+    <li>日付・時刻の入力欄が普通に見えるか（透明になっていないか）</li>
+    <li>下部ナビのピル、カードの角丸、チップの大きさが版で変わっていないか</li>
+    <li>ダークモードで光って見える所が無いか</li>
+    <li>ボタンを押した時の縮み方・動きが変わっていないか</li>
+    <li>3.13だけの節：ボタングループ／ツールバーが部品として使えそうか</li>
+  </ul>
+
+  <h2>3.13だけの節について（項目11）</h2>
+  <p>3.13.3版のページの最後にだけ、3.11で追加された Expressive 標準部品の試し置きがあります（ボタングループ、ツールバー、スプリットボタン、FABメニュー）。3.9.7版には入れていません。この「有る／無い」自体が版の差の確認対象です。</p>
+  <p class="note">部品のクラス名の確認元：ボタングループ／スプリットボタン／FABメニューは Beer CSS v3.13.3 の公式ドキュメント（docs/BUTTON.md）で確認。ツールバーはドキュメントに作例が無かったため、3.13.3の実CSSのセレクタ（nav.toolbar &gt; a、.active）に基づいて作成しました。アイコンは本番に合わせて Font Awesome を使用しています（公式作例のMaterialアイコン文字からの置き換え）。4部品とも「未確認」のものはありません。</p>
+
+  <h2>見方のコツ</h2>
+  <p>2つのページをブラウザのタブで開き、行き来して同じ部品を見比べてください。セグメントバーと下部ナビは、タップで選択が切り替わりピルが滑ります。</p>
+</main>
+</body>
+</html>
