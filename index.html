@@ -1817,7 +1817,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2224</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2240</div>
             </div>
         </div>
     </div>
@@ -9479,15 +9479,18 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             });
             let shown = 0;
             let rows = '';
+            glShownNames_ = [];
             order.forEach(({ g, index }) => {
                 if (q && !g.name.toLowerCase().includes(q)) return;
                 shown++;
+                const si = glShownNames_.length;
+                glShownNames_.push(g.name);
                 const isHidden = g.visible === false;
                 const notifyOff = g.notify === false;
                 const img = (typeof GROUP_IMAGES !== 'undefined' && GROUP_IMAGES[g.name]) ? GROUP_IMAGES[g.name] : '';
                 rows += `
                     <div class="gl-row flex items-center gap-3 p-2.5 rounded-2xl border shadow-sm cursor-pointer select-none min-w-0 ${isHidden ? 'bg-white border-slate-100 opacity-50' : ''}" style="${isHidden ? '' : `background-color:${g.color}10;border-color:${g.color}80;`}"
-                        onpointerdown="chipPointerDown(${index})" onpointerup="chipPointerEnd()" onpointerleave="chipPointerEnd()" onpointercancel="chipPointerEnd()" oncontextmenu="return false" onclick="glRowClick(${index})">
+                        onpointerdown="chipPointerDown(${si})" onpointerup="chipPointerEnd()" onpointerleave="chipPointerEnd()" onpointercancel="chipPointerEnd()" oncontextmenu="return false" onclick="glRowClick(${si})">
                         <span class="gl-av relative w-10 h-10 flex-shrink-0">
                             <span class="gl-av block w-10 h-10 rounded-xl overflow-hidden shadow-sm relative" style="background-color:${g.color}">
                                 <span class="gl-initial absolute inset-0 flex items-center justify-center text-white text-base font-black">${escapeHtml(groupInitial(g.name))}</span>
@@ -9499,7 +9502,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                             <span class="gl-sub block text-[10px] text-slate-400 truncate">${(typeof LINK_ONLY_GROUPS !== 'undefined' && LINK_ONLY_GROUPS.has(g.name)) ? '公式リンクのみ（予定は未対応）' : `未来のライブ ${futureCounts[g.name] || 0}件`}${notifyOff ? ' ・ 通知オフ' : ''}${agencyText_(g.name) ? ` ・ ${escapeHtml(agencyText_(g.name))}` : ''}</span>
                         </span>
                         <span class="gl-cluster flex items-center gap-2.5 flex-shrink-0" style="margin-right:6px">
-                            <button type="button" aria-label="通知オン/オフ" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()" onclick="event.stopPropagation(); toggleGroupNotify(${index})" class="gl-bell flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${notifyOff ? 'text-slate-300' : 'text-pink-500'}"><i class="fa-${notifyOff ? 'solid fa-bell-slash' : 'solid fa-bell'} text-sm"></i></button>
+                            <button type="button" aria-label="通知オン/オフ" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()" onclick="event.stopPropagation(); glBellClick(${si})" class="gl-bell flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${notifyOff ? 'text-slate-300' : 'text-pink-500'}"><i class="fa-${notifyOff ? 'solid fa-bell-slash' : 'solid fa-bell'} text-sm"></i></button>
                             ${isHidden ? '<span class="gl-checkbox w-8 h-8 flex items-center justify-center flex-shrink-0"><span class="gl-check fa-regular fa-circle text-slate-300" style="font-size:19px;line-height:1"></span></span>' : `<span class="gl-checkbox w-8 h-8 flex items-center justify-center flex-shrink-0"><span class="gl-check fa-solid fa-circle-check" style="color:${g.color};font-size:19px;line-height:1"></span></span>`}
                         </span>
                     </div>`;
@@ -9508,10 +9511,22 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const cnt = document.getElementById('group-list-count');
             if (cnt) cnt.textContent = (q || groupListFilter !== 'all' || groupListAgency) ? `${shown}件表示（全${groups.length}）` : `全${groups.length}グループ`;
         }
-        function glRowClick(index) {
+        // 一覧の行は「表示位置」で受け取り、名前→実インデックスをその場で解決する。
+        // 描画後に groups が差し替わっても（クラウド同期・表記統一など）別のグループを開かないため。
+        let glShownNames_ = [];
+        function glResolveIndex_(si) {
+            const name = glShownNames_[si];
+            if (!name) return -1;
+            return groups.findIndex(g => g.name === name);
+        }
+        function glRowClick(si) {
             if (chipLongPressed) { chipLongPressed = false; return; }
-            const g = groups[index];
-            if (g) openGroupLinksModal(g.name);
+            const name = glShownNames_[si];
+            if (name) openGroupLinksModal(name);
+        }
+        function glBellClick(si) {
+            const index = glResolveIndex_(si);
+            if (index >= 0) toggleGroupNotify(index);
         }
 
         // ==== グループ管理チップ（タップで公式リンク・長押しで表示/非表示の切替） ====
@@ -9536,13 +9551,15 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
 
         let chipPressTimer = null;
         let chipLongPressed = false;
-        function chipPointerDown(index) {
+        function chipPointerDown(si) {
             chipLongPressed = false;
             clearTimeout(chipPressTimer);
+            const name = glShownNames_[si];
             chipPressTimer = setTimeout(() => {
                 chipLongPressed = true;
+                const index = name ? groups.findIndex(g => g.name === name) : -1;
+                if (index < 0) return;
                 const g = groups[index];
-                if (!g) return;
                 toggleGroupVisible(index);
                 renderGroupList();
                 showSnackbar_(g.visible === false ? `「${g.name}」を非表示にしました` : `「${g.name}」を表示しました`);
