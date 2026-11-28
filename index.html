@@ -1816,7 +1816,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 <i class="fa-solid fa-rotate-left mr-1"></i> グループ一覧をリセットする
             </button>
             <a href="https://oshi-cal-info.github.io/my-idol-app/privacy.html" target="_blank" rel="noopener" class="block text-center w-full py-1 text-slate-400 font-bold hover:text-slate-500 transition text-[10px]">プライバシーポリシー</a>
-            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2053</div>
+            <div class="text-center w-full text-slate-300 text-[9px] pb-1">build 20261128-2054</div>
             </div>
         </div>
     </div>
@@ -2045,7 +2045,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         <div class="dlg-card w-full max-w-sm p-6 space-y-4">
             <div class="flex justify-between items-center">
                 <h3 id="group-links-title" class="font-bold text-base text-slate-800 flex items-center"></h3>
-                <button onclick="closeModal('group-links-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeModal('group-links-modal')" class="text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center flex-shrink-0"><span class="fa-solid fa-xmark"></span></button>
             </div>
             <div id="group-links-list" class="space-y-2"></div>
         </div>
@@ -9518,6 +9518,12 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
         }
 
         let groupActionIndex = -1;
+        let groupActionOpenedAt_ = 0;
+        function groupActionGuard_() { return Date.now() - groupActionOpenedAt_ < 400; }
+        function groupActionClose() {
+            if (groupActionGuard_()) return;
+            closeModal('group-action-modal');
+        }
         function openGroupActionSheet(index) {
             const g = groups[index];
             if (!g) return;
@@ -9534,59 +9540,67 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                         ${groupAvatarHtml(g, false)}
                         <span class="font-bold text-sm text-slate-800 break-words">${escapeHtml(g.name)}</span>
                     </span>
-                    <button onclick="closeModal('group-action-modal')" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0 ml-2"><i class="fa-solid fa-xmark"></i></button>
+                    <button onclick="groupActionClose()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0 ml-2"><span class="fa-solid fa-xmark"></span></button>
                 </div>
                 <button onclick="groupActionLinks()" class="${rowCls}">
-                    <i class="fa-solid fa-link text-purple-500 w-5 text-center flex-shrink-0"></i>
+                    <span class="fa-solid fa-link text-purple-500 w-5 text-center flex-shrink-0"></span>
                     <span class="text-xs font-bold text-slate-700">${(tokutenByGroup[g.name] || tokutenFlagEvent_(g.name)) ? '公式リンク・新規特典を見る' : '公式リンクを見る'}${linkCount > 0 ? `（${linkCount}件）` : '（未登録）'}</span>
                 </button>
                 <button onclick="groupActionToggleVisible()" class="${rowCls}">
-                    <i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'} text-slate-400 w-5 text-center flex-shrink-0"></i>
+                    <span class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'} text-slate-400 w-5 text-center flex-shrink-0"></span>
                     <span class="text-xs font-bold text-slate-700">${isHidden ? 'スケジュールに表示する' : 'スケジュールで非表示にする'}</span>
                 </button>
                 <button onclick="groupActionToggleNotify()" class="${rowCls}">
-                    <i class="fa-solid ${notifyOn ? 'fa-bell text-pink-500' : 'fa-bell-slash text-slate-300'} w-5 text-center flex-shrink-0"></i>
+                    <span class="fa-solid ${notifyOn ? 'fa-bell text-pink-500' : 'fa-bell-slash text-slate-300'} w-5 text-center flex-shrink-0"></span>
                     <span class="text-xs font-bold text-slate-700">新着ライブの通知：${notifyOn ? 'オン' : 'オフ'}</span>
                 </button>
                 <button onclick="groupActionSubscribe()" class="${rowCls}">
-                    <i class="fa-solid fa-calendar-plus text-slate-400 w-5 text-center flex-shrink-0"></i>
+                    <span class="fa-solid fa-calendar-plus text-slate-400 w-5 text-center flex-shrink-0"></span>
                     <span class="text-xs font-bold text-slate-700">Googleカレンダーで購読</span>
                 </button>
                 <button onclick="groupActionEdit()" class="${rowCls}">
-                    <i class="fa-solid fa-palette text-slate-400 w-5 text-center flex-shrink-0"></i>
+                    <span class="fa-solid fa-palette text-slate-400 w-5 text-center flex-shrink-0"></span>
                     <span class="text-xs font-bold text-slate-700">表示設定（色の変更）</span>
                 </button>
                 <button onclick="groupActionDelete()" class="${rowCls}">
-                    <i class="fa-solid fa-trash text-red-400 w-5 text-center flex-shrink-0"></i>
+                    <span class="fa-solid fa-trash text-red-400 w-5 text-center flex-shrink-0"></span>
                     <span class="text-xs font-bold text-red-500">グループを削除</span>
                 </button>
             `;
-            document.getElementById('group-action-modal').classList.remove('hidden');
+            const actModal = document.getElementById('group-action-modal');
+            if (actModal.classList.contains('hidden')) groupActionOpenedAt_ = Date.now();
+            actModal.classList.remove('hidden');
         }
         function groupActionLinks() {
+            if (groupActionGuard_()) return;
             const g = groups[groupActionIndex];
             closeModal('group-action-modal');
             if (g) openGroupLinksModal(g.name);
         }
         function groupActionToggleVisible() {
+            if (groupActionGuard_()) return;
             toggleGroupVisible(groupActionIndex);
             openGroupActionSheet(groupActionIndex);
         }
         function groupActionToggleNotify() {
+            if (groupActionGuard_()) return;
             toggleGroupNotify(groupActionIndex);
             openGroupActionSheet(groupActionIndex);
         }
         function groupActionSubscribe() {
+            if (groupActionGuard_()) return;
             const idx = groupActionIndex;
             closeModal('group-action-modal');
             subscribeGroupCalendar(idx);
         }
         function groupActionEdit() {
+            if (groupActionGuard_()) return;
             const idx = groupActionIndex;
             closeModal('group-action-modal');
             openGroupEditModal(idx);
         }
         function groupActionDelete() {
+            if (groupActionGuard_()) return;
             const idx = groupActionIndex;
             closeModal('group-action-modal');
             deleteGroupFromManagement(idx);
@@ -9795,17 +9809,53 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
             const x = (OFFICIAL_GROUP_LINKS[groupName] || {}).x || '';
             return `
                 <div class="p-3.5 bg-pink-50/50 border border-dashed border-pink-300 rounded-2xl mb-2">
-                    <p class="text-xs font-black text-pink-600 mb-1.5"><i class="fa-solid fa-gift mr-1"></i>新規特典あり</p>
+                    <p class="text-xs font-black text-pink-600 mb-1.5"><span class="fa-solid fa-gift mr-1"></span>新規特典あり</p>
                     <p class="text-[11px] leading-relaxed text-slate-600">${m}月${d}日の公演告知で、新規特典の実施が案内されています。内容は公演ページや公式Xで確認してください。</p>
-                    ${x ? `<div class="mt-2"><a href="${x}" target="_blank" class="text-[10px] font-bold text-purple-500">公式Xで確認 <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i></a></div>` : ''}
+                    ${x ? `<div class="mt-2"><a href="${x}" target="_blank" class="text-[10px] font-bold text-purple-500">公式Xで確認 <span class="fa-solid fa-arrow-up-right-from-square text-[8px]"></span></a></div>` : ''}
                 </div>
             `;
         }
 
+        let linksModalPeers_ = [];
         function agencyLineHtml(groupName) {
-            const t = agencyText_(groupName);
-            if (!t) return '';
-            return `<div class="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-100 rounded-2xl"><span class="fa-solid fa-building text-slate-400"></span><span class="text-xs font-bold text-slate-600">所属事務所：${escapeHtml(t)}</span></div>`;
+            const list = GROUP_AGENCIES[groupName] || [];
+            linksModalPeers_ = [];
+            if (!list.length) return '';
+            return list.map((agency) => {
+                const peers = Object.keys(GROUP_AGENCIES).filter(n => n !== groupName && (GROUP_AGENCIES[n] || []).includes(agency));
+                const head = `<span class="fa-solid fa-building text-slate-400 flex-shrink-0"></span><span class="text-xs font-bold text-slate-600 truncate">所属事務所：${escapeHtml(agency)}</span>`;
+                if (!peers.length) {
+                    return `<div class="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-100 rounded-2xl">${head}</div>`;
+                }
+                const pi = linksModalPeers_.length;
+                linksModalPeers_.push(peers);
+                return `
+                    <div class="bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden">
+                        <button type="button" onclick="toggleAgencyPeers_(${pi})" class="w-full flex items-center p-3 text-left">
+                            <span class="flex items-center space-x-2 flex-1 min-w-0">${head}</span>
+                            <span class="flex items-center space-x-1 flex-shrink-0 pl-2">
+                                <span class="text-[10px] font-bold text-slate-400">同じ事務所 ${peers.length}組</span>
+                                <span id="agency-peers-chev-${pi}" class="fa-solid fa-chevron-down text-[10px] text-slate-400" style="transition:transform .2s"></span>
+                            </span>
+                        </button>
+                        <div id="agency-peers-${pi}" class="hidden px-3 pb-3">
+                            <div class="flex flex-wrap" style="gap:6px">
+                                ${peers.map((n, ni) => { const c = (groups.find(g => g.name === n) || {}).color || '#94a3b8'; return `<span onclick="openAgencyPeer_(${pi}, ${ni})" class="inline-flex items-center px-2.5 py-1.5 rounded-full bg-white border border-slate-200 text-[11px] font-bold text-slate-700 cursor-pointer"><span class="w-2 h-2 rounded-full inline-block flex-shrink-0" style="background-color:${c};margin-right:6px"></span>${escapeHtml(n)}</span>`; }).join('')}
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+        function toggleAgencyPeers_(pi) {
+            const el = document.getElementById('agency-peers-' + pi);
+            if (!el) return;
+            const nowHidden = el.classList.toggle('hidden');
+            const chev = document.getElementById('agency-peers-chev-' + pi);
+            if (chev) chev.style.transform = nowHidden ? '' : 'rotate(180deg)';
+        }
+        function openAgencyPeer_(pi, ni) {
+            const name = (linksModalPeers_[pi] || [])[ni];
+            if (name) openGroupLinksModal(name);
         }
 
         function openGroupLinksModal(groupName) {
@@ -9824,10 +9874,10 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                     return `
                         <a href="${links[key]}" target="_blank" class="flex items-center justify-between p-3 bg-pink-50/40 border border-pink-100/80 rounded-2xl hover:bg-pink-100/60 transition">
                             <span class="flex items-center space-x-2 text-xs font-bold text-slate-700">
-                                <i class="${meta.icon}" style="color:${meta.color}"></i>
+                                <span class="${meta.icon}" style="color:${meta.color}"></span>
                                 <span>${meta.label}</span>
                             </span>
-                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></i>
+                            <span class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></span>
                         </a>
                     `;
                 });
@@ -9839,6 +9889,7 @@ html.tilt-on.dark.tod-yoru .app-header { background-position: calc(var(--tilt-x,
                 ? rows.join('')
                 : ((agencyHtml || tokutenHtml || buppanHtml) ? '' : `<p class="text-xs text-slate-400 text-center py-6">公式リンクはまだ登録されていません</p>`));
 
+            container.scrollTop = 0;
             document.getElementById('group-links-modal').classList.remove('hidden');
         }
 
